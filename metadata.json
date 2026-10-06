@@ -1,0 +1,6 @@
+{
+  "name": "Engez Nafsak",
+  "description": "Ultra-modern study companion and academic planner featuring AI difficulty estimation, document scholar, exam task matrix, resources, and gamified focus flows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

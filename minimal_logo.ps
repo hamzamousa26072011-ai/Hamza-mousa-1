@@ -1,0 +1,126 @@
+%!PS-Adobe-3.0
+%%BoundingBox: 0 0 512 512
+%%Pages: 1
+%%LanguageLevel: 3
+%%EndComments
+
+%%Page: 1 1
+gsave
+
+% Helper for rounded rectangle
+/roundrect { % x y w h r
+  /r exch def
+  /h exch def
+  /w exch def
+  /y exch def
+  /x exch def
+  newpath
+  x r add y moveto
+  x w add y x w add y h add r arcto 4 {pop} repeat
+  x w add y h add x y h add r arcto 4 {pop} repeat
+  x y h add x y r arcto 4 {pop} repeat
+  x y x w add y r arcto 4 {pop} repeat
+  closepath
+} def
+
+% Minimalist Dark Canvas
+0.04 0.05 0.10 setrgbcolor
+24 24 464 464 120 roundrect fill
+
+% Border
+0.12 0.14 0.24 setrgbcolor
+2 setlinewidth
+24 24 464 464 120 roundrect stroke
+
+% Subtle center ambient glow
+gsave
+0.39 0.40 0.95 setrgbcolor
+newpath
+256 265 110 0 360 arc fill
+grestore
+
+% Left Book Wing (Cyan to Indigo)
+gsave
+0.22 0.74 0.97 setrgbcolor
+newpath
+140 232 moveto
+180 252 220 247 250 227 curveto
+250 322 lineto
+220 342 180 337 140 317 curveto
+closepath
+fill
+grestore
+
+% Right Book Wing (Violet to Purple)
+gsave
+0.65 0.33 0.97 setrgbcolor
+newpath
+372 232 moveto
+332 252 292 247 262 227 curveto
+262 322 lineto
+292 342 332 337 372 317 curveto
+closepath
+fill
+grestore
+
+% Dynamic Minimal Lightning Bolt (White with dark border)
+gsave
+1.0 1.0 1.0 setrgbcolor
+newpath
+256 357 moveto
+210 267 lineto
+252 267 lineto
+238 177 lineto
+302 282 lineto
+260 282 lineto
+closepath
+fill
+
+0.04 0.05 0.10 setrgbcolor
+4 setlinewidth
+1 setlinejoin
+newpath
+256 357 moveto
+210 267 lineto
+252 267 lineto
+238 177 lineto
+302 282 lineto
+260 282 lineto
+closepath
+stroke
+grestore
+
+% Minimalist Diamond Mortarboard Cap
+gsave
+1.0 1.0 1.0 setrgbcolor
+newpath
+256 382 moveto
+316 360 lineto
+256 338 lineto
+196 360 lineto
+closepath
+fill
+
+% Gold Tassel
+0.98 0.75 0.14 setrgbcolor
+3 setlinewidth
+newpath
+316 360 moveto
+320 344 lineto
+stroke
+newpath
+320 340 4 0 360 arc fill
+grestore
+
+% Minimalist Typography
+/Helvetica-Bold findfont 22 scalefont setfont
+0.97 0.98 1.0 setrgbcolor
+(ENGEZ NAFSAK) dup
+stringwidth pop
+2 div
+256 exch sub 105 moveto
+show
+
+grestore
+showpage
+%%EOF

@@ -1,0 +1,175 @@
+%!PS-Adobe-3.0
+%%BoundingBox: 0 0 512 512
+%%Pages: 1
+%%LanguageLevel: 3
+%%EndComments
+
+%%Page: 1 1
+gsave
+
+% Rounded rectangle macro
+/roundrect { % x y w h r
+  /r exch def
+  /h exch def
+  /w exch def
+  /y exch def
+  /x exch def
+  newpath
+  x r add y moveto
+  x w add y x w add y h add r arcto 4 {pop} repeat
+  x w add y h add x y h add r arcto 4 {pop} repeat
+  x y h add x y r arcto 4 {pop} repeat
+  x y x w add y r arcto 4 {pop} repeat
+  closepath
+} def
+
+% Dark Night Canvas
+0.04 0.06 0.12 setrgbcolor
+16 16 480 480 120 roundrect fill
+
+% Border
+0.14 0.17 0.31 setrgbcolor
+3 setlinewidth
+16 16 480 480 120 roundrect stroke
+
+% Stress Ambient Red/Purple Center Glow
+gsave
+0.8 0.15 0.25 setrgbcolor
+newpath
+256 290 140 0 360 arc fill
+grestore
+
+% Stress Tension Marks around head
+gsave
+0.96 0.25 0.37 setrgbcolor
+4 setlinewidth
+1 setlinecap
+
+% Left stress lines
+newpath 140 380 moveto 115 400 lineto stroke
+newpath 120 345 moveto 90 350 lineto stroke
+newpath 135 305 moveto 105 295 lineto stroke
+
+% Right stress lines
+newpath 372 380 moveto 397 400 lineto stroke
+newpath 392 345 moveto 422 350 lineto stroke
+newpath 377 305 moveto 407 295 lineto stroke
+
+% Squiggly stress thought loop over head
+newpath
+215 422 moveto
+230 442 245 422 256 432 curveto
+267 442 282 422 297 432 curveto
+stroke
+grestore
+
+% Torso / Shoulders
+gsave
+0.12 0.15 0.25 setrgbcolor
+newpath
+145 170 moveto
+160 220 210 230 256 230 curveto
+302 230 352 220 367 170 curveto
+375 155 lineto
+340 140 lineto
+172 140 lineto
+closepath
+fill
+
+0.31 0.27 0.90 setrgbcolor
+3 setlinewidth
+newpath
+145 170 moveto
+160 220 210 230 256 230 curveto
+302 230 352 220 367 170 curveto
+stroke
+grestore
+
+% Featureless Head (White Oval/Egg)
+gsave
+0.98 0.98 1.0 setrgbcolor
+newpath
+256 310 58 72 0 360 arc
+fill
+0.88 0.90 0.98 setrgbcolor
+2 setlinewidth
+newpath
+256 310 58 72 0 360 arc
+stroke
+grestore
+
+% Arms Clutching Head (Thick white curved lines)
+gsave
+0.98 0.98 1.0 setrgbcolor
+23 setlinewidth
+1 setlinecap
+1 setlinejoin
+
+% Left Arm clutching head
+newpath
+155 185 moveto
+120 220 105 270 130 310 curveto
+145 335 180 355 215 348 curveto
+stroke
+
+% Right Arm clutching head
+newpath
+357 185 moveto
+392 220 407 270 382 310 curveto
+367 335 332 355 297 348 curveto
+stroke
+grestore
+
+% Hands clutching sides of head
+gsave
+0.98 0.98 1.0 setrgbcolor
+% Left Hand Palm
+newpath 215 348 16 0 360 arc fill
+% Right Hand Palm
+newpath 297 348 16 0 360 arc fill
+
+% Clutching fingers on skull
+0.80 0.85 0.92 setrgbcolor
+5 setlinewidth
+1 setlinecap
+newpath 205 358 moveto 228 340 lineto stroke
+newpath 212 342 moveto 236 324 lineto stroke
+newpath 210 324 moveto 230 306 lineto stroke
+
+newpath 307 358 moveto 284 340 lineto stroke
+newpath 300 342 moveto 276 324 lineto stroke
+newpath 302 324 moveto 282 306 lineto stroke
+grestore
+
+% Sweat droplet of frustration
+gsave
+0.22 0.74 0.97 setrgbcolor
+newpath
+290 280 moveto
+295 270 285 260 280 260 curveto
+275 260 270 270 280 280 curveto
+closepath
+fill
+grestore
+
+% Brand Typography: "ENGEZ NAFSAK"
+/Helvetica-Bold findfont 30 scalefont setfont
+1.0 1.0 1.0 setrgbcolor
+(ENGEZ NAFSAK) dup
+stringwidth pop
+2 div
+256 exch sub 90 moveto
+show
+
+% Subtitle in energetic Arabic styling / script
+/Helvetica-Bold findfont 16 scalefont setfont
+0.96 0.25 0.37 setrgbcolor
+(ENGEZ NAFSAK  |  GET IT DONE) dup
+stringwidth pop
+2 div
+256 exch sub 62 moveto
+show
+
+grestore
+showpage
+%%EOF

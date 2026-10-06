@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <defs>
+    <!-- Deep Realistic 3D Floor Shadow -->
+    <filter id="squircleDropShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity="0.9" />
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.55" />
+    </filter>
+
+    <!-- 3D Monogram Depth Shadow -->
+    <filter id="monogramDepth" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#000000" flood-opacity="0.95" />
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#7C3AED" flood-opacity="0.45" />
+    </filter>
+
+    <!-- Squircle Obsidian Matte Gradient -->
+    <radialGradient id="squircleObsidian" cx="46%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#262533" />
+      <stop offset="45%" stop-color="#161521" />
+      <stop offset="80%" stop-color="#0F0E17" />
+      <stop offset="100%" stop-color="#07070B" />
+    </radialGradient>
+
+    <!-- Squircle Perimeter Bevel Rim (With Glowing Purple Reflection) -->
+    <linearGradient id="squirclePerimeter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4E5168" stop-opacity="0.8" />
+      <stop offset="25%" stop-color="#2B2C3C" stop-opacity="0.4" />
+      <stop offset="55%" stop-color="#9333EA" stop-opacity="0.85" />
+      <stop offset="78%" stop-color="#C084FC" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#3B1261" stop-opacity="0.75" />
+    </linearGradient>
+
+    <!-- Chrome Metallic Outer Bevel -->
+    <linearGradient id="chromeBevel" x1="15%" y1="5%" x2="85%" y2="95%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="20%" stop-color="#F1F5F9" />
+      <stop offset="45%" stop-color="#94A3B8" />
+      <stop offset="70%" stop-color="#CBD5E1" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+
+    <!-- Electric Purple Face Gradient -->
+    <linearGradient id="purpleFace" x1="15%" y1="5%" x2="85%" y2="95%">
+      <stop offset="0%" stop-color="#D8B4FE" />
+      <stop offset="20%" stop-color="#C084FC" />
+      <stop offset="55%" stop-color="#A855F7" />
+      <stop offset="85%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#581C87" />
+    </linearGradient>
+
+    <!-- Specular Highlight Overlay -->
+    <linearGradient id="specularGlint" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="35%" stop-color="#FFFFFF" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.25" />
+    </linearGradient>
+
+    <!-- Ambient Purple Backlight Behind Monogram -->
+    <radialGradient id="purpleAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.25" />
+      <stop offset="65%" stop-color="#7E22CE" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0" />
+    </radialGradient>
+  </defs>
+
+  <!-- ================= 1. 3D SQUIRCLE EMBLEM BASE ================= -->
+  <g filter="url(#squircleDropShadow)">
+    <!-- Squircle Body -->
+    <rect 
+      x="36" 
+      y="36" 
+      width="440" 
+      height="440" 
+      rx="116" 
+      ry="116" 
+      fill="url(#squircleObsidian)" 
+    />
+    <!-- 3D Beveled Outer Rim with Purple Reflection -->
+    <rect 
+      x="36" 
+      y="36" 
+      width="440" 
+      height="440" 
+      rx="116" 
+      ry="116" 
+      fill="none" 
+      stroke="url(#squirclePerimeter)" 
+      stroke-width="3.5" 
+    />
+  </g>
+
+  <!-- ================= 2. SOFT AMBIENT PURPLE BACKLIGHT ================= -->
+  <rect x="70" y="70" width="372" height="372" rx="100" fill="url(#purpleAura)" />
+
+  <!-- ================= 3. EN 3D SCULPTED MONOGRAM ================= -->
+  <g filter="url(#monogramDepth)">
+
+    <!-- 1. Outer Chrome Metallic Bevel -->
+    <path 
+      d="M 126 172 
+         C 126 148, 142 136, 166 136 
+         L 242 136 
+         C 248 136, 254 139, 258 145 
+         L 344 296 
+         C 346 300, 346 304, 346 308 
+         L 346 194 
+         C 346 186, 350 180, 356 176 
+         L 380 162 
+         C 386 158, 388 162, 388 168 
+         L 388 336 
+         C 388 360, 368 376, 344 376 
+         L 335 376 
+         C 330 376, 326 373, 323 368 
+         L 223 182 
+         C 221 178, 217 174, 212 174 
+         L 174 174 
+         C 168 174, 166 178, 166 184 
+         L 166 232 
+         C 166 236, 170 240, 174 240 
+         L 204 240 
+         C 210 240, 214 244, 214 250 
+         L 214 262 
+         C 214 268, 210 272, 204 272 
+         L 174 272 
+         C 170 272, 166 276, 166 280 
+         L 166 330 
+         C 166 336, 170 338, 176 338 
+         L 246 338 
+         C 250 338, 254 340, 256 344 
+         L 268 368 
+         C 271 373, 268 376, 262 376 
+         L 166 376 
+         C 142 376, 126 362, 126 338 
+         Z" 
+      fill="none" 
+      stroke="url(#chromeBevel)" 
+      stroke-width="14" 
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+
+    <!-- 2. Electric Purple Face -->
+    <path 
+      d="M 126 172 
+         C 126 148, 142 136, 166 136 
+         L 242 136 
+         C 248 136, 254 139, 258 145 
+         L 344 296 
+         C 346 300, 346 304, 346 308 
+         L 346 194 
+         C 346 186, 350 180, 356 176 
+         L 380 162 
+         C 386 158, 388 162, 388 168 
+         L 388 336 
+         C 388 360, 368 376, 344 376 
+         L 335 376 
+         C 330 376, 326 373, 323 368 
+         L 223 182 
+         C 221 178, 217 174, 212 174 
+         L 174 174 
+         C 168 174, 166 178, 166 184 
+         L 166 232 
+         C 166 236, 170 240, 174 240 
+         L 204 240 
+         C 210 240, 214 244, 214 250 
+         L 214 262 
+         C 214 268, 210 272, 204 272 
+         L 174 272 
+         C 170 272, 166 276, 166 280 
+         L 166 330 
+         C 166 336, 170 338, 176 338 
+         L 246 338 
+         C 250 338, 254 340, 256 344 
+         L 268 368 
+         C 271 373, 268 376, 262 376 
+         L 166 376 
+         C 142 376, 126 362, 126 338 
+         Z" 
+      fill="url(#purpleFace)" 
+    />
+
+    <!-- 3. Specular Glint Surface Filter -->
+    <path 
+      d="M 126 172 
+         C 126 148, 142 136, 166 136 
+         L 242 136 
+         C 248 136, 254 139, 258 145 
+         L 344 296 
+         C 346 300, 346 304, 346 308 
+         L 346 194 
+         C 346 186, 350 180, 356 176 
+         L 380 162 
+         C 386 158, 388 162, 388 168 
+         L 388 336 
+         C 388 360, 368 376, 344 376 
+         L 335 376 
+         C 330 376, 326 373, 323 368 
+         L 223 182 
+         C 221 178, 217 174, 212 174 
+         L 174 174 
+         C 168 174, 166 178, 166 184 
+         L 166 232 
+         C 166 236, 170 240, 174 240 
+         L 204 240 
+         C 210 240, 214 244, 214 250 
+         L 214 262 
+         C 214 268, 210 272, 204 272 
+         L 174 272 
+         C 170 272, 166 276, 166 280 
+         L 166 330 
+         C 166 336, 170 338, 176 338 
+         L 246 338 
+         C 250 338, 254 340, 256 344 
+         L 268 368 
+         C 271 373, 268 376, 262 376 
+         L 166 376 
+         C 142 376, 126 362, 126 338 
+         Z" 
+      fill="url(#specularGlint)" 
+    />
+
+    <!-- 4. Specular Core Highlight Strokes (Authentic 3D Studio Sheen) -->
+    <!-- Left spine of E -->
+    <path d="M 144 176 L 144 334" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.65" />
+    <!-- Top bar of E -->
+    <path d="M 166 152 L 236 152" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.65" />
+    <!-- Middle bar of E -->
+    <path d="M 174 253 L 202 253" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.5" />
+    <!-- Bottom bar of E -->
+    <path d="M 166 360 L 250 360" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.5" />
+    <!-- Descending Diagonal of N -->
+    <line x1="252" y1="154" x2="330" y2="352" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+    <!-- Right vertical stem of N -->
+    <line x1="368" y1="192" x2="368" y2="338" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.75" />
+
+  </g>
+</svg>

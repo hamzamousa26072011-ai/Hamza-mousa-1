@@ -1,0 +1,81 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=()" },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://*.firebaseapp.com https://*.googleapis.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.googleusercontent.com https://*.googleapis.com https://identitytoolkit.googleapis.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://*.googleapis.com https://apis.google.com https://accounts.google.com https://*.firebaseio.com wss://*.firebaseio.com https://generativelanguage.googleapis.com https://api.deepseek.com; frame-src 'self' https://accounts.google.com https://*.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate" },
+        { "key": "Pragma", "value": "no-cache" },
+        { "key": "Expires", "value": "0" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/__/auth/(.*)",
+      "destination": "https://engez-nafsak.firebaseapp.com/__/auth/$1"
+    },
+    {
+      "source": "/api/scholar/grade",
+      "destination": "/api/scholar/grade"
+    },
+    {
+      "source": "/api/scholar/parse-paper",
+      "destination": "/api/scholar/parse-paper"
+    },
+    {
+      "source": "/api/scholar/correct-paper",
+      "destination": "/api/scholar/correct-paper"
+    },
+    {
+      "source": "/api/gemini/chat",
+      "destination": "/api/gemini/chat"
+    },
+    {
+      "source": "/api/gemini/prioritize",
+      "destination": "/api/gemini/prioritize"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/api/auth/dns-status",
+      "destination": "/api/auth/dns-status"
+    },
+    {
+      "source": "/api/dns/status",
+      "destination": "/api/dns/status"
+    },
+    {
+      "source": "/api/deepseek/status",
+      "destination": "/api/deepseek/status"
+    },
+    {
+      "source": "/api/ai/test-key",
+      "destination": "/api/ai/test-key"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/((?!api/|robots\\.txt|sitemap\\.xml|logo|assets/|favicon|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "UserWorkspace": {
+      "title": "UserWorkspace",
+      "description": "User profile containing XP, streak, tasks, classes, and apps for persistence.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique user ID of the student matching request.auth.uid"
+        },
+        "email": {
+          "type": "string",
+          "description": "Google email address of the student"
+        },
+        "xp": {
+          "type": "integer",
+          "description": "XP reward progress points"
+        },
+        "streak": {
+          "type": "integer",
+          "description": "Consecutive dynamic log days"
+        },
+        "subjects": {
+          "type": "array",
+          "description": "Registered academic subjects list"
+        },
+        "tasks": {
+          "type": "array",
+          "description": "Workspace study tasks with AI recommendations"
+        },
+        "classes": {
+          "type": "array",
+          "description": "Zoom or study schedules log"
+        },
+        "apps": {
+          "type": "array",
+          "description": "Integrated companion launchpad keys"
+        },
+        "papers": {
+          "type": "array",
+          "description": "User uploaded past papers and worksheet evaluation records"
+        },
+        "deepseekApiKey": {
+          "type": "string",
+          "description": "User custom DeepSeek API key for personalized AI reasoning"
+        },
+        "customDns": {
+          "type": "string",
+          "description": "User custom private DNS host"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Student display name"
+        },
+        "habits": {
+          "type": "array",
+          "description": "User custom study and routine habit items"
+        },
+        "habitLogs": {
+          "type": "object",
+          "description": "Daily habit completion checkboxes and mood/sleep metrics"
+        },
+        "habitStartDate": {
+          "type": "string",
+          "description": "Starting anchor date for habit tracking matrix"
+        },
+        "exams": {
+          "type": "array",
+          "description": "Student exam countdown schedule items with date, time, subject, and notes"
+        },
+        "friends": {
+          "type": "array",
+          "description": "Study buddies and mutual focus leaderboard connections"
+        },
+        "friendUsername": {
+          "type": "string",
+          "description": "User personalized public handle for study buddy invitations"
+        },
+        "inviteCode": {
+          "type": "string",
+          "description": "Unique invite code for friend connection links"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was modified"
+        }
+      },
+      "required": ["uid", "email"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserWorkspace",
+      "description": "Main document that persists all study portal workspace criteria for a single student."
+    }
+  }
+}

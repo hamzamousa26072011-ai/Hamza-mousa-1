@@ -1,0 +1,152 @@
+import os
+
+def create_logos():
+    os.makedirs("public", exist_ok=True)
+    os.makedirs("dist", exist_ok=True)
+
+    # 1. SQUARE EMBLEM (512x512) - For icons, favicons, avatars, headers
+    emblem_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <!-- Warm ivory background matching user image -->
+  <rect width="512" height="512" rx="72" fill="#FAF8F5" />
+
+  <g transform="translate(0, 10)">
+    <!-- 1. SUNBURST RAYS RADIATING FROM ARROWHEAD -->
+    <!-- Top Center Ray (Terracotta) -->
+    <rect x="250" y="86" width="12" height="38" rx="6" fill="#C96F55" />
+    
+    <!-- Top Left Ray (Soft Sand/Peach) -->
+    <rect x="202" y="112" width="11" height="30" rx="5.5" fill="#DFC0A9" transform="rotate(-38 207 127)" />
+    
+    <!-- Top Right Ray (Soft Sand/Peach) -->
+    <rect x="299" y="112" width="11" height="30" rx="5.5" fill="#DFC0A9" transform="rotate(38 304 127)" />
+    
+    <!-- Lower Left Ray (Black) -->
+    <rect x="180" y="152" width="10" height="22" rx="5" fill="#1D1D1B" transform="rotate(-75 185 163)" />
+    
+    <!-- Lower Right Ray (Black) -->
+    <rect x="322" y="152" width="10" height="22" rx="5" fill="#1D1D1B" transform="rotate(75 327 163)" />
+
+    <!-- 2. UPWARD ARROW (Black) -->
+    <g fill="#1D1D1B">
+      <path d="M 256 142 L 284 184 L 264 184 L 264 212 L 248 212 L 248 184 L 228 184 Z" stroke="#1D1D1B" stroke-width="2" stroke-linejoin="round" />
+    </g>
+
+    <!-- 3. OPEN BOOK WINGS (Soft Sand/Peach) -->
+    <!-- Left Page Wing -->
+    <path d="M 112 300 C 152 298, 196 312, 236 332 C 236 338, 232 344, 226 346 C 182 344, 140 334, 105 318 C 106 308, 108 302, 112 300 Z" fill="#DFC0A9" />
+
+    <!-- Right Page Wing -->
+    <path d="M 400 300 C 360 298, 316 312, 276 332 C 276 338, 280 344, 286 346 C 330 344, 372 334, 407 318 C 406 308, 404 302, 400 300 Z" fill="#DFC0A9" />
+
+    <!-- 4. OPEN BOOK BOTTOM SPINE (Solid Black Stroke) -->
+    <path d="M 96 326 C 142 352, 202 354, 256 336 C 310 354, 370 352, 416 326" fill="none" stroke="#1D1D1B" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- 5. WINDING ROAD / PATH (Terracotta #C96F55) -->
+    <path d="M 248 210 C 248 226, 206 242, 202 272 C 198 300, 230 322, 256 336 C 288 330, 336 314, 344 292 C 348 266, 268 236, 264 210 Z" fill="#C96F55" />
+  </g>
+</svg>"""
+
+    # 2. FULL HORIZONTAL LOGO (920x320) - Emblem + English Engez Nafsak + Arabic إنجز نفسك
+    horizontal_logo_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="920" height="320" fill="none">
+  <!-- Subtle warm ivory background -->
+  <rect width="920" height="320" rx="36" fill="#FAF8F5" />
+
+  <!-- EMBLEM GROUP (Scaled and centered on left) -->
+  <g transform="translate(18, -12) scale(0.68)">
+    <rect x="250" y="86" width="12" height="38" rx="6" fill="#C96F55" />
+    <rect x="202" y="112" width="11" height="30" rx="5.5" fill="#DFC0A9" transform="rotate(-38 207 127)" />
+    <rect x="299" y="112" width="11" height="30" rx="5.5" fill="#DFC0A9" transform="rotate(38 304 127)" />
+    <rect x="180" y="152" width="10" height="22" rx="5" fill="#1D1D1B" transform="rotate(-75 185 163)" />
+    <rect x="322" y="152" width="10" height="22" rx="5" fill="#1D1D1B" transform="rotate(75 327 163)" />
+
+    <g fill="#1D1D1B">
+      <path d="M 256 142 L 284 184 L 264 184 L 264 212 L 248 212 L 248 184 L 228 184 Z" stroke="#1D1D1B" stroke-width="2" stroke-linejoin="round" />
+    </g>
+
+    <path d="M 112 300 C 152 298, 196 312, 236 332 C 236 338, 232 344, 226 346 C 182 344, 140 334, 105 318 C 106 308, 108 302, 112 300 Z" fill="#DFC0A9" />
+    <path d="M 400 300 C 360 298, 316 312, 276 332 C 276 338, 280 344, 286 346 C 330 344, 372 334, 407 318 C 406 308, 404 302, 400 300 Z" fill="#DFC0A9" />
+
+    <path d="M 96 326 C 142 352, 202 354, 256 336 C 310 354, 370 352, 416 326" fill="none" stroke="#1D1D1B" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+
+    <path d="M 248 210 C 248 226, 206 242, 202 272 C 198 300, 230 322, 256 336 C 288 330, 336 314, 344 292 C 348 266, 268 236, 264 210 Z" fill="#C96F55" />
+  </g>
+
+  <!-- TYPOGRAPHY GROUP (Right Side) -->
+  <g transform="translate(370, 0)">
+    <!-- Line 1: Engez Nafsak -->
+    <text x="0" y="160" 
+          font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Plus Jakarta Sans', sans-serif" 
+          font-size="78" 
+          font-weight="800" 
+          letter-spacing="-1.5" 
+          fill="#1D1D1B">Engez Nafsak</text>
+
+    <!-- Line 2: إنجز نفسك -->
+    <text x="4" y="235" 
+          font-family="'Noto Sans Arabic', 'Cairo', 'Almarai', 'Segoe UI', Tahoma, sans-serif" 
+          font-size="52" 
+          font-weight="700" 
+          letter-spacing="1" 
+          fill="#C96F55">إنجز نفسك</text>
+  </g>
+</svg>"""
+
+    # 3. DARK THEME VARIANT
+    horizontal_logo_dark_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="920" height="320" fill="none">
+  <rect width="920" height="320" rx="36" fill="#0E1324" />
+
+  <g transform="translate(18, -12) scale(0.68)">
+    <rect x="250" y="86" width="12" height="38" rx="6" fill="#C96F55" />
+    <rect x="202" y="112" width="11" height="30" rx="5.5" fill="#DFC0A9" transform="rotate(-38 207 127)" />
+    <rect x="299" y="112" width="11" height="30" rx="5.5" fill="#DFC0A9" transform="rotate(38 304 127)" />
+    <rect x="180" y="152" width="10" height="22" rx="5" fill="#FAF8F5" transform="rotate(-75 185 163)" />
+    <rect x="322" y="152" width="10" height="22" rx="5" fill="#FAF8F5" transform="rotate(75 327 163)" />
+
+    <g fill="#FAF8F5">
+      <path d="M 256 142 L 284 184 L 264 184 L 264 212 L 248 212 L 248 184 L 228 184 Z" stroke="#FAF8F5" stroke-width="2" stroke-linejoin="round" />
+    </g>
+
+    <path d="M 112 300 C 152 298, 196 312, 236 332 C 236 338, 232 344, 226 346 C 182 344, 140 334, 105 318 C 106 308, 108 302, 112 300 Z" fill="#DFC0A9" />
+    <path d="M 400 300 C 360 298, 316 312, 276 332 C 276 338, 280 344, 286 346 C 330 344, 372 334, 407 318 C 406 308, 404 302, 400 300 Z" fill="#DFC0A9" />
+
+    <path d="M 96 326 C 142 352, 202 354, 256 336 C 310 354, 370 352, 416 326" fill="none" stroke="#FAF8F5" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+
+    <path d="M 248 210 C 248 226, 206 242, 202 272 C 198 300, 230 322, 256 336 C 288 330, 336 314, 344 292 C 348 266, 268 236, 264 210 Z" fill="#C96F55" />
+  </g>
+
+  <g transform="translate(370, 0)">
+    <text x="0" y="160" 
+          font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Plus Jakarta Sans', sans-serif" 
+          font-size="78" 
+          font-weight="800" 
+          letter-spacing="-1.5" 
+          fill="#FFFFFF">Engez Nafsak</text>
+
+    <text x="4" y="235" 
+          font-family="'Noto Sans Arabic', 'Cairo', 'Almarai', 'Segoe UI', Tahoma, sans-serif" 
+          font-size="52" 
+          font-weight="700" 
+          letter-spacing="1" 
+          fill="#C96F55">إنجز نفسك</text>
+  </g>
+</svg>"""
+
+    # Write files to both public and dist
+    files_to_write = {
+        "public/engez_brand_emblem.svg": emblem_svg,
+        "public/engez_brand_logo.svg": horizontal_logo_svg,
+        "public/engez_brand_logo_dark.svg": horizontal_logo_dark_svg,
+        "public/logo.svg": horizontal_logo_svg,
+        "dist/engez_brand_emblem.svg": emblem_svg,
+        "dist/engez_brand_logo.svg": horizontal_logo_svg,
+        "dist/engez_brand_logo_dark.svg": horizontal_logo_dark_svg,
+        "dist/logo.svg": horizontal_logo_svg,
+    }
+
+    for path, content in files_to_write.items():
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(f"Wrote {path}")
+
+if __name__ == "__main__":
+    create_logos()

@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Global Safety Net (Default deny all)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // Entity validation helper (enforcing strict schema types and boundaries)
+    function isValidUserWorkspace(data, userId) {
+      return data.uid == userId
+        && data.email is string 
+        && data.email.size() <= 200
+        && (!data.keys().hasAll(['xp']) || (data.xp is int && data.xp >= 0))
+        && data.streak is int 
+        && data.streak >= 0
+        && data.subjects is list 
+        && data.subjects.size() <= 50
+        && data.tasks is list 
+        && data.tasks.size() <= 300
+        && data.classes is list 
+        && data.classes.size() <= 100
+        && data.apps is list 
+        && data.apps.size() <= 100
+        && (!data.keys().hasAll(['papers']) || (data.papers is list && data.papers.size() <= 200))
+        && (!data.keys().hasAll(['deepseekApiKey']) || (data.deepseekApiKey is string && data.deepseekApiKey.size() <= 256))
+        && (!data.keys().hasAll(['customDns']) || (data.customDns is string && data.customDns.size() <= 128))
+        && (!data.keys().hasAll(['displayName']) || (data.displayName is string && data.displayName.size() <= 128))
+        && (!data.keys().hasAll(['habits']) || (data.habits is list && data.habits.size() <= 100))
+        && (!data.keys().hasAll(['habitLogs']) || (data.habitLogs is map && data.habitLogs.keys().size() <= 120))
+        && (!data.keys().hasAll(['habitStartDate']) || (data.habitStartDate is string && data.habitStartDate.size() <= 32))
+        && (!data.keys().hasAll(['exams']) || (data.exams is list && data.exams.size() <= 100))
+        && (!data.keys().hasAll(['friends']) || (data.friends is list && data.friends.size() <= 100))
+        && (!data.keys().hasAll(['friendUsername']) || (data.friendUsername is string && data.friendUsername.size() <= 64))
+        && (!data.keys().hasAll(['inviteCode']) || (data.inviteCode is string && data.inviteCode.size() <= 64))
+        // strict key checks to prevent ghost/shadow fields and privilege escalation
+        && data.keys().hasAll(['uid', 'email', 'streak', 'subjects', 'tasks', 'classes', 'apps'])
+        && data.keys().size() <= 25;
+    }
+
+    // 2. Main users/ workspace collection rules
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow list: if false; // Strict no-list query policy to prevent scraping and billing exhaustion
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) 
+                    && isValidUserWorkspace(incoming(), userId) 
+                    && incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) 
+                    && isValidUserWorkspace(incoming(), userId) 
+                    && incoming().updatedAt == request.time;
+      allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+    }
+  }
+}

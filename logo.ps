@@ -1,0 +1,129 @@
+%!PS-Adobe-3.0
+%%BoundingBox: 0 0 512 512
+%%Pages: 1
+%%LanguageLevel: 3
+%%EndComments
+
+%%Page: 1 1
+gsave
+
+% Helper for rounded rectangle
+/roundrect { % x y w h r
+  /r exch def
+  /h exch def
+  /w exch def
+  /y exch def
+  /x exch def
+  newpath
+  x r add y moveto
+  x w add y x w add y h add r arcto 4 {pop} repeat
+  x w add y h add x y h add r arcto 4 {pop} repeat
+  x y h add x y r arcto 4 {pop} repeat
+  x y x w add y r arcto 4 {pop} repeat
+  closepath
+} def
+
+% Background Dark Rounded Box
+0.05 0.07 0.18 setrgbcolor
+0 0 512 512 115 roundrect fill
+
+% Border
+0.39 0.40 0.95 setrgbcolor
+2 setlinewidth
+4 4 504 504 111 roundrect stroke
+
+% Central Ambient Glow Circle
+gsave
+0.39 0.40 0.95 setrgbcolor
+newpath
+256 272 130 0 360 arc fill
+grestore
+
+% Transformed group (Y flipped for PS coordinate space: 512 - Y)
+% Book Left Wing
+gsave
+0.22 0.74 0.97 setrgbcolor
+newpath
+120 192 moveto
+170 222 220 217 256 198 curveto
+256 332 lineto
+220 352 170 357 120 327 curveto
+closepath
+fill
+grestore
+
+% Book Right Wing
+gsave
+0.65 0.33 0.97 setrgbcolor
+newpath
+392 192 moveto
+342 222 292 217 256 198 curveto
+256 332 lineto
+292 352 342 357 392 327 curveto
+closepath
+fill
+grestore
+
+% Lightning Bolt
+gsave
+0.98 0.98 1.0 setrgbcolor
+newpath
+268 412 moveto
+200 282 lineto
+252 282 lineto
+236 152 lineto
+320 302 lineto
+272 302 lineto
+closepath
+fill
+
+% White stroke on lightning
+1.0 1.0 1.0 setrgbcolor
+4 setlinewidth
+1 setlinejoin
+newpath
+268 412 moveto
+200 282 lineto
+252 282 lineto
+236 152 lineto
+320 302 lineto
+272 302 lineto
+closepath
+stroke
+grestore
+
+% Graduation Cap
+gsave
+1.0 1.0 1.0 setrgbcolor
+newpath
+256 422 moveto
+340 382 lineto
+256 342 lineto
+172 382 lineto
+closepath
+fill
+
+% Tassel
+0.96 0.62 0.04 setrgbcolor
+5 setlinewidth
+1 setlinecap
+newpath
+340 382 moveto
+340 332 lineto
+stroke
+newpath
+340 327 5 0 360 arc fill
+grestore
+
+% Brand Text
+/Helvetica-Bold findfont 32 scalefont setfont
+0.97 0.98 1.0 setrgbcolor
+(ENGEZ NAFSAK) dup
+stringwidth pop
+2 div
+256 exch sub 70 moveto
+show
+
+grestore
+showpage
+%%EOF

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="920" height="320" fill="none">
+  <!-- Subtle warm ivory background -->
+  <rect width="920" height="320" rx="36" fill="#FAF8F5" />
+
+  <!-- EMBLEM GROUP (Scaled and centered on left) -->
+  <g transform="translate(18, -12) scale(0.68)">
+    <rect x="250" y="86" width="12" height="38" rx="6" fill="#C96F55" />
+    <rect x="202" y="112" width="11" height="30" rx="5.5" fill="#DFC0A9" transform="rotate(-38 207 127)" />
+    <rect x="299" y="112" width="11" height="30" rx="5.5" fill="#DFC0A9" transform="rotate(38 304 127)" />
+    <rect x="180" y="152" width="10" height="22" rx="5" fill="#1D1D1B" transform="rotate(-75 185 163)" />
+    <rect x="322" y="152" width="10" height="22" rx="5" fill="#1D1D1B" transform="rotate(75 327 163)" />
+
+    <g fill="#1D1D1B">
+      <path d="M 256 142 L 284 184 L 264 184 L 264 212 L 248 212 L 248 184 L 228 184 Z" stroke="#1D1D1B" stroke-width="2" stroke-linejoin="round" />
+    </g>
+
+    <path d="M 112 300 C 152 298, 196 312, 236 332 C 236 338, 232 344, 226 346 C 182 344, 140 334, 105 318 C 106 308, 108 302, 112 300 Z" fill="#DFC0A9" />
+    <path d="M 400 300 C 360 298, 316 312, 276 332 C 276 338, 280 344, 286 346 C 330 344, 372 334, 407 318 C 406 308, 404 302, 400 300 Z" fill="#DFC0A9" />
+
+    <path d="M 96 326 C 142 352, 202 354, 256 336 C 310 354, 370 352, 416 326" fill="none" stroke="#1D1D1B" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+
+    <path d="M 248 210 C 248 226, 206 242, 202 272 C 198 300, 230 322, 256 336 C 288 330, 336 314, 344 292 C 348 266, 268 236, 264 210 Z" fill="#C96F55" />
+  </g>
+
+  <!-- TYPOGRAPHY GROUP (Right Side) -->
+  <g transform="translate(370, 0)">
+    <!-- Line 1: Engez Nafsak -->
+    <text x="0" y="160" 
+          font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Plus Jakarta Sans', sans-serif" 
+          font-size="78" 
+          font-weight="800" 
+          letter-spacing="-1.5" 
+          fill="#1D1D1B">Engez Nafsak</text>
+
+    <!-- Line 2: إنجز نفسك -->
+    <text x="4" y="235" 
+          font-family="'Noto Sans Arabic', 'Cairo', 'Almarai', 'Segoe UI', Tahoma, sans-serif" 
+          font-size="52" 
+          font-weight="700" 
+          letter-spacing="1" 
+          fill="#C96F55">إنجز نفسك</text>
+  </g>
+</svg>
