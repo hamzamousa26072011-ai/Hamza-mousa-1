@@ -59,8 +59,8 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
         return <MathSpan key={`math-inline-${sIdx}`} latex={formula} displayMode={false} />;
       }
 
-      // Process standard markdown bold (**text**) and code (`text`) inside regular text
-      const subParts = seg.split(/(\*\*.*?\*\*|`.*?`)/g);
+      // Process standard markdown bold (**text**), italics (*text* or _text_), and code (`text`) inside regular text
+      const subParts = seg.split(/(\*\*.*?\*\*|`.*?`|\*[^*\n]+?\*|_[^_\n]+?_)/g);
       return (
         <React.Fragment key={`text-seg-${sIdx}`}>
           {subParts.map((part, pIdx) => {
@@ -133,6 +133,15 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
                 </strong>
               );
             }
+            if ((part.startsWith("*") && part.endsWith("*") && !part.startsWith("**")) || 
+                (part.startsWith("_") && part.endsWith("_") && !part.startsWith("__"))) {
+              const inner = part.slice(1, -1);
+              return (
+                <em key={`italic-${pIdx}`} className="italic text-purple-200/90 font-serif">
+                  {inner}
+                </em>
+              );
+            }
             if (part.startsWith("`") && part.endsWith("`")) {
               return (
                 <code
@@ -189,41 +198,53 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
           }
         }
 
-        // Detect Markdown Headers (### Assessment, ### Mistake Breakdown, etc.)
-        if (trimmed.startsWith("### ") || trimmed.startsWith("## ")) {
-          const headerText = trimmed.replace(/^#{2,3}\s+/, "");
-          const lower = headerText.toLowerCase();
+        // Section Headings matching Screenshot 2 (e.g. "• 1. Converging (Convex) Lenses" or "### 1. Converging...")
+        const isHeaderTag = trimmed.startsWith("### ") || trimmed.startsWith("## ");
+        const isBulletHeader = trimmed.match(/^[-*•]\s*(\d+\.\s+[A-Za-z].*)$/);
+        const isNumberedHeader = !trimmed.includes(":") && trimmed.match(/^(\d+\.\s+[A-Za-z].*)$/);
 
-          let headerIcon = <Sparkles size={16} className="text-indigo-400" />;
-          let headerBadge = "bg-indigo-500/10 border-indigo-500/20 text-indigo-300";
+        if (isHeaderTag || isBulletHeader || isNumberedHeader) {
+          const rawHeader = isHeaderTag 
+            ? trimmed.replace(/^#{2,3}\s+/, "") 
+            : isBulletHeader 
+            ? isBulletHeader[1] 
+            : isNumberedHeader![1];
 
-          if (lower.includes("got right") || lower.includes("earned marks") || lower.includes("key points correct")) {
-            headerIcon = <CheckCircle2 size={16} className="text-emerald-400" />;
-            headerBadge = "bg-emerald-500/15 border-emerald-500/30 text-emerald-300 shadow-sm";
-          } else if (lower.includes("lost marks") || lower.includes("missed") || lower.includes("mistake") || lower.includes("error") || lower.includes("gap")) {
-            headerIcon = <XCircle size={16} className="text-rose-400" />;
-            headerBadge = "bg-rose-500/15 border-rose-500/30 text-rose-300 shadow-sm";
-          } else if (lower.includes("assessment") || lower.includes("score") || lower.includes("marks awarded")) {
-            headerIcon = <Award size={16} className="text-amber-400" />;
-            headerBadge = "bg-amber-500/10 border-amber-500/20 text-amber-300";
-          } else if (lower.includes("how to earn") || lower.includes("action") || lower.includes("tip")) {
-            headerIcon = <Lightbulb size={16} className="text-amber-400" />;
-            headerBadge = "bg-amber-500/10 border-amber-500/20 text-amber-300";
-          } else if (lower.includes("model") || lower.includes("full-mark") || lower.includes("answer")) {
-            headerIcon = <CheckCircle2 size={16} className="text-sky-400" />;
-            headerBadge = "bg-sky-500/10 border-sky-500/20 text-sky-300";
-          } else if (lower.includes("examiner") || lower.includes("cambridge") || lower.includes("rubric")) {
-            headerIcon = <BookOpen size={16} className="text-purple-400" />;
-            headerBadge = "bg-purple-500/10 border-purple-500/20 text-purple-300";
+          // Check if it's a known assessment/mistake badge header
+          const lower = rawHeader.toLowerCase();
+          if (lower.includes("assessment") || lower.includes("mistake breakdown") || lower.includes("earned marks") || lower.includes("lost marks")) {
+            let headerIcon = <Sparkles size={16} className="text-indigo-400" />;
+            let headerBadge = "bg-indigo-500/10 border-indigo-500/20 text-indigo-300";
+
+            if (lower.includes("got right") || lower.includes("earned marks") || lower.includes("key points correct")) {
+              headerIcon = <CheckCircle2 size={16} className="text-emerald-400" />;
+              headerBadge = "bg-emerald-500/15 border-emerald-500/30 text-emerald-300 shadow-sm";
+            } else if (lower.includes("lost marks") || lower.includes("missed") || lower.includes("mistake") || lower.includes("error") || lower.includes("gap")) {
+              headerIcon = <XCircle size={16} className="text-rose-400" />;
+              headerBadge = "bg-rose-500/15 border-rose-500/30 text-rose-300 shadow-sm";
+            } else if (lower.includes("assessment") || lower.includes("score") || lower.includes("marks awarded")) {
+              headerIcon = <Award size={16} className="text-amber-400" />;
+              headerBadge = "bg-amber-500/10 border-amber-500/20 text-amber-300";
+            }
+
+            return (
+              <div
+                key={idx}
+                className={`pt-2.5 pb-1 border-b border-white/5 flex items-center gap-2 font-mono font-bold text-sm ${headerBadge} px-3 py-1.5 rounded-xl border`}
+              >
+                {headerIcon}
+                <span>{rawHeader}</span>
+              </div>
+            );
           }
 
+          // Sleek clean topic/section heading exactly like Screenshot 2: "• 1. Converging (Convex) Lenses"
           return (
-            <div
-              key={idx}
-              className={`pt-2.5 pb-1 border-b border-white/5 flex items-center gap-2 font-mono font-bold text-sm ${headerBadge} px-3 py-1.5 rounded-xl border`}
-            >
-              {headerIcon}
-              <span>{headerText}</span>
+            <div key={idx} className="flex items-start gap-2 pt-3 pb-0.5 mt-2">
+              <span className="text-[#C084FC] font-black text-lg leading-none shrink-0 mt-0.5 select-none">•</span>
+              <h3 className="font-bold text-[#E9D5FF] text-[15px] sm:text-base tracking-tight leading-snug">
+                {renderInline(rawHeader)}
+              </h3>
             </div>
           );
         }
@@ -281,8 +302,8 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
           );
         }
 
-        // Bullet points with Mark Scheme codes
-        if (trimmed.startsWith("* ") || trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
+        // Bullet points (matching Screenshot 2 with purple bullets & lavender key phrases)
+        if (trimmed.startsWith("* ") || trimmed.startsWith("- ") || trimmed.startsWith("• ") || trimmed.startsWith("•\t")) {
           const contentAfterBullet = trimmed.replace(/^[-*•]\s*/, "");
           const isLostMarkBullet = contentAfterBullet.startsWith("**[M0") || contentAfterBullet.startsWith("**[A0") || contentAfterBullet.startsWith("**[B0") || contentAfterBullet.toLowerCase().includes("lost mark");
           const isEarnedMarkBullet = contentAfterBullet.startsWith("**[M1") || contentAfterBullet.startsWith("**[M2") || contentAfterBullet.startsWith("**[A1") || contentAfterBullet.startsWith("**[A2") || contentAfterBullet.startsWith("**[B1") || contentAfterBullet.startsWith("**[B2") || contentAfterBullet.startsWith("**[B3");
@@ -315,10 +336,36 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
             );
           }
 
+          // Matches key terms before a colon: e.g. "Magnifying Glass: ...", "**Camera:** ...", "Correcting Long-Sightedness (Hyperopia): ..."
+          const colonMatch = contentAfterBullet.match(/^(\*\*.*?\*\*|[^:\n]{2,60}):\s*(.*)/);
+          if (colonMatch) {
+            let keyTerm = colonMatch[1].trim();
+            if (keyTerm.startsWith("**") && keyTerm.endsWith("**")) {
+              keyTerm = keyTerm.slice(2, -2).trim();
+            }
+            const restOfContent = colonMatch[2];
+
+            return (
+              <div key={idx} className="flex items-start gap-2.5 py-1 pl-0.5 leading-relaxed">
+                <span className="text-[#A855F7] font-bold text-base leading-none shrink-0 mt-1 select-none">•</span>
+                <div className="flex-1 text-slate-200 text-sm sm:text-[14px]">
+                  <span className="font-bold text-[#E9D5FF]">
+                    {renderInline(keyTerm)}:
+                  </span>{" "}
+                  <span>
+                    {renderInline(restOfContent)}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
           return (
-            <div key={idx} className="flex items-start gap-2.5 pl-2 my-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-2 shrink-0" />
-              <div className="flex-1 leading-relaxed">{renderInline(trimmed.substring(2))}</div>
+            <div key={idx} className="flex items-start gap-2.5 py-1 pl-0.5 leading-relaxed">
+              <span className="text-[#A855F7] font-bold text-base leading-none shrink-0 mt-1 select-none">•</span>
+              <div className="flex-1 text-slate-200 text-sm sm:text-[14px]">
+                {renderInline(contentAfterBullet)}
+              </div>
             </div>
           );
         }
@@ -340,7 +387,7 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
 
         // Standard text paragraph
         return (
-          <p key={idx} className="leading-relaxed">
+          <p key={idx} className="leading-relaxed text-slate-200 text-sm sm:text-[14.5px] my-2">
             {renderInline(line)}
           </p>
         );

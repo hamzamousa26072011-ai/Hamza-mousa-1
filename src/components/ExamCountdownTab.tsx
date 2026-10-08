@@ -93,14 +93,18 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
   const [friendFeedback, setFriendFeedback] = useState<string | null>(null);
   const [copiedInvite, setCopiedInvite] = useState(false);
 
-  // Exam Form State
+  // Exam Form State matching Screenshot 1
   const [examForm, setExamForm] = useState({
     title: "",
     subject: "",
     paperCode: "",
     examDate: "",
     examTime: "09:00",
+    examHours: "09",
+    examMinutes: "00",
     colorTheme: "amber" as ExamItem["colorTheme"],
+    cardColor: "automatic" as NonNullable<ExamItem["cardColor"]>,
+    description: "",
     isPinned: false,
     notes: "",
     roomNumber: "",
@@ -203,15 +207,20 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
   const handleEditExam = (exam: ExamItem, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingExamId(exam.id);
+    const [h, m] = (exam.examTime || "09:00").split(":");
     setExamForm({
       title: exam.title,
-      subject: exam.subject,
+      subject: exam.subject || exam.title,
       paperCode: exam.paperCode || "",
       examDate: exam.examDate,
       examTime: exam.examTime || "09:00",
-      colorTheme: exam.colorTheme || "amber",
+      examHours: h ? h.padStart(2, "0") : "09",
+      examMinutes: m ? m.padStart(2, "0") : "00",
+      colorTheme: (exam.colorTheme as any) || "amber",
+      cardColor: (exam.cardColor as any) || "automatic",
+      description: exam.description || exam.notes || "",
       isPinned: exam.isPinned || false,
-      notes: exam.notes || "",
+      notes: exam.notes || exam.description || "",
       roomNumber: exam.roomNumber || "",
       targetGrade: exam.targetGrade || ""
     });
@@ -222,9 +231,13 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
   const handleSubmitExamForm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!examForm.title.trim() || !examForm.examDate) {
-      alert("Please provide an exam title and date.");
+      alert("Please provide an exam name and date.");
       return;
     }
+
+    const hours = (examForm.examHours || "09").trim().padStart(2, "0");
+    const minutes = (examForm.examMinutes || "00").trim().padStart(2, "0");
+    const formattedTime = `${hours}:${minutes}`;
 
     if (editingExamId) {
       const updated = exams.map(ex => ex.id === editingExamId ? {
@@ -233,10 +246,12 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
         subject: examForm.subject.trim() || examForm.title.trim(),
         paperCode: examForm.paperCode.trim(),
         examDate: examForm.examDate,
-        examTime: examForm.examTime,
-        colorTheme: examForm.colorTheme,
+        examTime: formattedTime,
+        colorTheme: examForm.cardColor === "automatic" ? "amber" : (examForm.cardColor as any),
+        cardColor: examForm.cardColor,
+        description: examForm.description.trim(),
+        notes: examForm.description.trim(),
         isPinned: examForm.isPinned,
-        notes: examForm.notes.trim(),
         roomNumber: examForm.roomNumber.trim(),
         targetGrade: examForm.targetGrade.trim()
       } : ex);
@@ -248,10 +263,12 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
         subject: examForm.subject.trim() || examForm.title.trim(),
         paperCode: examForm.paperCode.trim(),
         examDate: examForm.examDate,
-        examTime: examForm.examTime,
-        colorTheme: examForm.colorTheme,
+        examTime: formattedTime,
+        colorTheme: examForm.cardColor === "automatic" ? "amber" : (examForm.cardColor as any),
+        cardColor: examForm.cardColor,
+        description: examForm.description.trim(),
+        notes: examForm.description.trim(),
         isPinned: examForm.isPinned,
-        notes: examForm.notes.trim(),
         roomNumber: examForm.roomNumber.trim(),
         targetGrade: examForm.targetGrade.trim(),
         createdAt: new Date().toISOString()
@@ -267,7 +284,11 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
       paperCode: "",
       examDate: "",
       examTime: "09:00",
+      examHours: "09",
+      examMinutes: "00",
       colorTheme: "amber",
+      cardColor: "automatic",
+      description: "",
       isPinned: false,
       notes: "",
       roomNumber: "",
@@ -548,7 +569,11 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     paperCode: "",
                     examDate: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
                     examTime: "09:00",
+                    examHours: "09",
+                    examMinutes: "00",
                     colorTheme: "amber",
+                    cardColor: "automatic",
+                    description: "",
                     isPinned: false,
                     notes: "",
                     roomNumber: "",
@@ -613,13 +638,18 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               </div>
               <button
                 onClick={() => {
+                  setEditingExamId(null);
                   setExamForm({
                     title: "",
                     subject: "",
                     paperCode: "",
                     examDate: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
                     examTime: "09:00",
+                    examHours: "09",
+                    examMinutes: "00",
                     colorTheme: "amber",
+                    cardColor: "automatic",
+                    description: "",
                     isPinned: false,
                     notes: "",
                     roomNumber: "",
@@ -644,6 +674,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 const isDistant = !countdown.isPast && countdown.days > 14;
 
                 // Color palette according to urgency & card theme
+                const chosenColor = exam.cardColor || "automatic";
                 let cardBg = isLight ? "bg-white" : "bg-[#0A0714]/90 backdrop-blur-xl";
                 let borderColor = isLight ? "border-[#E3E0D8]" : "border-white/10";
                 let titleColor = isLight ? "text-[#1D1D1B]" : "text-white";
@@ -652,24 +683,47 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 if (countdown.isPast) {
                   cardBg = isLight ? "bg-[#F7F5F0]/60 opacity-70" : "bg-[#06040C]/70 border-white/5 opacity-65";
                   borderColor = isLight ? "border-[#E3E0D8]" : "border-white/5";
+                } else if (chosenColor === "lavender") {
+                  cardBg = isLight ? "bg-[#FAF8FF]" : "bg-[#140E28]/90 border-[#A78BFA]/35 shadow-[0_8px_30px_rgba(139,92,246,0.18)]";
+                  borderColor = isLight ? "border-[#DDD6FE]" : "border-[#A78BFA]/40";
+                  titleColor = isLight ? "text-[#5B21B6]" : "text-[#E9D5FF]";
+                  pillBg = isLight ? "bg-[#EDE9FE]" : "bg-[#8B5CF6]/20";
+                } else if (chosenColor === "sky") {
+                  cardBg = isLight ? "bg-[#F0F9FF]" : "bg-[#081528]/90 border-[#38BDF8]/35 shadow-[0_8px_30px_rgba(56,189,248,0.18)]";
+                  borderColor = isLight ? "border-[#BAE6FD]" : "border-[#38BDF8]/40";
+                  titleColor = isLight ? "text-[#0369A1]" : "text-[#BAE6FD]";
+                  pillBg = isLight ? "bg-[#E0F2FE]" : "bg-sky-500/20";
+                } else if (chosenColor === "mint") {
+                  cardBg = isLight ? "bg-[#F0FDF4]" : "bg-[#081F15]/90 border-[#34D399]/35 shadow-[0_8px_30px_rgba(52,211,153,0.18)]";
+                  borderColor = isLight ? "border-[#A7F3D0]" : "border-[#34D399]/40";
+                  titleColor = isLight ? "text-[#15803D]" : "text-[#A7F3D0]";
+                  pillBg = isLight ? "bg-[#DCFCE7]" : "bg-emerald-500/20";
+                } else if (chosenColor === "sunset") {
+                  cardBg = isLight ? "bg-[#FFF7ED]" : "bg-[#261208]/90 border-[#FB923C]/35 shadow-[0_8px_30px_rgba(251,146,60,0.18)]";
+                  borderColor = isLight ? "border-[#FED7AA]" : "border-[#FB923C]/40";
+                  titleColor = isLight ? "text-[#C2410C]" : "text-[#FED7AA]";
+                  pillBg = isLight ? "bg-[#FFEDD5]" : "bg-orange-500/20";
+                } else if (chosenColor === "golden") {
+                  cardBg = isLight ? "bg-[#FEFCE8]" : "bg-[#241C06]/90 border-[#FACC15]/35 shadow-[0_8px_30px_rgba(250,204,21,0.18)]";
+                  borderColor = isLight ? "border-[#FEF08A]" : "border-[#FACC15]/40";
+                  titleColor = isLight ? "text-[#A16207]" : "text-[#FEF08A]";
+                  pillBg = isLight ? "bg-[#FEF9C3]" : "bg-yellow-500/20";
+                } else if (chosenColor === "coral") {
+                  cardBg = isLight ? "bg-[#FFF1F2]" : "bg-[#280A14]/90 border-[#FB7185]/35 shadow-[0_8px_30px_rgba(251,113,133,0.18)]";
+                  borderColor = isLight ? "border-[#FECDD3]" : "border-[#FB7185]/40";
+                  titleColor = isLight ? "text-[#BE123C]" : "text-[#FECDD3]";
+                  pillBg = isLight ? "bg-[#FFE4E6]" : "bg-rose-500/20";
+                } else if (chosenColor === "slate") {
+                  cardBg = isLight ? "bg-[#F8FAFC]" : "bg-[#0F1420]/90 border-[#94A3B8]/35 shadow-[0_8px_30px_rgba(148,163,184,0.18)]";
+                  borderColor = isLight ? "border-[#CBD5E1]" : "border-[#94A3B8]/40";
+                  titleColor = isLight ? "text-[#334155]" : "text-[#E2E8F0]";
+                  pillBg = isLight ? "bg-[#F1F5F9]" : "bg-slate-500/20";
                 } else if (exam.colorTheme === "burgundy" || isUrgent) {
                   // Red / Burgundy urgency tone
                   cardBg = isLight ? "bg-[#FFF4F4]" : "bg-[#18090C]/90 border-red-500/30";
                   borderColor = isLight ? "border-[#FCA5A5]" : "border-red-500/30";
                   titleColor = isLight ? "text-[#991B1B]" : "text-red-300";
                   pillBg = isLight ? "bg-[#FEE2E2]" : "bg-red-500/15";
-                } else if (exam.colorTheme === "emerald") {
-                  // Emerald / Green calm tone
-                  cardBg = isLight ? "bg-[#F0FDF4]" : "bg-[#06140D]/90 border-emerald-500/30";
-                  borderColor = isLight ? "border-[#86EFAC]" : "border-emerald-500/30";
-                  titleColor = isLight ? "text-[#166534]" : "text-emerald-300";
-                  pillBg = isLight ? "bg-[#DCFCE7]" : "bg-emerald-500/15";
-                } else if (exam.colorTheme === "indigo") {
-                  // Purple / Indigo tone
-                  cardBg = isLight ? "bg-[#F5F3FF]" : "bg-[#120A24]/90 border-[#8B5CF6]/35 shadow-[0_8px_30px_rgba(139,92,246,0.15)]";
-                  borderColor = isLight ? "border-[#C4B5FD]" : "border-[#8B5CF6]/35";
-                  titleColor = isLight ? "text-[#5B21B6]" : "text-[#E9D5FF]";
-                  pillBg = isLight ? "bg-[#EDE9FE]" : "bg-[#8B5CF6]/20";
                 } else {
                   // Warm Amber / Terracotta default
                   cardBg = isLight ? "bg-[#FFF9F5]" : "bg-[#140E26]/85 border-white/10";
@@ -700,6 +754,11 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                           <p className={`text-xs font-sans mt-1 ${isLight ? "text-[#77736B]" : "text-[#ADA59B]"}`}>
                             {formatExamDateTime(exam.examDate, exam.examTime)}
                           </p>
+                          {(exam.description || exam.notes) && (
+                            <p className={`text-xs font-sans mt-2 line-clamp-2 leading-relaxed ${isLight ? "text-[#55524D]" : "text-slate-300"}`}>
+                              {exam.description || exam.notes}
+                            </p>
+                          )}
                         </div>
 
                         {/* Top Action Icons: Pin & Options */}
@@ -1151,202 +1210,214 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
       {/* =========================================================================
           MODAL: ADD / EDIT EXAM
       ========================================================================= */}
+      {/* =========================================================================
+          MODAL: ADD / EDIT EXAM (EXACTLY MATCHING SCREENSHOT 1)
+      ========================================================================= */}
       {isAddExamOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-          <div className={`w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden my-auto ${
-            isLight ? "bg-[#FAF8F5] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0A0714] border-white/15 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9)]"
+          <div className={`w-full max-w-lg rounded-3xl sm:rounded-[32px] border shadow-2xl overflow-hidden my-auto p-6 sm:p-8 space-y-5 transition-all ${
+            isLight 
+              ? "bg-[#FAF8F5] border-[#E3E0D8] text-[#1D1D1B]" 
+              : "bg-[#0D0A1C] border-white/10 text-white shadow-[0_20px_70px_rgba(0,0,0,0.9)]"
           }`}>
             {/* Modal Header */}
-            <div className={`p-4 sm:p-5 border-b flex items-center justify-between ${
-              isLight ? "bg-white border-[#E3E0D8]" : "bg-[#120E22] border-white/10"
-            }`}>
-              <div className="flex items-center gap-2.5">
-                <div className={`w-9 h-9 rounded-xl ${
-                  isLight ? "bg-[#C96F55]/15 border-[#C96F55]/30 text-[#C96F55]" : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
-                } border flex items-center justify-center`}>
-                  <CalendarClock size={18} />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base font-sans">
-                    {editingExamId ? "Edit Exam Countdown" : "Add Exam Countdown"}
-                  </h3>
-                  <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"}`}>
-                    Schedule your paper with live countdown timer
-                  </p>
-                </div>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-xl sm:text-2xl font-sans tracking-tight">
+                  {editingExamId ? "Edit Exam" : "Add New Exam"}
+                </h3>
+                <p className={`text-xs sm:text-sm mt-1 font-medium ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
+                  Enter the details of your new exam below.
+                </p>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAddExamOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+                className="p-2 rounded-2xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition cursor-pointer"
+                title="Close"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSubmitExamForm} className="p-4 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              {/* Title & Subject */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider block opacity-75">
-                    Exam Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={examForm.title}
-                    onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
-                    placeholder="e.g. Biology Paper 1"
-                    className={`w-full px-3.5 py-2 rounded-xl border text-sm font-medium outline-none ${
-                      isLight 
-                        ? "bg-white border-[#E3E0D8] focus:border-[#C96F55]" 
-                        : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6]"
-                    }`}
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider block opacity-75">
-                    Paper / Unit Code
-                  </label>
-                  <input
-                    type="text"
-                    value={examForm.paperCode}
-                    onChange={(e) => setExamForm({ ...examForm, paperCode: e.target.value })}
-                    placeholder="e.g. 0610/41 or U1"
-                    className={`w-full px-3.5 py-2 rounded-xl border text-sm font-medium outline-none ${
-                      isLight 
-                        ? "bg-white border-[#E3E0D8] focus:border-[#C96F55]" 
-                        : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6]"
-                    }`}
-                  />
-                </div>
+            <form onSubmit={handleSubmitExamForm} className="space-y-4">
+              {/* Field 1: Exam name */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold block">
+                  Exam name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={examForm.title}
+                  onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
+                  placeholder="e.g. Mathematics Paper 1"
+                  className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium transition outline-none ${
+                    isLight 
+                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                      : "bg-[#161228] border-white/10 text-white placeholder-slate-500 focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
+                  }`}
+                />
               </div>
 
-              {/* Date & Time */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider block opacity-75">
-                    Exam Date *
-                  </label>
+              {/* Field 2: Exam Date */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold block">
+                  Exam Date
+                </label>
+                <div className="relative flex items-center">
+                  <Calendar size={18} className="absolute left-4 text-[#77736B] dark:text-slate-400 pointer-events-none" />
                   <input
                     type="date"
                     required
                     value={examForm.examDate}
                     onChange={(e) => setExamForm({ ...examForm, examDate: e.target.value })}
-                    className={`w-full px-3.5 py-2 rounded-xl border text-sm font-mono outline-none ${
+                    className={`w-full pl-11 pr-4 py-3 rounded-2xl border text-sm font-medium transition outline-none cursor-pointer ${
                       isLight 
-                        ? "bg-white border-[#E3E0D8] focus:border-[#C96F55]" 
-                        : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6]"
-                    }`}
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider block opacity-75">
-                    Start Time
-                  </label>
-                  <input
-                    type="time"
-                    value={examForm.examTime}
-                    onChange={(e) => setExamForm({ ...examForm, examTime: e.target.value })}
-                    className={`w-full px-3.5 py-2 rounded-xl border text-sm font-mono outline-none ${
-                      isLight 
-                        ? "bg-white border-[#E3E0D8] focus:border-[#C96F55]" 
-                        : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6]"
+                        ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                        : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                     }`}
                   />
                 </div>
               </div>
 
-              {/* Theme & Priority */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider block opacity-75">
-                    Color Accent
-                  </label>
-                  <select
-                    value={examForm.colorTheme}
-                    onChange={(e) => setExamForm({ ...examForm, colorTheme: e.target.value as any })}
-                    className={`w-full px-3.5 py-2 rounded-xl border text-xs font-bold outline-none cursor-pointer ${
-                      isLight 
-                        ? "bg-white border-[#E3E0D8]" 
-                        : "bg-[#120E22] border-white/10 text-white"
-                    }`}
-                  >
-                    <option value="amber">Warm Amber (Standard)</option>
-                    <option value="burgundy">Burgundy (Urgent / Mock)</option>
-                    <option value="emerald">Emerald (Calm / Later)</option>
-                    <option value="indigo">Indigo (Target Paper)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider block opacity-75">
-                    Target Grade
-                  </label>
+              {/* Field 3: Exam Time */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold block">
+                  Exam Time
+                </label>
+                <div className="flex items-center gap-2">
+                  <Clock size={18} className="text-[#77736B] dark:text-slate-400 shrink-0 mr-1" />
                   <input
                     type="text"
-                    value={examForm.targetGrade}
-                    onChange={(e) => setExamForm({ ...examForm, targetGrade: e.target.value })}
-                    placeholder="e.g. A* or 9"
-                    className={`w-full px-3.5 py-2 rounded-xl border text-sm font-mono outline-none ${
+                    maxLength={2}
+                    value={examForm.examHours}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      if (val.length <= 2) {
+                        setExamForm({ ...examForm, examHours: val });
+                      }
+                    }}
+                    onBlur={() => {
+                      const num = parseInt(examForm.examHours || "0", 10);
+                      const clamped = Math.max(0, Math.min(23, isNaN(num) ? 9 : num));
+                      setExamForm({ ...examForm, examHours: clamped.toString().padStart(2, "0") });
+                    }}
+                    placeholder="09"
+                    className={`w-14 text-center py-2.5 px-2 rounded-2xl border font-mono text-sm font-bold transition outline-none ${
                       isLight 
-                        ? "bg-white border-[#E3E0D8] focus:border-[#C96F55]" 
-                        : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6]"
+                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                        : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
+                    }`}
+                  />
+                  <span className="font-bold text-base text-[#77736B] dark:text-slate-400">:</span>
+                  <input
+                    type="text"
+                    maxLength={2}
+                    value={examForm.examMinutes}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, "");
+                      if (val.length <= 2) {
+                        setExamForm({ ...examForm, examMinutes: val });
+                      }
+                    }}
+                    onBlur={() => {
+                      const num = parseInt(examForm.examMinutes || "0", 10);
+                      const clamped = Math.max(0, Math.min(59, isNaN(num) ? 0 : num));
+                      setExamForm({ ...examForm, examMinutes: clamped.toString().padStart(2, "0") });
+                    }}
+                    placeholder="00"
+                    className={`w-14 text-center py-2.5 px-2 rounded-2xl border font-mono text-sm font-bold transition outline-none ${
+                      isLight 
+                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                        : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                     }`}
                   />
                 </div>
               </div>
 
-              {/* Room & Notes */}
-              <div className="space-y-1">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider block opacity-75">
-                  Exam Hall / Seat (Optional)
+              {/* Field 4: Description (Optional) */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold block">
+                  Description (Optional)
                 </label>
-                <input
-                  type="text"
-                  value={examForm.roomNumber}
-                  onChange={(e) => setExamForm({ ...examForm, roomNumber: e.target.value })}
-                  placeholder="e.g. Main Sports Hall - Desk B12"
-                  className={`w-full px-3.5 py-2 rounded-xl border text-sm font-medium outline-none ${
+                <textarea
+                  rows={3}
+                  value={examForm.description}
+                  onChange={(e) => setExamForm({ ...examForm, description: e.target.value })}
+                  placeholder="Add any additional details about the exam. You can add line breaks."
+                  className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium transition outline-none resize-y ${
                     isLight 
-                      ? "bg-white border-[#E3E0D8] focus:border-[#C96F55]" 
-                      : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6]"
+                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                      : "bg-[#161228] border-white/10 text-white placeholder-slate-500 focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                   }`}
                 />
               </div>
 
-              {/* Pin Checkbox */}
-              <label className="flex items-center gap-2.5 pt-1 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={examForm.isPinned}
-                  onChange={(e) => setExamForm({ ...examForm, isPinned: e.target.checked })}
-                  className="w-4 h-4 rounded text-[#8B5CF6] accent-[#8B5CF6] cursor-pointer"
-                />
-                <span className="text-xs font-sans font-bold flex items-center gap-1.5">
-                  <Pin size={13} className={isLight ? "text-[#C96F55]" : "text-[#C084FC]"} />
-                  <span>Pin this exam to top of dashboard & countdown grid</span>
-                </span>
-              </label>
+              {/* Field 5: Card color */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold block">
+                  Card color
+                </label>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                  {[
+                    { id: "automatic", label: "Automatic", isRainbow: true },
+                    { id: "lavender", label: "Lavender", dotColor: "#C4B5FD" },
+                    { id: "sky", label: "Sky", dotColor: "#93C5FD" },
+                    { id: "mint", label: "Mint", dotColor: "#86EFAC" },
+                    { id: "sunset", label: "Sunset", dotColor: "#FDBA74" },
+                    { id: "golden", label: "Golden", dotColor: "#FDE047" },
+                    { id: "coral", label: "Coral", dotColor: "#FCA5A5" },
+                    { id: "slate", label: "Slate", dotColor: "#CBD5E1" }
+                  ].map((colorOpt) => {
+                    const isSelected = (examForm.cardColor || "automatic") === colorOpt.id;
+                    return (
+                      <button
+                        key={colorOpt.id}
+                        type="button"
+                        onClick={() => setExamForm({ ...examForm, cardColor: colorOpt.id as any })}
+                        className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
+                          isSelected
+                            ? "bg-[#4F46E5] text-white shadow-md shadow-[#4F46E5]/25 border border-transparent font-semibold"
+                            : isLight
+                            ? "bg-white border border-[#D5D2CA] text-[#1D1D1B] hover:bg-[#F3EFEA]"
+                            : "bg-[#161228] border border-white/10 text-slate-200 hover:bg-[#20173A]"
+                        }`}
+                      >
+                        {colorOpt.isRainbow ? (
+                          <span className="w-3.5 h-3.5 rounded-full shrink-0 bg-gradient-to-tr from-amber-400 via-rose-500 to-indigo-500 shadow-xs" />
+                        ) : (
+                          <span
+                            className="w-3.5 h-3.5 rounded-full shrink-0"
+                            style={{ backgroundColor: colorOpt.dotColor }}
+                          />
+                        )}
+                        <span>{colorOpt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-black/10 dark:border-white/10">
+              {/* Submit Buttons (Cancel & Save) */}
+              <div className="flex items-center justify-end gap-3 pt-3">
                 <button
                   type="button"
                   onClick={() => setIsAddExamOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer"
+                  className={`px-5 py-2.5 rounded-2xl border text-sm font-semibold transition cursor-pointer ${
+                    isLight 
+                      ? "border-black/10 bg-white/70 hover:bg-black/5 text-[#1D1D1B]" 
+                      : "border-white/10 bg-white/5 hover:bg-white/10 text-slate-200"
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className={`px-5 py-2 rounded-xl text-xs font-bold ${
-                    isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-[#7C3AED] hover:bg-[#6D28D9] shadow-lg shadow-[#7C3AED]/30"
-                  } text-white transition cursor-pointer shadow-xs`}
+                  className="px-6 py-2.5 rounded-2xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold shadow-md shadow-[#4F46E5]/30 active:scale-95 transition cursor-pointer"
                 >
-                  {editingExamId ? "Update Exam" : "Add Exam"}
+                  Save
                 </button>
               </div>
             </form>

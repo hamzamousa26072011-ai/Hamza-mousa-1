@@ -187,7 +187,9 @@ export interface ExamItem {
   paperCode?: string;
   examDate: string; // ISO date or YYYY-MM-DD
   examTime?: string; // HH:mm e.g. "14:00"
-  colorTheme?: "burgundy" | "amber" | "emerald" | "indigo" | "terracotta";
+  colorTheme?: "automatic" | "lavender" | "sky" | "mint" | "sunset" | "golden" | "coral" | "slate" | "burgundy" | "amber" | "emerald" | "indigo" | "terracotta" | string;
+  cardColor?: "automatic" | "lavender" | "sky" | "mint" | "sunset" | "golden" | "coral" | "slate" | string;
+  description?: string;
   isPinned?: boolean;
   notes?: string;
   roomNumber?: string;
