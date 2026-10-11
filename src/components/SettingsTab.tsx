@@ -12,8 +12,7 @@ import {
   ShieldCheck, 
   UserCheck, 
   Loader2, 
-  Check,
-  Globe
+  Check
 } from "lucide-react";
 import { AppSettings } from "../types";
 import { User } from "firebase/auth";
@@ -58,7 +57,7 @@ export default function SettingsTab({
   onOpenPrivacyPolicy,
   onOpenDnsModal,
   isGoogleLoading = false,
-  themeMode = "light"
+  themeMode = "dark"
 }: SettingsTabProps) {
   const isLight = themeMode === "light";
   const [newSubject, setNewSubject] = useState("");
@@ -94,7 +93,7 @@ export default function SettingsTab({
     <div className="space-y-6 md:space-y-8 select-none">
       
       {/* Title Header */}
-      <div className={`border-b ${isLight ? "border-[#E3E0D8]" : "border-white/5"} pb-5 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
+      <div className={`border-b ${isLight ? "border-[#E8D7C9]" : "border-white/5"} pb-5 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
         <div>
           <span className={`text-[10px] font-mono ${isLight ? "text-[#C96F55]" : "text-indigo-400"} font-bold uppercase tracking-widest flex items-center gap-2`}>
             <Settings size={14} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
@@ -105,24 +104,6 @@ export default function SettingsTab({
             Configure your revision schedule parameters, manage course syllabuses, customize clock formats, and synchronize your cloud profile.
           </p>
         </div>
-
-        {/* Global Cloud Sync & Protection Status */}
-        <div className={`flex items-center gap-3 ${
-          isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" : "bg-[#0a0f1d] border-white/10 text-white shadow-lg"
-        } border px-4 py-2 rounded-2xl`}>
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-mono font-bold uppercase">Cloud Sync</span>
-              <span className={`text-[9px] font-mono font-bold ${
-                isLight ? "bg-[#EAF3EC] text-[#66856D] border-[#CDE3D2]" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-              } px-1.5 py-0.5 rounded border`}>
-                ACTIVE
-              </span>
-            </div>
-            <span className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>Zero-Trust Secured</span>
-          </div>
-        </div>
       </div>
 
       {/* Grid of Clean Settings Cards */}
@@ -130,7 +111,7 @@ export default function SettingsTab({
         
         {/* Card 1: Visual Theme & Clock Format */}
         <div className={`p-6 ${
-          isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" : "bg-[#0E1322]/80 border-white/10 text-white shadow-lg"
+          isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" : "bg-[#0E1322]/80 border-white/10 text-white shadow-lg"
         } border rounded-3xl space-y-6 relative overflow-hidden`}>
           
           <div className="flex items-center gap-2.5">
@@ -154,7 +135,7 @@ export default function SettingsTab({
             </div>
 
             <div className={`flex ${
-              isLight ? "bg-[#F0EEE8] border-[#E3E0D8]" : "bg-[#0B0F19] border-white/5"
+              isLight ? "bg-[#F0EEE8] border-[#E8D7C9]" : "bg-[#0B0F19] border-white/5"
             } border p-1 rounded-2xl w-full`}>
               <button
                 type="button"
@@ -182,7 +163,7 @@ export default function SettingsTab({
           </div>
 
           {/* Theme Mode */}
-          <div className={`space-y-3 pt-3 border-t ${isLight ? "border-[#E3E0D8]" : "border-[#38332E]"}`}>
+          <div className={`space-y-3 pt-3 border-t ${isLight ? "border-[#E8D7C9]" : "border-[#38332E]"}`}>
             <div className="flex justify-between items-center">
               <div>
                 <span className={`text-xs font-bold ${isLight ? "text-[#1D1D1B]" : "text-[#F6F3EE]"} block`}>Theme & Brand Identity</span>
@@ -196,7 +177,7 @@ export default function SettingsTab({
             </div>
 
             <div className={`grid grid-cols-2 gap-2 ${
-              isLight ? "bg-[#F0EEE8] border-[#E3E0D8]" : "bg-[#120E22] border-white/10"
+              isLight ? "bg-[#F0EEE8] border-[#E8D7C9]" : "bg-[#120E22] border-white/10"
             } border p-1 rounded-2xl w-full`}>
               <button
                 type="button"
@@ -229,7 +210,7 @@ export default function SettingsTab({
 
         {/* Card 2: Subject & Syllabus Manager */}
         <div className={`p-6 ${
-          isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" : "bg-[#0A0714]/85 border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+          isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" : "bg-[#0A0714]/85 border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
         } border rounded-3xl space-y-5 relative overflow-hidden`}>
 
           <div className="flex items-center gap-2.5">
@@ -253,7 +234,7 @@ export default function SettingsTab({
                 value={newSubject}
                 onChange={(e) => setNewSubject(e.target.value)}
                 className={`flex-1 ${
-                  isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B] placeholder:text-[#9B9890] focus:border-[#C96F55]" : "bg-[#120E22] border-white/10 text-white placeholder:text-[#8B82A8] focus:border-[#8B5CF6]"
+                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] placeholder:text-[#9B9890] focus:border-[#C96F55]" : "bg-[#120E22] border-white/10 text-white placeholder:text-[#8B82A8] focus:border-[#8B5CF6]"
                 } border rounded-xl px-3.5 py-2 text-xs focus:outline-none`}
               />
               <button
@@ -276,7 +257,7 @@ export default function SettingsTab({
                   type="button"
                   onClick={() => handleCreateSubject(undefined, preset)}
                   className={`px-2 py-1 rounded-lg ${
-                    isLight ? "bg-[#F7F6F2] hover:bg-[#FFF1EC] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#120E22] hover:bg-[#1A1432] border-white/10 text-[#C4B5FD]"
+                    isLight ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#120E22] hover:bg-[#1A1432] border-white/10 text-[#C4B5FD]"
                   } border text-[10px] font-mono transition cursor-pointer flex items-center gap-1`}
                 >
                   <Plus size={10} className={isLight ? "text-[#C96F55]" : "text-[#A855F7]"} />
@@ -287,14 +268,14 @@ export default function SettingsTab({
           </div>
 
           {/* Active Subject List */}
-          <div className={`space-y-2 pt-2 border-t ${isLight ? "border-[#E3E0D8]" : "border-white/10"}`}>
+          <div className={`space-y-2 pt-2 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/10"}`}>
             <span className={`text-[11px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} block uppercase`}>Active Subjects ({subjects.length})</span>
             <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
               {subjects.map((sub) => (
                 <div
                   key={sub}
                   className={`flex items-center justify-between p-2 ${
-                    isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-[#120E22] border-white/10"
+                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#120E22] border-white/10"
                   } border rounded-xl transition`}
                 >
                   <span className={`text-xs font-medium ${isLight ? "text-[#1D1D1B]" : "text-white"} truncate`}>{sub}</span>
@@ -316,7 +297,7 @@ export default function SettingsTab({
 
         {/* Card 3: Account & Cloud Session */}
         <div className={`p-6 ${
-          isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" : "bg-[#0A0714]/85 border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+          isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" : "bg-[#0A0714]/85 border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
         } border rounded-3xl space-y-6 relative overflow-hidden flex flex-col justify-between`}>
 
           <div className="space-y-4">
@@ -334,7 +315,7 @@ export default function SettingsTab({
             {currentUser ? (
               <div className="space-y-4">
                 <div className={`p-3.5 ${
-                  isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-[#120E22] border-white/10"
+                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#120E22] border-white/10"
                 } border rounded-2xl space-y-1.5`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase`}>Logged In As</span>
@@ -405,7 +386,7 @@ export default function SettingsTab({
                   onClick={onGoogleLogin || handleLoginAction}
                   disabled={isSignActionLoading || isGoogleLoading}
                   className={`w-full py-2.5 px-3 ${
-                    isLight ? "bg-[#FFFFFF] hover:bg-[#FAF9F5] text-[#1D1D1B] border-[#E3E0D8]" : "bg-[#2D2824] hover:bg-[#38312B] text-[#F6F3EE] border-[#3D3833]"
+                    isLight ? "bg-[#FFFFFF] hover:bg-[#FAF9F5] text-[#1D1D1B] border-[#E8D7C9]" : "bg-[#2D2824] hover:bg-[#38312B] text-[#F6F3EE] border-[#3D3833]"
                   } border font-sans font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-2.5 shadow-2xs`}
                 >
                   {isGoogleLoading ? (
@@ -440,7 +421,7 @@ export default function SettingsTab({
             )}
           </div>
 
-          <div className={`pt-3 border-t ${isLight ? "border-[#E3E0D8]" : "border-white/5"} flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] ${isLight ? "text-[#77736B]" : "text-slate-400"} font-mono`}>
+          <div className={`pt-3 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/5"} flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] ${isLight ? "text-[#77736B]" : "text-slate-400"} font-mono`}>
             <span className={`flex items-center gap-1.5 ${isLight ? "text-[#66856D]" : "text-emerald-400"}`}>
               <ShieldCheck size={13} />
               <span>Zero-Retention Student AI Shield</span>
@@ -456,43 +437,6 @@ export default function SettingsTab({
             )}
           </div>
 
-        </div>
-
-        {/* Card 4: Custom Domain & DNS (engeznafsak.com) */}
-        <div className={`p-6 ${
-          isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" : "bg-[#0A0714]/85 border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
-        } border rounded-3xl space-y-4 relative overflow-hidden`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className={`p-2 ${isLight ? "bg-[#C96F55]/15 text-[#C96F55] border-[#C96F55]/30" : "bg-[#8B5CF6]/20 text-[#C084FC] border-[#8B5CF6]/40"} rounded-xl border`}>
-                <Globe size={18} />
-              </div>
-              <div>
-                <h3 className={`text-md font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"} font-mono uppercase tracking-wider`}>
-                  Custom Domain & DNS
-                </h3>
-                <span className={`text-[10px] font-mono ${isLight ? "text-[#C96F55]" : "text-[#C084FC]"} font-bold`}>engeznafsak.com</span>
-              </div>
-            </div>
-
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Connected
-            </span>
-          </div>
-
-          <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-[#ADA59B]"} leading-relaxed font-sans`}>
-            Official production domain is connected with A-record routing (<code className="font-bold text-[#C96F55]">76.76.21.21</code>), CNAME (<code className="font-bold text-[#C96F55]">cname.vercel-dns.com</code>), and Firebase Auth reverse proxy.
-          </p>
-
-          <button
-            type="button"
-            onClick={onOpenDnsModal}
-            className="w-full py-2.5 px-3 bg-[#C96F55] hover:bg-[#B85F48] text-white font-sans font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs"
-          >
-            <Globe size={14} />
-            <span>Open Domain & DNS Hub</span>
-          </button>
         </div>
 
       </div>

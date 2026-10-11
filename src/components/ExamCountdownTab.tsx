@@ -474,7 +474,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
           {/* Subview Switcher: My Exams vs Friends */}
           <div className={`p-1 rounded-2xl border flex items-center shadow-2xs ${
-            isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#140E26] border-[#2C1F4A]"
+            isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#140E26] border-[#2C1F4A]"
           }`}>
             <button
               onClick={() => setActiveSubView("exams")}
@@ -533,7 +533,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   onChange={(e) => setExamFilter(e.target.value as any)}
                   className={`px-3 py-2 rounded-xl text-xs font-bold border transition cursor-pointer appearance-none pr-7 shadow-2xs ${
                     isLight 
-                      ? "bg-white border-[#E3E0D8] text-[#1D1D1B] hover:bg-[#F7F5F0]" 
+                      ? "bg-white border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F7F5F0]" 
                       : "bg-[#140E26] border-[#2C1F4A] text-[#FAF8F5] hover:bg-[#1E1735]"
                   }`}
                 >
@@ -550,7 +550,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 onClick={() => setActiveSubView("friends")}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
                   isLight 
-                    ? "bg-white border-[#E3E0D8] hover:bg-[#F7F5F0] text-[#1D1D1B]" 
+                    ? "bg-white border-[#E8D7C9] hover:bg-[#F7F5F0] text-[#1D1D1B]" 
                     : "bg-[#140E26] border-[#2C1F4A] hover:bg-[#1E1735] text-[#FAF8F5]"
                 }`}
                 title="Add a study buddy and compare focus scores"
@@ -623,7 +623,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
           {filteredExams.length === 0 ? (
             /* Empty State */
             <div className={`p-8 sm:p-12 rounded-3xl border text-center space-y-4 ${
-              isLight ? "bg-white border-[#E3E0D8]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
+              isLight ? "bg-white border-[#E8D7C9]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
             }`}>
               <div className="w-14 h-14 rounded-2xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[#C084FC] flex items-center justify-center mx-auto">
                 <CalendarClock size={28} />
@@ -676,13 +676,13 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 // Color palette according to urgency & card theme
                 const chosenColor = exam.cardColor || "automatic";
                 let cardBg = isLight ? "bg-white" : "bg-[#0A0714]/90 backdrop-blur-xl";
-                let borderColor = isLight ? "border-[#E3E0D8]" : "border-white/10";
+                let borderColor = isLight ? "border-[#E8D7C9]" : "border-white/10";
                 let titleColor = isLight ? "text-[#1D1D1B]" : "text-white";
                 let pillBg = isLight ? "bg-[#F7F5F0]" : "bg-white/5";
 
                 if (countdown.isPast) {
                   cardBg = isLight ? "bg-[#F7F5F0]/60 opacity-70" : "bg-[#06040C]/70 border-white/5 opacity-65";
-                  borderColor = isLight ? "border-[#E3E0D8]" : "border-white/5";
+                  borderColor = isLight ? "border-[#E8D7C9]" : "border-white/5";
                 } else if (chosenColor === "lavender") {
                   cardBg = isLight ? "bg-[#FAF8FF]" : "bg-[#140E28]/90 border-[#A78BFA]/35 shadow-[0_8px_30px_rgba(139,92,246,0.18)]";
                   borderColor = isLight ? "border-[#DDD6FE]" : "border-[#A78BFA]/40";
@@ -860,7 +860,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
           ========================================================================= */}
           {exams.length > 0 && (
             <div className={`p-4 sm:p-5 rounded-3xl border shadow-xs flex flex-col sm:flex-row items-center gap-4 ${
-              isLight ? "bg-white border-[#E3E0D8]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+              isLight ? "bg-white border-[#E8D7C9]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl"
             }`}>
               {/* Progress Percentage & Dots Track */}
               <div className="flex-1 w-full flex items-center gap-3">
@@ -898,7 +898,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               {/* Date Range Badge */}
               <div className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 shrink-0 ${
                 isLight 
-                  ? "bg-[#FAF8F5] border-[#E3E0D8] text-[#1D1D1B]" 
+                  ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" 
                   : "bg-[#120E22] border-white/10 text-white"
               }`}>
                 <Calendar size={13} className={isLight ? "text-[#C96F55]" : "text-[#8B5CF6]"} />
@@ -954,7 +954,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
 
           {/* 2. PROFILE & INVITE CONTROLS CARD (MATCHING SCREENSHOT 2) */}
           <div className={`p-5 sm:p-6 rounded-3xl border shadow-xs space-y-5 ${
-            isLight ? "bg-white border-[#E3E0D8]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+            isLight ? "bg-white border-[#E8D7C9]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
           }`}>
             
             {/* YOUR USERNAME ROW */}
@@ -966,7 +966,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               </label>
               
               <div className={`p-3 rounded-2xl border flex items-center justify-between gap-3 ${
-                isLight ? "bg-[#FAF8F5] border-[#E3E0D8]" : "bg-[#120E22] border-white/10"
+                isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#120E22] border-white/10"
               }`}>
                 {isChangingUsername ? (
                   <div className="flex items-center gap-2 w-full">
@@ -977,7 +977,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                       placeholder="@yourhandle"
                       className={`flex-1 px-3 py-1.5 rounded-xl border text-sm font-mono font-bold outline-none ${
                         isLight 
-                          ? "bg-white border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55]" 
+                          ? "bg-white border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
                           : "bg-[#0A0714] border-white/20 text-white focus:border-[#8B5CF6]"
                       }`}
                     />
@@ -1011,7 +1011,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                       onClick={() => setIsChangingUsername(true)}
                       className={`px-3 py-1.5 rounded-xl border text-xs font-sans font-bold flex items-center gap-1.5 transition cursor-pointer ${
                         isLight 
-                          ? "bg-white border-[#E3E0D8] hover:bg-[#F0EEE8] text-[#1D1D1B]" 
+                          ? "bg-white border-[#E8D7C9] hover:bg-[#F0EEE8] text-[#1D1D1B]" 
                           : "bg-[#1A1432] border-white/10 hover:bg-[#231A44] text-white"
                       }`}
                     >
@@ -1032,7 +1032,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               </label>
 
               <div className={`p-3 rounded-2xl border flex items-center justify-between gap-3 ${
-                isLight ? "bg-[#FAF8F5] border-[#E3E0D8]" : "bg-[#120E22] border-white/10"
+                isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#120E22] border-white/10"
               }`}>
                 <span className={`font-mono text-xs sm:text-sm ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/90"} truncate select-all`}>
                   {inviteUrl}
@@ -1045,7 +1045,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     copiedInvite
                       ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
                       : isLight 
-                      ? "bg-white border-[#E3E0D8] hover:bg-[#F0EEE8] text-[#1D1D1B]" 
+                      ? "bg-white border-[#E8D7C9] hover:bg-[#F0EEE8] text-[#1D1D1B]" 
                       : "bg-[#1A1432] border-white/10 hover:bg-[#231A44] text-white"
                   }`}
                 >
@@ -1072,7 +1072,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   placeholder="@username"
                   className={`flex-1 px-4 py-2.5 rounded-2xl border text-sm font-mono font-medium outline-none transition ${
                     isLight 
-                      ? "bg-[#FAF8F5] border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55] focus:bg-white" 
+                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] focus:bg-white" 
                       : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6] focus:bg-[#1A1432]"
                   }`}
                 />
@@ -1098,7 +1098,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
 
           {/* 3. LEADERBOARD CARD (MATCHING SCREENSHOT 2) */}
           <div className={`p-5 sm:p-6 rounded-3xl border shadow-xs space-y-4 ${
-            isLight ? "bg-white border-[#E3E0D8]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+            isLight ? "bg-white border-[#E8D7C9]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
           }`}>
             <div className="flex items-center justify-between">
               <div>
@@ -1136,7 +1136,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                           ? "bg-[#FFF4F0] border-[#E8D7C9]"
                           : "bg-[#181030] border-[#8B5CF6]/40 shadow-[0_4px_20px_rgba(139,92,246,0.15)]"
                         : isLight
-                        ? "bg-[#FAF8F5] border-[#E3E0D8]"
+                        ? "bg-[#FAF8F5] border-[#E8D7C9]"
                         : "bg-[#120E22]/90 border-white/10"
                     }`}
                   >
@@ -1217,7 +1217,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
           <div className={`w-full max-w-lg rounded-3xl sm:rounded-[32px] border shadow-2xl overflow-hidden my-auto p-6 sm:p-8 space-y-5 transition-all ${
             isLight 
-              ? "bg-[#FAF8F5] border-[#E3E0D8] text-[#1D1D1B]" 
+              ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" 
               : "bg-[#0D0A1C] border-white/10 text-white shadow-[0_20px_70px_rgba(0,0,0,0.9)]"
           }`}>
             {/* Modal Header */}

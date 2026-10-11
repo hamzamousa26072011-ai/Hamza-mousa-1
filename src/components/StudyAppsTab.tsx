@@ -36,7 +36,7 @@ export default function StudyAppsTab({
   onAddApp, 
   onEditApp,
   onDeleteApp,
-  themeMode = "light",
+  themeMode = "dark",
   currentUser,
   appSavedNotice,
   onResetDefaults,
@@ -132,7 +132,7 @@ export default function StudyAppsTab({
       
       {/* Launchpad Header */}
       <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b ${
-        isLight ? "border-[#E3E0D8]" : "border-white/5"
+        isLight ? "border-[#E8D7C9]" : "border-white/5"
       } pb-5 shrink-0`}>
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -188,7 +188,7 @@ export default function StudyAppsTab({
               onClick={onResetDefaults}
               className={`py-2 px-3 ${
                 isLight 
-                  ? "bg-[#F7F6F2] hover:bg-[#EFECE6] border-[#E3E0D8] text-[#77736B]" 
+                  ? "bg-[#FAF8F5] hover:bg-[#EFECE6] border-[#E8D7C9] text-[#77736B]" 
                   : "bg-white/5 hover:bg-white/10 border-white/5 text-slate-400 hover:text-white"
               } border rounded-xl text-xs font-mono font-medium transition flex items-center gap-1.5 cursor-pointer`}
               title="Reset apps to standard defaults"
@@ -245,7 +245,7 @@ export default function StudyAppsTab({
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.24, ease: "easeOut" }}
             className={`p-6 ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" : "bg-[#0E1322] border-white/10 text-white shadow-2xl"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" : "bg-[#0E1322] border-white/10 text-white shadow-2xl"
             } border rounded-2xl relative space-y-5`}
           >
             <div className="flex justify-between items-center pb-3 border-b border-inherit">
@@ -271,7 +271,7 @@ export default function StudyAppsTab({
                     onClick={() => applySuggestion(sug)}
                     className={`px-2.5 py-1 ${
                       isLight 
-                        ? "bg-[#F7F6F2] hover:bg-[#FFF1EC] border-[#E3E0D8] text-[#1D1D1B]" 
+                        ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border-[#E8D7C9] text-[#1D1D1B]" 
                         : "bg-white/5 hover:bg-indigo-600/10 border-white/5 text-slate-300 hover:text-indigo-400"
                     } border rounded-lg text-[10px] font-mono font-medium transition cursor-pointer`}
                   >
@@ -294,7 +294,7 @@ export default function StudyAppsTab({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Physics and Maths Tutor"
                   className={`w-full mt-1.5 px-4 py-2 ${
-                    isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55]" : "bg-[#12192B] border-white/10 text-white focus:border-indigo-500"
+                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" : "bg-[#12192B] border-white/10 text-white focus:border-indigo-500"
                   } border rounded-xl text-xs placeholder:text-[#9B9890] focus:outline-none transition shadow-inner`}
                   required
                 />
@@ -311,7 +311,7 @@ export default function StudyAppsTab({
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="e.g. www.physicsandmathstutor.com"
                   className={`w-full mt-1.5 px-4 py-2 ${
-                    isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55]" : "bg-[#12192B] border-white/10 text-white focus:border-indigo-500"
+                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" : "bg-[#12192B] border-white/10 text-white focus:border-indigo-500"
                   } border rounded-xl text-xs placeholder:text-[#9B9890] focus:outline-none transition shadow-inner`}
                   required
                 />
@@ -322,7 +322,7 @@ export default function StudyAppsTab({
                 <label className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold mb-2`}>
                   Display Accent Color
                 </label>
-                <div className={`flex flex-wrap gap-3 p-3 ${isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-[#111626]/60 border-white/5"} border rounded-xl`}>
+                <div className={`flex flex-wrap gap-3 p-3 ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#111626]/60 border-white/5"} border rounded-xl`}>
                   {accentColors.map((col) => (
                     <button
                       key={col.value}
@@ -331,7 +331,7 @@ export default function StudyAppsTab({
                       className={`px-3 py-1.5 rounded-lg text-[9px] font-mono font-bold flex items-center gap-2 transition cursor-pointer border ${
                         logoColor === col.value 
                           ? isLight ? "bg-[#FFFFFF] border-[#C96F55] text-[#1D1D1B] shadow-2xs" : "bg-white/10 border-indigo-500/50 text-white" 
-                          : isLight ? "bg-[#F0EEE8] border-[#E3E0D8] text-[#77736B]" : "bg-black/20 border-white/5 text-slate-400 hover:text-slate-200"
+                          : isLight ? "bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B]" : "bg-black/20 border-white/5 text-slate-400 hover:text-slate-200"
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: col.value }} />
@@ -368,7 +368,7 @@ export default function StudyAppsTab({
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.2 }}
             className={`p-6 ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-lg" : "bg-[#0E1322] border-white/10 text-white shadow-2xl"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-lg" : "bg-[#0E1322] border-white/10 text-white shadow-2xl"
             } border rounded-2xl relative space-y-5`}
           >
             <div className="flex justify-between items-center pb-3 border-b border-inherit">
@@ -404,7 +404,7 @@ export default function StudyAppsTab({
                   placeholder="e.g. Khan Academy"
                   className={`mt-1.5 w-full py-2 px-3 text-xs font-mono rounded-xl border outline-none transition ${
                     isLight 
-                      ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55]" 
+                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
                       : "bg-[#111626] border-white/10 text-white focus:border-indigo-500"
                   }`}
                   required
@@ -422,7 +422,7 @@ export default function StudyAppsTab({
                   placeholder="e.g. khanacademy.org"
                   className={`mt-1.5 w-full py-2 px-3 text-xs font-mono rounded-xl border outline-none transition ${
                     isLight 
-                      ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55]" 
+                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
                       : "bg-[#111626] border-white/10 text-white focus:border-indigo-500"
                   }`}
                   required
@@ -442,7 +442,7 @@ export default function StudyAppsTab({
                       className={`px-3 py-1.5 rounded-xl border text-[10px] font-mono font-medium flex items-center gap-2 cursor-pointer transition ${
                         editLogoColor === c.value
                           ? isLight ? "border-[#1D1D1B] bg-[#FFF1EC] font-bold" : "border-white bg-white/10 font-bold"
-                          : isLight ? "border-[#E3E0D8] bg-[#F7F6F2]" : "border-white/5 bg-[#111626]"
+                          : isLight ? "border-[#E8D7C9] bg-[#FAF8F5]" : "border-white/5 bg-[#111626]"
                       }`}
                     >
                       <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.value }} />
@@ -477,7 +477,7 @@ export default function StudyAppsTab({
                     onClick={() => setEditingApp(null)}
                     className={`py-2 px-4 rounded-xl text-xs font-mono font-medium transition cursor-pointer ${
                       isLight 
-                        ? "bg-[#F7F6F2] hover:bg-[#EFECE6] text-[#77736B] border border-[#E3E0D8]" 
+                        ? "bg-[#FAF8F5] hover:bg-[#EFECE6] text-[#77736B] border border-[#E8D7C9]" 
                         : "bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5"
                     }`}
                   >
@@ -502,7 +502,7 @@ export default function StudyAppsTab({
       {/* Bento Layout deck of portal cards */}
       {apps.length === 0 ? (
         <div className={`p-12 text-center ${
-          isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0E1322] border-white/10 text-white"
+          isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0E1322] border-white/10 text-white"
         } border border-dashed rounded-3xl space-y-3`}>
           <Globe className={`mx-auto ${isLight ? "text-[#77736B]" : "text-slate-600"} animate-pulse`} size={32} />
           <h3 className={`text-md font-bold ${isLight ? "text-[#1D1D1B]" : "text-slate-300"}`}>No Web Portals Connected</h3>
@@ -525,7 +525,7 @@ export default function StudyAppsTab({
               key={app.id} 
               className={`p-6 ${
                 isLight 
-                  ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs hover:border-[#C96F55]/40" 
+                  ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs hover:border-[#C96F55]/40" 
                   : "bg-[#0E1322]/80 border border-white/10 hover:border-[#1E233E]/90 shadow-lg"
               } rounded-3xl flex flex-col justify-between relative group transition-all duration-300 min-h-[150px] hover:-translate-y-0.5`}
             >
@@ -578,14 +578,14 @@ export default function StudyAppsTab({
               </div>
 
               {/* Launches Portal */}
-              <div className={`mt-4 pt-4 border-t ${isLight ? "border-[#E3E0D8]" : "border-white/5"} flex gap-2 w-full`}>
+              <div className={`mt-4 pt-4 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/5"} flex gap-2 w-full`}>
                 <a
                   href={app.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`flex-1 py-2 px-4 rounded-xl text-[10px] font-mono font-bold tracking-widest uppercase border ${
                     isLight 
-                      ? "bg-[#F7F6F2] hover:bg-[#C96F55] hover:text-white hover:border-[#C96F55] text-[#1D1D1B] border-[#E3E0D8]" 
+                      ? "bg-[#FAF8F5] hover:bg-[#C96F55] hover:text-white hover:border-[#C96F55] text-[#1D1D1B] border-[#E8D7C9]" 
                       : "bg-[#12192B] hover:bg-indigo-600 hover:border-indigo-500 hover:text-white text-slate-300 border-white/5"
                   } transition duration-250 cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs`}
                 >
@@ -601,7 +601,7 @@ export default function StudyAppsTab({
 
       {/* Footer info box */}
       <div className={`p-6 ${
-        isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#77736B]" : "bg-[#111626]/40 border-white/5 text-slate-500"
+        isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#77736B]" : "bg-[#111626]/40 border-white/5 text-slate-500"
       } border border-dashed rounded-3xl text-center select-none max-w-lg mx-auto`}>
         <Sparkles className={`mx-auto ${isLight ? "text-[#C96F55]" : "text-indigo-400/40"} mb-2`} size={18} />
         <p className="text-[10px] font-mono uppercase tracking-widest">

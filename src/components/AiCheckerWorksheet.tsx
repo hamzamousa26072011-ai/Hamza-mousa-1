@@ -100,7 +100,7 @@ export default function AiCheckerWorksheet({
   onOpenAuthModal,
   onOpenTutorWithContext,
   onOpenPrivacyPolicy,
-  themeMode = "light"
+  themeMode = "dark"
 }: AiCheckerWorksheetProps) {
   const isLight = themeMode === "light";
 
@@ -850,7 +850,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
       {/* ========================================================================= */}
       <div className="flex items-center justify-center w-full">
         <div className={`p-1.5 rounded-2xl border flex items-center gap-1.5 w-full max-w-2xl shadow-2xs ${
-          isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+          isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
         }`}>
           {/* Step 1 */}
           <button
@@ -860,7 +860,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
               currentStep === 1
                 ? "bg-[#C96F55] text-white shadow-xs"
                 : isLight
-                  ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F7F6F2]"
+                  ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#FAF8F5]"
                   : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -883,7 +883,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
               currentStep === 2
                 ? "bg-[#C96F55] text-white shadow-xs"
                 : isLight
-                  ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F7F6F2]"
+                  ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#FAF8F5]"
                   : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -909,7 +909,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                 : !report
                   ? "opacity-50 cursor-not-allowed text-[#A8A49C]"
                   : isLight
-                    ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F7F6F2]"
+                    ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#FAF8F5]"
                     : "text-slate-400 hover:text-white hover:bg-white/5"
             }`}
           >
@@ -927,7 +927,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
       {!isAuthenticated ? (
         <div className={`rounded-3xl border p-6 sm:p-8 relative overflow-hidden transition-all shadow-sm ${
           isLight
-            ? "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F5] to-[#FFF4EE] border-[#E3E0D8]"
+            ? "bg-gradient-to-br from-[#FFFFFF] via-[#FAF9F5] to-[#FFF4EE] border-[#E8D7C9]"
             : "bg-gradient-to-br from-[#0d1222] via-[#11172b] to-[#1a1428] border-white/10"
         }`}>
           <div className="max-w-2xl mx-auto text-center space-y-4">
@@ -964,7 +964,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4 text-left">
               <div className={`p-3 rounded-xl border text-xs ${
-                isLight ? "bg-white/80 border-[#E3E0D8]" : "bg-black/30 border-white/5"
+                isLight ? "bg-white/80 border-[#E8D7C9]" : "bg-black/30 border-white/5"
               }`}>
                 <div className="font-bold text-[#C96F55] mb-0.5">📸 Vision OCR</div>
                 <div className={`${isLight ? "text-[#77736B]" : "text-slate-400"} text-[11px]`}>
@@ -972,7 +972,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                 </div>
               </div>
               <div className={`p-3 rounded-xl border text-xs ${
-                isLight ? "bg-white/80 border-[#E3E0D8]" : "bg-black/30 border-white/5"
+                isLight ? "bg-white/80 border-[#E8D7C9]" : "bg-black/30 border-white/5"
               }`}>
                 <div className="font-bold text-[#C96F55] mb-0.5">🎯 Official Rubrics</div>
                 <div className={`${isLight ? "text-[#77736B]" : "text-slate-400"} text-[11px]`}>
@@ -980,7 +980,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                 </div>
               </div>
               <div className={`p-3 rounded-xl border text-xs ${
-                isLight ? "bg-white/80 border-[#E3E0D8]" : "bg-black/30 border-white/5"
+                isLight ? "bg-white/80 border-[#E8D7C9]" : "bg-black/30 border-white/5"
               }`}>
                 <div className="font-bold text-[#C96F55] mb-0.5">💡 Model Solutions</div>
                 <div className={`${isLight ? "text-[#77736B]" : "text-slate-400"} text-[11px]`}>
@@ -988,7 +988,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                 </div>
               </div>
               <div className={`p-3 rounded-xl border text-xs ${
-                isLight ? "bg-white/80 border-[#E3E0D8]" : "bg-black/30 border-white/5"
+                isLight ? "bg-white/80 border-[#E8D7C9]" : "bg-black/30 border-white/5"
               }`}>
                 <div className="font-bold text-[#C96F55] mb-0.5">📊 Grade Forecast</div>
                 <div className={`${isLight ? "text-[#77736B]" : "text-slate-400"} text-[11px]`}>
@@ -1000,7 +1000,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
         </div>
       ) : (
         <div className={`p-3 px-4 rounded-2xl border flex items-center justify-between text-xs transition-all ${
-          isLight ? "bg-[#FAF9F5] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0d1222] border-white/10 text-slate-200"
+          isLight ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0d1222] border-white/10 text-slate-200"
         }`}>
           <div className="flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -1065,7 +1065,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
             
             {/* Zone 1: Question Paper */}
             <div className={`rounded-2xl p-5 border flex flex-col justify-between shadow-2xs ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
             }`}>
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -1074,13 +1074,13 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                   }`}>
                     1. Question paper
                   </h2>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E3E0D8] text-[#77736B]">
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E8D7C9] text-[#77736B]">
                     Optional
                   </span>
                 </div>
 
                 {questionPaperFile ? (
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F5] border border-[#E3E0D8] mb-3">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F5] border border-[#E8D7C9] mb-3">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <FileText size={18} className="text-[#C96F55] shrink-0" />
                       <div className="truncate">
@@ -1124,7 +1124,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       dragQp
                         ? "border-[#C96F55] bg-[#FFF1EC]"
                         : isLight
-                          ? "border-[#E3E0D8] bg-[#FAF9F5] hover:bg-[#F5F3EC]"
+                          ? "border-[#E8D7C9] bg-[#FAF9F5] hover:bg-[#F5F3EC]"
                           : "border-white/15 bg-white/5 hover:bg-white/10"
                     }`}
                   >
@@ -1149,7 +1149,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
 
             {/* Zone 2: Mark Scheme */}
             <div className={`rounded-2xl p-5 border flex flex-col justify-between shadow-2xs ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
             }`}>
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -1158,13 +1158,13 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                   }`}>
                     2. Official mark scheme
                   </h2>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E3E0D8] text-[#77736B]">
+                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#FAF9F5] border border-[#E8D7C9] text-[#77736B]">
                     Recommended
                   </span>
                 </div>
 
                 {markSchemeFile ? (
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F5] border border-[#E3E0D8] mb-3">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF9F5] border border-[#E8D7C9] mb-3">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <FileCheck size={18} className="text-[#C96F55] shrink-0" />
                       <div className="truncate">
@@ -1208,7 +1208,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       dragMs
                         ? "border-[#C96F55] bg-[#FFF1EC]"
                         : isLight
-                          ? "border-[#E3E0D8] bg-[#FAF9F5] hover:bg-[#F5F3EC]"
+                          ? "border-[#E8D7C9] bg-[#FAF9F5] hover:bg-[#F5F3EC]"
                           : "border-white/15 bg-white/5 hover:bg-white/10"
                     }`}
                   >
@@ -1282,7 +1282,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
               </div>
 
               {answerPages.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-[#E3E0D8] space-y-2.5">
+                <div className="mt-3 pt-3 border-t border-[#E8D7C9] space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
                       <Check size={13} /> {answerPages.length} {answerPages.length === 1 ? "page" : "pages"} loaded
@@ -1301,7 +1301,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                     {answerPages.map((pg, idx) => (
                       <div
                         key={pg.id || idx}
-                        className="p-1.5 rounded-xl border border-[#E3E0D8] bg-[#FAF9F5] flex items-center justify-between gap-1.5"
+                        className="p-1.5 rounded-xl border border-[#E8D7C9] bg-[#FAF9F5] flex items-center justify-between gap-1.5"
                       >
                         <div
                           className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
@@ -1312,7 +1312,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                             <img
                               src={pg.previewUrl}
                               alt={`Page ${idx + 1}`}
-                              className="w-8 h-8 object-cover rounded-md border border-[#E3E0D8] shrink-0"
+                              className="w-8 h-8 object-cover rounded-md border border-[#E8D7C9] shrink-0"
                               referrerPolicy="no-referrer"
                             />
                           ) : (
@@ -1397,7 +1397,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
               }}
               className={`px-4 py-2.5 rounded-xl border text-xs font-bold font-sans transition flex items-center gap-2 cursor-pointer shrink-0 shadow-2xs ${
                 isLight
-                  ? "bg-[#FFFFFF] hover:bg-[#F7F6F2] text-[#1D1D1B] border-[#E3E0D8]"
+                  ? "bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#1D1D1B] border-[#E8D7C9]"
                   : "bg-white/10 hover:bg-white/15 text-white border-white/15"
               }`}
             >
@@ -1419,7 +1419,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
             
             {/* Left Panel: Uploaded Paper Viewer or Document Canvas */}
             <div className={`xl:col-span-6 rounded-2xl border p-5 flex flex-col justify-between shadow-2xs ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
             }`}>
               <div>
                 {/* Header */}
@@ -1440,7 +1440,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                         <button
                           type="button"
                           onClick={() => setPreviewModalFile(questionPaperFile)}
-                          className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-[#FAF9F5] border border-[#E3E0D8] hover:bg-[#FFF1EC] hover:border-[#C96F55] text-[#1D1D1B] flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                          className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-[#FAF9F5] border border-[#E8D7C9] hover:bg-[#FFF1EC] hover:border-[#C96F55] text-[#1D1D1B] flex items-center gap-1 cursor-pointer transition shadow-2xs"
                           title="Preview full Question Paper"
                         >
                           <FileText size={12} className="text-[#C96F55]" />
@@ -1451,7 +1451,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                         <button
                           type="button"
                           onClick={() => setPreviewModalFile(markSchemeFile)}
-                          className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-[#FAF9F5] border border-[#E3E0D8] hover:bg-[#FFF1EC] hover:border-[#C96F55] text-[#1D1D1B] flex items-center gap-1 cursor-pointer transition shadow-2xs"
+                          className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-[#FAF9F5] border border-[#E8D7C9] hover:bg-[#FFF1EC] hover:border-[#C96F55] text-[#1D1D1B] flex items-center gap-1 cursor-pointer transition shadow-2xs"
                           title="Preview full Mark Scheme"
                         >
                           <FileCheck size={12} className="text-emerald-600" />
@@ -1472,9 +1472,9 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#E3E0D8]/60">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#E8D7C9]/60">
                     {/* Vision Filters for Handwriting */}
-                    <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#FAF9F5] border border-[#E3E0D8]">
+                    <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#FAF9F5] border border-[#E8D7C9]">
                       <button
                         type="button"
                         onClick={() => setImageFilterMode("normal")}
@@ -1520,7 +1520,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                             type="button"
                             onClick={() => setCurrentPageIndex(prev => Math.max(0, prev - 1))}
                             disabled={currentPageIndex === 0}
-                            className="px-1.5 py-1 rounded border border-[#E3E0D8] text-[10px] font-mono font-bold disabled:opacity-40 cursor-pointer"
+                            className="px-1.5 py-1 rounded border border-[#E8D7C9] text-[10px] font-mono font-bold disabled:opacity-40 cursor-pointer"
                           >
                             Prev
                           </button>
@@ -1531,7 +1531,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                             type="button"
                             onClick={() => setCurrentPageIndex(prev => Math.min(answerPages.length - 1, prev + 1))}
                             disabled={currentPageIndex >= answerPages.length - 1}
-                            className="px-1.5 py-1 rounded border border-[#E3E0D8] text-[10px] font-mono font-bold disabled:opacity-40 cursor-pointer"
+                            className="px-1.5 py-1 rounded border border-[#E8D7C9] text-[10px] font-mono font-bold disabled:opacity-40 cursor-pointer"
                           >
                             Next
                           </button>
@@ -1540,7 +1540,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       <button
                         type="button"
                         onClick={() => setZoomLevel(prev => Math.max(0.7, prev - 0.15))}
-                        className="p-1.5 rounded-lg border border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B] cursor-pointer"
+                        className="p-1.5 rounded-lg border border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] cursor-pointer"
                         title="Zoom out"
                       >
                         <ZoomOut size={13} />
@@ -1548,7 +1548,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       <button
                         type="button"
                         onClick={() => setZoomLevel(prev => Math.min(1.8, prev + 0.15))}
-                        className="p-1.5 rounded-lg border border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B] cursor-pointer"
+                        className="p-1.5 rounded-lg border border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] cursor-pointer"
                         title="Zoom in"
                       >
                         <ZoomIn size={13} />
@@ -1556,7 +1556,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       <button
                         type="button"
                         onClick={handleRotatePage}
-                        className="p-1.5 rounded-lg border border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B] cursor-pointer"
+                        className="p-1.5 rounded-lg border border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] cursor-pointer"
                         title="Rotate 90 degrees"
                       >
                         <RotateCw size={13} />
@@ -1577,7 +1577,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
 
                 {/* Display Scanned Image, PDF, or Clean Canvas */}
                 <div className={`w-full rounded-xl border min-h-[420px] max-h-[560px] overflow-auto flex items-center justify-center p-3 relative ${
-                  isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-[#080c18] border-white/10"
+                  isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#080c18] border-white/10"
                 }`}>
                   {activePage && activePage.previewUrl ? (
                     activePage.type === "application/pdf" || activePage.previewUrl.startsWith("data:application/pdf") ? (
@@ -1662,7 +1662,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                           className={`w-6 h-6 rounded-lg text-xs font-mono font-bold cursor-pointer ${
                             currentPageIndex === i
                               ? "bg-[#C96F55] text-white"
-                              : "bg-[#FAF9F5] border border-[#E3E0D8] text-[#77736B]"
+                              : "bg-[#FAF9F5] border border-[#E8D7C9] text-[#77736B]"
                           }`}
                         >
                           {i + 1}
@@ -1686,12 +1686,12 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
 
             {/* Right Panel: Detected Questions & Transcribed Student Answers */}
             <div className={`xl:col-span-6 rounded-2xl border p-5 md:p-6 flex flex-col justify-between shadow-2xs ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
             }`}>
               <div className="space-y-4">
                 
                 {/* Header with Add Question and Re-scan */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E3E0D8]">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E8D7C9]">
                   <div>
                     <h2 className={`text-sm md:text-base font-bold tracking-tight font-sans ${
                       isLight ? "text-[#1D1D1B]" : "text-white"
@@ -1716,7 +1716,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       <button
                         type="button"
                         onClick={() => runOcrParser(answerPages, questionPaperFile, markSchemeFile)}
-                        className="px-2.5 py-1.5 rounded-xl border text-xs font-semibold border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B] cursor-pointer flex items-center gap-1"
+                        className="px-2.5 py-1.5 rounded-xl border text-xs font-semibold border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] cursor-pointer flex items-center gap-1"
                         title="Re-run AI OCR on uploaded paper"
                       >
                         <RefreshCw size={12} />
@@ -1918,13 +1918,13 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                 </div>
 
                 {/* Exam Settings (Subject, Exam Board, Paper, Strict Mode) */}
-                <div className="pt-4 border-t border-[#E3E0D8] grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="pt-4 border-t border-[#E8D7C9] grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <label className="text-[11px] font-bold text-[#77736B] block mb-1">Subject</label>
                     <select
                       value={selectedSubject}
                       onChange={(e) => setSelectedSubject(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs font-semibold border rounded-xl bg-[#FAF9F5] border-[#E3E0D8] text-[#1D1D1B]"
+                      className="w-full px-2.5 py-1.5 text-xs font-semibold border rounded-xl bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]"
                     >
                       <option value="Mathematics">Mathematics</option>
                       <option value="Physics">Physics</option>
@@ -1943,7 +1943,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                     <select
                       value={selectedExamBoard}
                       onChange={(e) => setSelectedExamBoard(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs font-semibold border rounded-xl bg-[#FAF9F5] border-[#E3E0D8] text-[#1D1D1B]"
+                      className="w-full px-2.5 py-1.5 text-xs font-semibold border rounded-xl bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]"
                     >
                       <option value="Cambridge IGCSE">Cambridge IGCSE</option>
                       <option value="Pearson Edexcel">Pearson Edexcel</option>
@@ -1957,7 +1957,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                     <select
                       value={selectedPaper}
                       onChange={(e) => setSelectedPaper(e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs font-semibold border rounded-xl bg-[#FAF9F5] border-[#E3E0D8] text-[#1D1D1B]"
+                      className="w-full px-2.5 py-1.5 text-xs font-semibold border rounded-xl bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]"
                     >
                       <option value="Paper 2">Paper 2</option>
                       <option value="Paper 4">Paper 4</option>
@@ -2028,7 +2028,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
           
           {/* Top Score Banner Card */}
           <div className={`rounded-2xl p-6 border shadow-2xs ${
-            isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+            isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
           }`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               
@@ -2067,7 +2067,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                     onClick={handleDownloadReport}
                     className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
                       isLight
-                        ? "bg-[#FAF9F5] hover:bg-[#F5F3EC] text-[#1D1D1B] border-[#E3E0D8]"
+                        ? "bg-[#FAF9F5] hover:bg-[#F5F3EC] text-[#1D1D1B] border-[#E8D7C9]"
                         : "bg-white/5 hover:bg-white/10 text-white border-white/10"
                     }`}
                   >
@@ -2103,7 +2103,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition ${
                 activeFilter === "all"
                   ? "bg-[#C96F55] text-white"
-                  : "bg-white border border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B]"
+                  : "bg-white border border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]"
               }`}
             >
               All Questions ({report.questions.length})
@@ -2114,7 +2114,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition ${
                 activeFilter === "correct"
                   ? "bg-emerald-600 text-white"
-                  : "bg-white border border-[#E3E0D8] text-[#77736B] hover:text-emerald-700"
+                  : "bg-white border border-[#E8D7C9] text-[#77736B] hover:text-emerald-700"
               }`}
             >
               Full Marks ({report.questions.filter(q => q.status === "correct").length})
@@ -2125,7 +2125,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition ${
                 activeFilter === "partially_correct"
                   ? "bg-amber-600 text-white"
-                  : "bg-white border border-[#E3E0D8] text-[#77736B] hover:text-amber-700"
+                  : "bg-white border border-[#E8D7C9] text-[#77736B] hover:text-amber-700"
               }`}
             >
               Partially Correct ({report.questions.filter(q => q.status === "partially_correct").length})
@@ -2136,7 +2136,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition ${
                 activeFilter === "incorrect"
                   ? "bg-rose-600 text-white"
-                  : "bg-white border border-[#E3E0D8] text-[#77736B] hover:text-rose-700"
+                  : "bg-white border border-[#E8D7C9] text-[#77736B] hover:text-rose-700"
               }`}
             >
               Zero Marks ({report.questions.filter(q => q.status === "incorrect").length})
@@ -2159,7 +2159,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                   <div
                     key={q.questionNumber}
                     className={`rounded-2xl border p-5 transition-all shadow-2xs ${
-                      isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
                     }`}
                   >
                     {/* Question Header Bar */}
@@ -2168,7 +2168,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       className="flex items-center justify-between cursor-pointer select-none"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="font-mono font-black text-sm bg-[#FAF9F5] border border-[#E3E0D8] text-[#1D1D1B] px-2.5 py-1 rounded-lg">
+                        <span className="font-mono font-black text-sm bg-[#FAF9F5] border border-[#E8D7C9] text-[#1D1D1B] px-2.5 py-1 rounded-lg">
                           Question {q.questionNumber}
                         </span>
                         
@@ -2201,7 +2201,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       <div className="mt-5 space-y-4 pt-4 border-t border-[#EAE7E0]">
                         
                         {/* Student Answer Box */}
-                        <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E3E0D8]">
+                        <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E8D7C9]">
                           <p className="text-[10px] uppercase font-mono font-bold text-[#77736B] mb-1">
                             Your Answer Working:
                           </p>
@@ -2312,7 +2312,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
             
             {/* Strengths */}
             <div className={`p-5 rounded-2xl border shadow-2xs ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
             }`}>
               <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-3 flex items-center gap-1.5">
                 <CheckCircle2 size={15} />
@@ -2330,7 +2330,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
 
             {/* Recurring Mistakes */}
             <div className={`p-5 rounded-2xl border shadow-2xs ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
             }`}>
               <h3 className="text-xs font-bold uppercase tracking-wider text-rose-700 mb-3 flex items-center gap-1.5">
                 <AlertCircle size={15} />
@@ -2348,7 +2348,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
 
             {/* Revision Actions */}
             <div className={`p-5 rounded-2xl border shadow-2xs ${
-              isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0d1222] border-white/10"
+              isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0d1222] border-white/10"
             }`}>
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#C96F55] mb-3 flex items-center gap-1.5">
                 <Zap size={15} />
@@ -2371,7 +2371,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
 
       {/* Student Data Privacy & Zero-Retention AI Guarantee */}
       <div className={`mt-8 p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs ${
-        isLight ? "bg-[#FAF9F5] border-[#E3E0D8] text-[#77736B]" : "bg-[#0d1222] border-white/10 text-slate-400"
+        isLight ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#77736B]" : "bg-[#0d1222] border-white/10 text-slate-400"
       }`}>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-500/20">

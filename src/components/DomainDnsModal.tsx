@@ -35,7 +35,7 @@ interface DomainDnsModalProps {
 export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
   isOpen,
   onClose,
-  themeMode,
+  themeMode = "dark",
 }) => {
   const isLight = themeMode === "light";
   const [loading, setLoading] = useState(false);
@@ -152,11 +152,11 @@ export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
                 Your custom domain is resolving to an older registrar/parking IP instead of Vercel's production IP. To show latest changes:
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs font-mono">
-                <div className={`p-2.5 rounded-xl border ${isLight ? "bg-white border-[#E3E0D8]" : "bg-[#1E1735] border-[#2C1F4A]"}`}>
+                <div className={`p-2.5 rounded-xl border ${isLight ? "bg-white border-[#E8D7C9]" : "bg-[#1E1735] border-[#2C1F4A]"}`}>
                   <strong className="block text-emerald-500 mb-1">1. Update A-Record</strong>
                   Change DNS @ A-record in registrar to <span className="font-bold underline text-[#8B5CF6] dark:text-[#C084FC]">76.76.21.21</span>.
                 </div>
-                <div className={`p-2.5 rounded-xl border ${isLight ? "bg-white border-[#E3E0D8]" : "bg-[#1E1735] border-[#2C1F4A]"}`}>
+                <div className={`p-2.5 rounded-xl border ${isLight ? "bg-white border-[#E8D7C9]" : "bg-[#1E1735] border-[#2C1F4A]"}`}>
                   <strong className="block text-[#8B5CF6] dark:text-[#C084FC] mb-1">2. Push to GitHub</strong>
                   Push repo to GitHub so Vercel builds & publishes newest version.
                 </div>
@@ -166,7 +166,7 @@ export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
 
           {/* PRIMARY CONNECTION HERO CARD */}
           <div className={`p-4 sm:p-5 rounded-2xl border ${
-            isLight ? "bg-white border-[#E3E0D8]" : "bg-[#1E1735] border-[#2C1F4A]"
+            isLight ? "bg-white border-[#E8D7C9]" : "bg-[#1E1735] border-[#2C1F4A]"
           } space-y-3.5 shadow-xs`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -195,7 +195,7 @@ export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
                   disabled={loading}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
                     isLight 
-                      ? "bg-[#FAF9F5] border-[#E3E0D8] hover:bg-[#F0EEE8] text-[#1D1D1B]" 
+                      ? "bg-[#FAF9F5] border-[#E8D7C9] hover:bg-[#F0EEE8] text-[#1D1D1B]" 
                       : "bg-[#140E26] border-[#2C1F4A] hover:bg-[#281E44] text-[#FAF8F5]"
                   }`}
                 >
@@ -262,7 +262,7 @@ export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
 
           {/* REQUIRED DNS RECORDS CARD */}
           <div className={`p-4 sm:p-5 rounded-2xl border ${
-            isLight ? "bg-white border-[#E3E0D8]" : "bg-[#2C2723] border-[#3D3833]"
+            isLight ? "bg-white border-[#E8D7C9]" : "bg-[#2C2723] border-[#3D3833]"
           } space-y-3`}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#77736B] dark:text-[#ADA59B]">
@@ -296,7 +296,7 @@ export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
                     copiedKey === "a-record"
                       ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
                       : isLight 
-                      ? "bg-white border-[#E3E0D8] hover:bg-[#F0EEE8]" 
+                      ? "bg-white border-[#E8D7C9] hover:bg-[#F0EEE8]" 
                       : "bg-[#1E1735] border-[#2C1F4A] hover:bg-[#281E44] text-[#FAF8F5]"
                   }`}
                 >
@@ -327,7 +327,7 @@ export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
                     copiedKey === "cname-record"
                       ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
                       : isLight 
-                      ? "bg-white border-[#E3E0D8] hover:bg-[#F0EEE8]" 
+                      ? "bg-white border-[#E8D7C9] hover:bg-[#F0EEE8]" 
                       : "bg-[#1E1735] border-[#2C1F4A] hover:bg-[#281E44] text-[#FAF8F5]"
                   }`}
                 >
@@ -340,7 +340,7 @@ export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
 
           {/* GITHUB & VERCEL AUTOMATIC DEPLOYMENT CARD */}
           <div className={`p-4 sm:p-5 rounded-2xl border ${
-            isLight ? "bg-white border-[#E3E0D8]" : "bg-[#1E1735] border-[#2C1F4A]"
+            isLight ? "bg-white border-[#E8D7C9]" : "bg-[#1E1735] border-[#2C1F4A]"
           } space-y-3.5`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -433,7 +433,7 @@ export const DomainDnsModal: React.FC<DomainDnsModalProps> = ({
 
           {/* FIREBASE AUTH AUTHORIZED DOMAINS CARD */}
           <div className={`p-4 sm:p-5 rounded-2xl border ${
-            isLight ? "bg-white border-[#E3E0D8]" : "bg-[#2C2723] border-[#3D3833]"
+            isLight ? "bg-white border-[#E8D7C9]" : "bg-[#2C2723] border-[#3D3833]"
           } space-y-3`}>
             <div className="flex items-center gap-2">
               <ShieldCheck size={16} className="text-[#C96F55]" />

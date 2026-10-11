@@ -206,13 +206,13 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         id="file-preview-modal-container"
         className={`w-full max-w-5xl flex flex-col rounded-2xl border shadow-2xl overflow-hidden transition-all duration-200 ${
           isFullScreen ? "fixed inset-2 max-w-none h-[calc(100vh-16px)] z-50" : "max-h-[90vh] h-[85vh]"
-        } ${isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0F1422] border-white/10 text-white"}`}
+        } ${isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0F1422] border-white/10 text-white"}`}
       >
         {/* Header Bar */}
         <div
           id="file-preview-modal-header"
           className={`px-4 py-3 border-b flex items-center justify-between gap-3 shrink-0 ${
-            isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-[#141A2D] border-white/10"
+            isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#141A2D] border-white/10"
           }`}
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -247,7 +247,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Zoom Controls */}
             {(isPdf || isImage) && (
-              <div className="hidden sm:flex items-center gap-1 mr-2 px-2 py-1 rounded-lg border border-[#E3E0D8] bg-[#FAF9F5]">
+              <div className="hidden sm:flex items-center gap-1 mr-2 px-2 py-1 rounded-lg border border-[#E8D7C9] bg-[#FAF9F5]">
                 <button
                   type="button"
                   id="preview-zoom-out-btn"
@@ -280,7 +280,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                 onClick={() => setRotation((r) => (r + 90) % 360)}
                 className={`p-2 rounded-xl border text-xs flex items-center gap-1 cursor-pointer transition ${
                   isLight
-                    ? "border-[#E3E0D8] bg-[#FAF9F5] text-[#1D1D1B] hover:bg-[#F5F3EC]"
+                    ? "border-[#E8D7C9] bg-[#FAF9F5] text-[#1D1D1B] hover:bg-[#F5F3EC]"
                     : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
                 }`}
                 title="Rotate 90° Clockwise"
@@ -310,7 +310,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                     imageFilter !== "none"
                       ? "border-[#C96F55] bg-[#FFF1EC] text-[#C96F55]"
                       : isLight
-                        ? "border-[#E3E0D8] bg-[#FAF9F5] text-[#77736B] hover:text-[#1D1D1B]"
+                        ? "border-[#E8D7C9] bg-[#FAF9F5] text-[#77736B] hover:text-[#1D1D1B]"
                         : "border-white/10 bg-white/5 text-slate-300"
                   }`}
                   title="Filter handwriting clarity"
@@ -333,7 +333,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                   copiedText
                     ? "border-emerald-500 bg-emerald-50 text-emerald-700"
                     : isLight
-                      ? "border-[#E3E0D8] bg-[#FAF9F5] text-[#1D1D1B] hover:bg-[#F5F3EC]"
+                      ? "border-[#E8D7C9] bg-[#FAF9F5] text-[#1D1D1B] hover:bg-[#F5F3EC]"
                       : "border-white/10 bg-white/5 text-slate-200"
                 }`}
                 title="Copy content"
@@ -350,7 +350,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
               onClick={handleDownload}
               className={`p-2 rounded-xl border text-xs flex items-center gap-1 cursor-pointer transition ${
                 isLight
-                  ? "border-[#E3E0D8] bg-[#FAF9F5] text-[#1D1D1B] hover:bg-[#F5F3EC]"
+                  ? "border-[#E8D7C9] bg-[#FAF9F5] text-[#1D1D1B] hover:bg-[#F5F3EC]"
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
               }`}
               title="Download or save file"
@@ -365,7 +365,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
               onClick={() => setIsFullScreen((prev) => !prev)}
               className={`p-2 rounded-xl border text-xs flex items-center gap-1 cursor-pointer transition ${
                 isLight
-                  ? "border-[#E3E0D8] bg-[#FAF9F5] text-[#1D1D1B] hover:bg-[#F5F3EC]"
+                  ? "border-[#E8D7C9] bg-[#FAF9F5] text-[#1D1D1B] hover:bg-[#F5F3EC]"
                   : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
               }`}
               title={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
@@ -419,7 +419,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="relative shadow-lg rounded-lg overflow-hidden border border-[#E3E0D8] bg-white transition-transform duration-150">
+                <div className="relative shadow-lg rounded-lg overflow-hidden border border-[#E8D7C9] bg-white transition-transform duration-150">
                   <canvas ref={canvasRef} className="max-w-full h-auto block" />
                 </div>
               )}
@@ -430,7 +430,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
               <img
                 src={file.previewUrl || file.base64}
                 alt={file.name}
-                className="max-w-full max-h-[72vh] object-contain rounded-lg shadow-md border border-[#E3E0D8] transition-all duration-200"
+                className="max-w-full max-h-[72vh] object-contain rounded-lg shadow-md border border-[#E8D7C9] transition-all duration-200"
                 style={{
                   transform: `rotate(${rotation}deg) scale(${zoomLevel})`,
                   filter:
@@ -447,8 +447,8 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             </div>
           ) : isText ? (
             /* 3. Text / Markdown / Code View */
-            <div className="w-full max-w-3xl h-full flex flex-col bg-white rounded-xl border border-[#E3E0D8] shadow-xs overflow-hidden">
-              <div className="px-4 py-2 border-b border-[#E3E0D8] bg-[#FAF9F5] flex items-center justify-between text-[11px] font-mono text-[#77736B]">
+            <div className="w-full max-w-3xl h-full flex flex-col bg-white rounded-xl border border-[#E8D7C9] shadow-xs overflow-hidden">
+              <div className="px-4 py-2 border-b border-[#E8D7C9] bg-[#FAF9F5] flex items-center justify-between text-[11px] font-mono text-[#77736B]">
                 <span>Document Text Preview</span>
                 <span>{file.content ? `${file.content.length} characters` : ""}</span>
               </div>
@@ -457,7 +457,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="p-8 text-center bg-white rounded-xl border border-[#E3E0D8]">
+            <div className="p-8 text-center bg-white rounded-xl border border-[#E8D7C9]">
               <FileText size={40} className="text-[#C96F55] mx-auto mb-2" />
               <p className="text-sm font-bold text-[#1D1D1B]">{file.name}</p>
               <p className="text-xs text-[#77736B] mt-1">Binary file preview not directly supported.</p>
@@ -478,7 +478,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
           <div
             id="file-preview-modal-footer"
             className={`px-4 py-2.5 border-t flex items-center justify-between shrink-0 ${
-              isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-[#141A2D] border-white/10"
+              isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#141A2D] border-white/10"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -487,7 +487,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                 id="preview-prev-page-btn"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                className="px-3 py-1.5 rounded-lg border border-[#E3E0D8] text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F5F3EC] cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-[#E8D7C9] text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F5F3EC] cursor-pointer"
               >
                 <ChevronLeft size={14} />
                 <span>Previous</span>
@@ -497,7 +497,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                 id="preview-next-page-btn"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages}
-                className="px-3 py-1.5 rounded-lg border border-[#E3E0D8] text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F5F3EC] cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-[#E8D7C9] text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F5F3EC] cursor-pointer"
               >
                 <span>Next</span>
                 <ChevronRight size={14} />
@@ -510,7 +510,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                 id="preview-page-select"
                 value={currentPage}
                 onChange={(e) => setCurrentPage(Number(e.target.value))}
-                className="px-2 py-1 rounded-lg border border-[#E3E0D8] text-xs font-mono font-bold bg-white text-[#1D1D1B]"
+                className="px-2 py-1 rounded-lg border border-[#E8D7C9] text-xs font-mono font-bold bg-white text-[#1D1D1B]"
               >
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
                   <option key={num} value={num}>

@@ -7,7 +7,7 @@ interface CyberWaveBackgroundProps {
 export const CyberWaveBackground: React.FC<CyberWaveBackgroundProps> = ({ isLight = false }) => {
   if (isLight) {
     return (
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-[#F7F6F2]">
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-[#FAF8F5]">
         {/* Subtle warm ambient glows for light mode */}
         <div className="absolute top-12 left-12 w-[450px] h-[450px] bg-[#C96F55]/5 rounded-full blur-[130px]" />
         <div className="absolute bottom-16 right-16 w-[500px] h-[500px] bg-[#DFC0A9]/10 rounded-full blur-[140px]" />

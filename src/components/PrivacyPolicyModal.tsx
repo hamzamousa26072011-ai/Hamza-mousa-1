@@ -28,7 +28,7 @@ interface PrivacyPolicyModalProps {
 export default function PrivacyPolicyModal({
   isOpen,
   onClose,
-  themeMode = "light",
+  themeMode = "dark",
   currentUser
 }: PrivacyPolicyModalProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "collection" | "ai" | "security" | "rights">("overview");
@@ -114,13 +114,13 @@ export default function PrivacyPolicyModal({
           onClick={(e) => e.stopPropagation()}
           className={`w-full max-w-4xl max-h-[90vh] rounded-3xl border shadow-2xl flex flex-col overflow-hidden transition-all ${
             isLight
-              ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]"
+              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]"
               : "bg-[#0c1020] border-white/10 text-white"
           }`}
         >
           {/* Top Header Bar */}
           <div className={`p-5 sm:p-6 border-b flex items-center justify-between shrink-0 ${
-            isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-[#11172b] border-white/10"
+            isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#11172b] border-white/10"
           }`}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#C96F55]/10 border border-[#C96F55]/20 flex items-center justify-center text-[#C96F55] shrink-0">
@@ -147,7 +147,7 @@ export default function PrivacyPolicyModal({
                 onClick={handlePrintPolicy}
                 className={`p-2 rounded-xl border text-xs font-mono font-bold transition cursor-pointer hidden sm:flex items-center gap-1.5 ${
                   isLight
-                    ? "bg-white hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]"
+                    ? "bg-white hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]"
                     : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
                 }`}
                 title="Print or Save as PDF"
@@ -170,7 +170,7 @@ export default function PrivacyPolicyModal({
 
           {/* Navigation Tabs Bar */}
           <div className={`flex items-center gap-1 px-4 sm:px-6 py-2 border-b overflow-x-auto shrink-0 ${
-            isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-[#0a0f1d] border-white/5"
+            isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0a0f1d] border-white/5"
           }`}>
             {[
               { id: "overview", label: "1. Overview & Pledge", icon: ShieldCheck },
@@ -231,15 +231,15 @@ export default function PrivacyPolicyModal({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                  <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/30 border-white/5"}`}>
+                  <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/5"}`}>
                     <div className="font-bold text-[#C96F55] mb-1">Zero-Day AI Retention</div>
                     <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>Exam images are parsed in-memory and discarded once JSON evaluation completes.</p>
                   </div>
-                  <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/30 border-white/5"}`}>
+                  <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/5"}`}>
                     <div className="font-bold text-[#C96F55] mb-1">Client-Side First</div>
                     <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>Image enhancements and canvas contrast filtering occur locally in your browser.</p>
                   </div>
-                  <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/30 border-white/5"}`}>
+                  <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/5"}`}>
                     <div className="font-bold text-[#C96F55] mb-1">Instant Erasure</div>
                     <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>You maintain 100% control to export or permanently purge your papers at any second.</p>
                   </div>
@@ -252,21 +252,21 @@ export default function PrivacyPolicyModal({
                 <div className="space-y-3">
                   <h4 className="text-sm font-bold uppercase tracking-wider font-mono">2.1 Information You Explicitly Provide</h4>
                   <div className="space-y-2.5">
-                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/20 border-white/5"}`}>
+                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/20 border-white/5"}`}>
                       <strong className="block text-[#C96F55] mb-0.5">Account Credentials</strong>
                       <span className={isLight ? "text-[#55524B]" : "text-slate-300"}>
                         When creating an account via Google Sign-In or Email/Password, we receive your name, email address, and profile photo provided by Google Identity Services or Firebase Authentication.
                       </span>
                     </div>
 
-                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/20 border-white/5"}`}>
+                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/20 border-white/5"}`}>
                       <strong className="block text-[#C96F55] mb-0.5">Examination Scripts & Handwritten Answer Sheets</strong>
                       <span className={isLight ? "text-[#55524B]" : "text-slate-300"}>
                         Photos, camera scans, or PDF documents you upload to the AI Exam Checker for handwriting transcription and mark scheme grading.
                       </span>
                     </div>
 
-                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/20 border-white/5"}`}>
+                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/20 border-white/5"}`}>
                       <strong className="block text-[#C96F55] mb-0.5">Academic Planner & Focus Logs</strong>
                       <span className={isLight ? "text-[#55524B]" : "text-slate-300"}>
                         Your customized syllabuses (e.g. Cambridge CIE, Edexcel), daily study tasks, Eisenhower task matrix items, and completed Pomodoro timer statistics.
@@ -294,7 +294,7 @@ export default function PrivacyPolicyModal({
                     To transcribe handwritten calculations, chemical formulas, and essay answers, our backend interfaces with the Google Gemini Multimodal Vision API over an encrypted TLS 1.3 channel.
                   </p>
                   <div className={`p-4 rounded-2xl border space-y-2 ${
-                    isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/30 border-white/5"
+                    isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/5"
                   }`}>
                     <div className="flex items-center gap-2 text-emerald-600 font-bold">
                       <CheckCircle2 size={16} />
@@ -320,7 +320,7 @@ export default function PrivacyPolicyModal({
                 <div className="space-y-3">
                   <h4 className="text-sm font-bold uppercase tracking-wider font-mono">4.1 Architecture & Technical Safeguards</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/20 border-white/5"}`}>
+                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/20 border-white/5"}`}>
                       <div className="flex items-center gap-2 font-bold mb-1">
                         <Lock size={15} className="text-[#C96F55]" />
                         <span>Transit & Rest Encryption</span>
@@ -330,7 +330,7 @@ export default function PrivacyPolicyModal({
                       </p>
                     </div>
 
-                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/20 border-white/5"}`}>
+                    <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/20 border-white/5"}`}>
                       <div className="flex items-center gap-2 font-bold mb-1">
                         <Server size={15} className="text-[#C96F55]" />
                         <span>Zero-Trust Security Shield</span>
@@ -362,7 +362,7 @@ export default function PrivacyPolicyModal({
 
                 {/* Interactive Privacy Tools */}
                 <div className={`p-5 rounded-2xl border space-y-4 ${
-                  isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/30 border-white/10"
+                  isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/10"
                 }`}>
                   <h5 className="font-bold text-xs uppercase tracking-wider font-mono">Self-Service Student Privacy Tools</h5>
                   
@@ -372,7 +372,7 @@ export default function PrivacyPolicyModal({
                       onClick={handleExportStudentData}
                       className={`px-4 py-2.5 rounded-xl border text-xs font-bold font-sans flex items-center justify-center gap-2 transition cursor-pointer active:scale-98 ${
                         isLight
-                          ? "bg-white hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]"
+                          ? "bg-white hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]"
                           : "bg-white/5 hover:bg-white/10 border-white/15 text-white"
                       }`}
                     >
@@ -417,7 +417,7 @@ export default function PrivacyPolicyModal({
 
           {/* Bottom Action Footer */}
           <div className={`p-4 sm:p-5 border-t flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 ${
-            isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-[#11172b] border-white/10"
+            isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#11172b] border-white/10"
           }`}>
             <div className="flex items-center gap-2 text-xs font-mono">
               <ShieldCheck size={14} className="text-[#C96F55]" />

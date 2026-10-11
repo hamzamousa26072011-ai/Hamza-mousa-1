@@ -69,7 +69,7 @@ export default function FocusTab({
   pomodoroMode = "work",
   onModeChange,
   pomodoroCount = 0,
-  themeMode = "light",
+  themeMode = "dark",
   onFullScreenChange
 }: FocusTabProps) {
 
@@ -518,7 +518,7 @@ export default function FocusTab({
                 <button
                   onClick={handleExitFullscreen}
                   className={`sm:hidden p-2 ${
-                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
+                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
                   } border rounded-xl transition cursor-pointer`}
                   title="Exit Full Screen (Esc)"
                 >
@@ -528,7 +528,7 @@ export default function FocusTab({
 
               {/* Center: Quick Mode Switcher in Full Screen */}
               <div className={`hidden md:flex items-center border ${
-                isLight ? "border-[#E3E0D8] bg-[#F0EEE8]" : "border-white/10 bg-[#0C101E]"
+                isLight ? "border-[#E8D7C9] bg-[#F0EEE8]" : "border-white/10 bg-[#0C101E]"
               } p-1 rounded-2xl`}>
                 <button
                   onClick={() => handleModeSwitch("work")}
@@ -572,7 +572,7 @@ export default function FocusTab({
                 <button
                   onClick={handleQuickToggleSound}
                   className={`py-2 px-3 ${
-                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
+                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
                   } border rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer`}
                   title={
                     selectedSoundscape !== "silent"
@@ -601,7 +601,7 @@ export default function FocusTab({
                 <button
                   onClick={handleExitFullscreen}
                   className={`py-2 px-3.5 ${
-                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-200"
+                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-200"
                   } border rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
                   title="Exit Full Screen (Esc)"
                 >
@@ -627,7 +627,7 @@ export default function FocusTab({
                         ? isLight ? "bg-[#EAF3EC] text-[#66856D] border border-[#CDE3D2]" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                         : step === currentCycleStep
                         ? isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9] shadow-xs" : "bg-indigo-500/30 text-indigo-200 border border-indigo-500/50 shadow-lg shadow-indigo-500/20 scale-105"
-                        : isLight ? "bg-[#FFFFFF] text-[#77736B] border border-[#E3E0D8]" : "bg-white/5 text-slate-500 border border-white/5"
+                        : isLight ? "bg-[#FFFFFF] text-[#77736B] border border-[#E8D7C9]" : "bg-white/5 text-slate-500 border border-white/5"
                     }`}
                   >
                     <span>🍅</span>
@@ -699,12 +699,12 @@ export default function FocusTab({
                         Playing
                       </span>
                     ) : (
-                      <span className={`text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full border ${isLight ? "bg-black/5 text-[#77736B] border-[#E3E0D8]" : "bg-white/5 text-slate-400 border-white/10"}`}>
+                      <span className={`text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full border ${isLight ? "bg-black/5 text-[#77736B] border-[#E8D7C9]" : "bg-white/5 text-slate-400 border-white/10"}`}>
                         Ready on start
                       </span>
                     )
                   ) : (
-                    <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border ${isLight ? "bg-black/5 text-[#77736B] border-[#E3E0D8]" : "bg-white/5 text-slate-400 border-white/10"}`}>
+                    <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full border ${isLight ? "bg-black/5 text-[#77736B] border-[#E8D7C9]" : "bg-white/5 text-slate-400 border-white/10"}`}>
                       Quiet
                     </span>
                   )}
@@ -730,7 +730,7 @@ export default function FocusTab({
                               ? "bg-[#FFF1EC] text-[#C96F55] border-2 border-[#C96F55] shadow-xs font-bold scale-[1.02]"
                               : "bg-indigo-600/30 text-indigo-200 border-2 border-indigo-500 shadow-md shadow-indigo-500/20 font-bold scale-[1.02]"
                             : isLight
-                            ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] text-[#1D1D1B] border border-[#E3E0D8] hover:border-[#C96F55]/40"
+                            ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] text-[#1D1D1B] border border-[#E8D7C9] hover:border-[#C96F55]/40"
                             : "bg-[#0C101E]/80 hover:bg-[#151B2E] text-slate-300 border border-white/10 hover:border-white/20"
                         }`}
                         title={`${s.label} (${s.desc})`}
@@ -765,7 +765,7 @@ export default function FocusTab({
                     step="0.05"
                     value={soundVolume}
                     onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                    className="flex-1 h-1.5 bg-[#E3E0D8] dark:bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#C96F55]"
+                    className="flex-1 h-1.5 bg-[#E8D7C9] dark:bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#C96F55]"
                     title={`Volume: ${Math.round(soundVolume * 100)}%`}
                   />
                   <span className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} w-8 text-right`}>
@@ -816,7 +816,7 @@ export default function FocusTab({
                     onDurationChange(targetMins);
                   }}
                   className={`py-3 px-5 ${
-                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
+                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
                   } border rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
                   title="Reset timer to beginning of stage"
                 >
@@ -830,7 +830,7 @@ export default function FocusTab({
                     handleSkipToNext();
                   }}
                   className={`py-3 px-5 ${
-                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
+                    isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
                   } border rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
                   title="Skip to next Pomodoro stage"
                 >
@@ -865,7 +865,7 @@ export default function FocusTab({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className={`max-w-md w-full ${
-                isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0E1322] border-indigo-500/30 text-white"
+                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0E1322] border-indigo-500/30 text-white"
               } border rounded-3xl p-6 md:p-8 text-center relative overflow-hidden shadow-2xl`}
             >
               <div className={`w-14 h-14 rounded-2xl ${
@@ -884,7 +884,7 @@ export default function FocusTab({
               </p>
               
               <div className={`my-5 p-4 ${
-                isLight ? "bg-[#F7F6F2] border border-[#E3E0D8]" : "bg-indigo-950/30 border border-indigo-900/40"
+                isLight ? "bg-[#FAF8F5] border border-[#E8D7C9]" : "bg-indigo-950/30 border border-indigo-900/40"
               } rounded-2xl`}>
                 <div className="flex justify-between text-left items-center">
                   <div>
@@ -912,7 +912,7 @@ export default function FocusTab({
                 <button
                   onClick={() => setShowCompletionModal(false)}
                   className={`py-3 px-4 ${
-                    isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border-[#E3E0D8]" : "bg-white/5 hover:bg-white/10 text-slate-300 border-white/10"
+                    isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border-[#E8D7C9]" : "bg-white/5 hover:bg-white/10 text-slate-300 border-white/10"
                   } border font-mono font-bold text-xs uppercase rounded-xl transition cursor-pointer`}
                 >
                   Dismiss
@@ -927,7 +927,7 @@ export default function FocusTab({
 
       {/* Header Section */}
       <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b ${
-        isLight ? "border-[#E3E0D8]" : "border-white/5"
+        isLight ? "border-[#E8D7C9]" : "border-white/5"
       } pb-5 shrink-0 select-none`}>
         <div>
           <div className="flex items-center gap-2">
@@ -964,7 +964,7 @@ export default function FocusTab({
           <button
             onClick={() => setIsLocked(true)}
             className={`py-2.5 px-3.5 ${
-              isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-200"
+              isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-200"
             } border rounded-xl text-xs font-mono font-bold uppercase tracking-wide transition flex items-center gap-1.5 cursor-pointer select-none shadow-2xs`}
             title="Lock screen companion"
           >
@@ -979,13 +979,13 @@ export default function FocusTab({
         {/* LEFT COLUMN: THE CENTRAL VISUAL POMODORO TIMER DISPLAY */}
         <div className={`lg:col-span-7 xl:col-span-8 ${
           isLight 
-            ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs text-[#1D1D1B]" 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs text-[#1D1D1B]" 
             : `bg-gradient-to-b ${theme.gradientBg} bg-[#0A0D18] border border-white/10 shadow-2xl`
         } rounded-3xl p-6 md:p-8 flex flex-col items-center justify-between min-h-[490px] relative overflow-hidden`}>
           
           {/* 2-Hour Study Cycle Tracker Bar */}
           <div className={`w-full flex flex-col sm:flex-row items-center justify-between gap-3 ${
-            isLight ? "bg-[#F7F6F2] border border-[#E3E0D8]" : "bg-white/5 border border-white/5"
+            isLight ? "bg-[#FAF8F5] border border-[#E8D7C9]" : "bg-white/5 border border-white/5"
           } p-3 rounded-2xl select-none`}>
             <div className="flex items-center gap-2">
               <span className={`text-[10px] font-mono font-bold ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase`}>2-Hour Cycle:</span>
@@ -1001,7 +1001,7 @@ export default function FocusTab({
                           ? isLight ? "bg-[#EAF3EC] text-[#66856D] border border-[#CDE3D2]" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                           : isCurrent
                           ? isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9] shadow-xs" : "bg-indigo-500/30 text-indigo-200 border border-indigo-500/50 shadow-sm"
-                          : isLight ? "bg-[#FFFFFF] text-[#77736B] border border-[#E3E0D8]" : "bg-black/30 text-slate-600 border border-white/5"
+                          : isLight ? "bg-[#FFFFFF] text-[#77736B] border border-[#E8D7C9]" : "bg-black/30 text-slate-600 border border-white/5"
                       }`}
                     >
                       {isDone ? <CheckCircle2 size={10} className={isLight ? "text-[#66856D]" : "text-emerald-400"} /> : <span>🍅</span>}
@@ -1022,7 +1022,7 @@ export default function FocusTab({
                 onClick={handleEnterFullscreen}
                 className={`py-1 px-2.5 rounded-lg border text-[10px] font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
                   isLight
-                    ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]"
+                    ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]"
                     : "bg-white/10 hover:bg-white/15 border-white/10 text-white"
                 }`}
                 title="Enter Full Screen Focus View (F)"
@@ -1035,7 +1035,7 @@ export default function FocusTab({
 
           {/* Centered Top Mode Switcher segmented tabs */}
           <div className={`flex max-w-full overflow-x-auto no-scrollbar border ${
-            isLight ? "border-[#E3E0D8] bg-[#F0EEE8]" : "border-white/10 bg-[#07090F]"
+            isLight ? "border-[#E8D7C9] bg-[#F0EEE8]" : "border-white/10 bg-[#07090F]"
           } p-1.5 rounded-2xl w-full sm:w-fit my-4 select-none`}>
             <button
               onClick={() => handleModeSwitch("work")}
@@ -1162,7 +1162,7 @@ export default function FocusTab({
                   onDurationChange(targetMins);
                 }}
                 className={`py-3 px-5 ${
-                  isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
+                  isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
                 } border rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
                 title="Reset to full interval"
               >
@@ -1174,7 +1174,7 @@ export default function FocusTab({
               <button
                 onClick={handleSkipToNext}
                 className={`py-3 px-5 ${
-                  isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
+                  isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
                 } border rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
                 title="Advance to next step in Pomodoro routine"
               >
@@ -1188,7 +1188,7 @@ export default function FocusTab({
                 className={`py-3 px-4 rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-xs border ${
                   selectedSoundscape !== "silent"
                     ? isLight ? "bg-[#FFF1EC] text-[#C96F55] border-[#E8D7C9]" : "bg-[#C96F55]/20 text-[#C96F55] border-[#C96F55]/40"
-                    : isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E3E0D8] text-[#77736B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-400 hover:text-slate-200"
+                    : isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E8D7C9] text-[#77736B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-400 hover:text-slate-200"
                 }`}
                 title={selectedSoundscape !== "silent" ? `Active sound: ${selectedSoundscape} - Click for Quiet` : "Activate ambient soundscape"}
               >
@@ -1215,7 +1215,7 @@ export default function FocusTab({
 
         {/* RIGHT COLUMN: TIMER SETTINGS & EDITABLE INTERVAL TIMERS */}
         <div className={`lg:col-span-5 xl:col-span-4 ${
-          isLight ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
+          isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
         } rounded-3xl p-6 md:p-8 flex flex-col justify-between space-y-6 relative overflow-hidden`}>
           
           <div className="space-y-4">
@@ -1233,7 +1233,7 @@ export default function FocusTab({
             <div className="space-y-5 pt-2">
               
               {/* Slider 1: STUDY (WORK) */}
-              <div className={`space-y-2 ${isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-[#12192B]/60 border-white/5"} border p-3.5 rounded-2xl`}>
+              <div className={`space-y-2 ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#12192B]/60 border-white/5"} border p-3.5 rounded-2xl`}>
                 <div className="flex justify-between items-center text-xs font-mono">
                   <span className={`${isLight ? "text-[#1D1D1B]" : "text-slate-300"} uppercase font-black text-[10px] tracking-wider flex items-center gap-1.5`}>
                     <span className="w-2 h-2 rounded-full bg-[#C96F55]" />
@@ -1250,7 +1250,7 @@ export default function FocusTab({
                   <button
                     onClick={() => handleSlideChange("work", Math.max(5, workDuration - 5))}
                     className={`w-8 h-8 rounded-lg ${
-                      isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
+                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
                     } border flex items-center justify-center transition cursor-pointer`}
                   >
                     <Minus size={12} />
@@ -1263,13 +1263,13 @@ export default function FocusTab({
                     step="5"
                     value={workDuration}
                     onChange={(e) => handleSlideChange("work", Number(e.target.value))}
-                    className="flex-1 h-1.5 bg-[#E3E0D8] rounded-lg appearance-none cursor-pointer accent-[#C96F55]"
+                    className="flex-1 h-1.5 bg-[#E8D7C9] rounded-lg appearance-none cursor-pointer accent-[#C96F55]"
                   />
                   
                   <button
                     onClick={() => handleSlideChange("work", Math.min(120, workDuration + 5))}
                     className={`w-8 h-8 rounded-lg ${
-                      isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
+                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
                     } border flex items-center justify-center transition cursor-pointer`}
                   >
                     <Plus size={12} />
@@ -1278,7 +1278,7 @@ export default function FocusTab({
               </div>
 
               {/* Slider 2: SHORT BREAK */}
-              <div className={`space-y-2 ${isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-[#12192B]/60 border-white/5"} border p-3.5 rounded-2xl`}>
+              <div className={`space-y-2 ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#12192B]/60 border-white/5"} border p-3.5 rounded-2xl`}>
                 <div className="flex justify-between items-center text-xs font-mono">
                   <span className={`${isLight ? "text-[#1D1D1B]" : "text-slate-300"} uppercase font-black text-[10px] tracking-wider flex items-center gap-1.5`}>
                     <span className="w-2 h-2 rounded-full bg-[#66856D]" />
@@ -1295,7 +1295,7 @@ export default function FocusTab({
                   <button
                     onClick={() => handleSlideChange("break", Math.max(1, shortBreakDuration - 1))}
                     className={`w-8 h-8 rounded-lg ${
-                      isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
+                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
                     } border flex items-center justify-center transition cursor-pointer`}
                   >
                     <Minus size={12} />
@@ -1308,13 +1308,13 @@ export default function FocusTab({
                     step="1"
                     value={shortBreakDuration}
                     onChange={(e) => handleSlideChange("break", Number(e.target.value))}
-                    className="flex-1 h-1.5 bg-[#E3E0D8] rounded-lg appearance-none cursor-pointer accent-[#66856D]"
+                    className="flex-1 h-1.5 bg-[#E8D7C9] rounded-lg appearance-none cursor-pointer accent-[#66856D]"
                   />
                   
                   <button
                     onClick={() => handleSlideChange("break", Math.min(30, shortBreakDuration + 1))}
                     className={`w-8 h-8 rounded-lg ${
-                      isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
+                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
                     } border flex items-center justify-center transition cursor-pointer`}
                   >
                     <Plus size={12} />
@@ -1323,7 +1323,7 @@ export default function FocusTab({
               </div>
 
               {/* Slider 3: LONG BREAK */}
-              <div className={`space-y-2 ${isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-[#12192B]/60 border-white/5"} border p-3.5 rounded-2xl`}>
+              <div className={`space-y-2 ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#12192B]/60 border-white/5"} border p-3.5 rounded-2xl`}>
                 <div className="flex justify-between items-center text-xs font-mono">
                   <span className={`${isLight ? "text-[#1D1D1B]" : "text-slate-300"} uppercase font-black text-[10px] tracking-wider flex items-center gap-1.5`}>
                     <span className="w-2 h-2 rounded-full bg-[#587B8C]" />
@@ -1340,7 +1340,7 @@ export default function FocusTab({
                   <button
                     onClick={() => handleSlideChange("long", Math.max(5, longBreakDuration - 5))}
                     className={`w-8 h-8 rounded-lg ${
-                      isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
+                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
                     } border flex items-center justify-center transition cursor-pointer`}
                   >
                     <Minus size={12} />
@@ -1353,13 +1353,13 @@ export default function FocusTab({
                     step="5"
                     value={longBreakDuration}
                     onChange={(e) => handleSlideChange("long", Number(e.target.value))}
-                    className="flex-1 h-1.5 bg-[#E3E0D8] rounded-lg appearance-none cursor-pointer accent-[#587B8C]"
+                    className="flex-1 h-1.5 bg-[#E8D7C9] rounded-lg appearance-none cursor-pointer accent-[#587B8C]"
                   />
                   
                   <button
                     onClick={() => handleSlideChange("long", Math.min(60, longBreakDuration + 5))}
                     className={`w-8 h-8 rounded-lg ${
-                      isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
+                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
                     } border flex items-center justify-center transition cursor-pointer`}
                   >
                     <Plus size={12} />
@@ -1371,7 +1371,7 @@ export default function FocusTab({
           </div>
 
           {/* QUICK PRESETS ROW */}
-          <div className={`pt-3 border-t ${isLight ? "border-[#E3E0D8]" : "border-white/5"} space-y-2.5`}>
+          <div className={`pt-3 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/5"} space-y-2.5`}>
             <span className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest font-black block`}>
               Quick Method Presets
             </span>
@@ -1389,7 +1389,7 @@ export default function FocusTab({
               <button
                 onClick={() => applyPreset(25, 5, 15)}
                 className={`py-2 px-3 ${
-                  isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-300"
+                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-300"
                 } border rounded-xl text-[10px] font-mono font-bold transition flex items-center justify-between cursor-pointer`}
               >
                 <span>🍅 Classic · 25/5</span>
@@ -1399,7 +1399,7 @@ export default function FocusTab({
               <button
                 onClick={() => applyPreset(15, 3, 10)}
                 className={`py-2 px-3 ${
-                  isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-300"
+                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-300"
                 } border rounded-xl text-[10px] font-mono font-bold transition flex items-center justify-between cursor-pointer`}
               >
                 <span>⚡ Sprint · 15/3</span>
@@ -1409,7 +1409,7 @@ export default function FocusTab({
               <button
                 onClick={() => applyPreset(90, 20, 30)}
                 className={`py-2 px-3 ${
-                  isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-300"
+                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-300"
                 } border rounded-xl text-[10px] font-mono font-bold transition flex items-center justify-between cursor-pointer`}
               >
                 <span>🌊 Ultradian · 90/20</span>
@@ -1419,8 +1419,8 @@ export default function FocusTab({
           </div>
 
           {/* AMBIENT FOCUS SOUNDSCAPES CONTROLS */}
-          <div className={`pt-4 border-t ${isLight ? "border-[#E3E0D8]" : "border-white/5"} space-y-3.5 ${
-            isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-[#0A0E1A]/90 border-white/10"
+          <div className={`pt-4 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/5"} space-y-3.5 ${
+            isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0A0E1A]/90 border-white/10"
           } p-4 md:p-5 rounded-2xl border`}>
             
             {/* Header with audio wave bars */}
@@ -1507,7 +1507,7 @@ export default function FocusTab({
                       isActive
                         ? "bg-[#C96F55] text-white border-[#C96F55] shadow-md -translate-y-0.5"
                         : isLight
-                          ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] text-[#1D1D1B] border-[#E3E0D8]"
+                          ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] text-[#1D1D1B] border-[#E8D7C9]"
                           : "bg-[#0E1322] hover:bg-[#161D30] text-slate-300 border-white/5"
                     }`}
                     title={item.id === "silent" ? "Pure quiet (no ambient audio)" : `Play ${item.name}`}
@@ -1543,7 +1543,7 @@ export default function FocusTab({
                 step="0.05"
                 value={soundVolume}
                 onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-full h-1.5 bg-[#E3E0D8] rounded-lg appearance-none cursor-pointer accent-[#C96F55]"
+                className="w-full h-1.5 bg-[#E8D7C9] rounded-lg appearance-none cursor-pointer accent-[#C96F55]"
               />
             </div>
 
@@ -1556,7 +1556,7 @@ export default function FocusTab({
                 type="checkbox"
                 checked={autoSoundOnStudy}
                 onChange={(e) => setAutoSoundOnStudy(e.target.checked)}
-                className="w-4 h-4 rounded bg-[#FFFFFF] border-[#E3E0D8] text-[#C96F55] focus:ring-0 cursor-pointer accent-[#C96F55]"
+                className="w-4 h-4 rounded bg-[#FFFFFF] border-[#E8D7C9] text-[#C96F55] focus:ring-0 cursor-pointer accent-[#C96F55]"
               />
             </label>
           </div>

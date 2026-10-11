@@ -41,7 +41,7 @@ export default function HabitTrackerTab({
   habits,
   habitLogs,
   startDate,
-  themeMode = "light",
+  themeMode = "dark",
   currentUser,
   onUpdateHabits,
   onUpdateLogs,
@@ -427,7 +427,7 @@ export default function HabitTrackerTab({
         {/* Left: DAILY PROGRESS Area Chart */}
         <div className={`lg:col-span-6 rounded-2xl border p-5 flex flex-col justify-between ${
           isLight 
-            ? "bg-[#FFFFFF] border-[#E3E0D8] shadow-2xs" 
+            ? "bg-[#FFFFFF] border-[#E8D7C9] shadow-2xs" 
             : "bg-[#0E1322] border-white/10 shadow-sm"
         }`}>
           <div className="flex items-center justify-between mb-2">
@@ -483,7 +483,7 @@ export default function HabitTrackerTab({
 
           {/* Week Label Markers along Bottom Axis */}
           <div className={`pt-2 border-t flex items-center justify-between text-[11px] font-bold tracking-wider uppercase ${
-            isLight ? "border-[#E3E0D8] text-[#77736B]" : "border-white/10 text-slate-400"
+            isLight ? "border-[#E8D7C9] text-[#77736B]" : "border-white/10 text-slate-400"
           }`}>
             <span>WEEK 1</span>
             {rangeDays >= 14 && <span>WEEK 2</span>}
@@ -498,7 +498,7 @@ export default function HabitTrackerTab({
           
           {/* GOAL CARD */}
           <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
-            isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0E1322] border-white/10"
+            isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
           }`}>
             <div>
               <div className={`text-[10px] font-extrabold tracking-widest uppercase ${
@@ -513,7 +513,7 @@ export default function HabitTrackerTab({
               </div>
             </div>
             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-              isLight ? "bg-[#F7F6F2] text-[#77736B]" : "bg-white/5 text-slate-300"
+              isLight ? "bg-[#FAF8F5] text-[#77736B]" : "bg-white/5 text-slate-300"
             }`}>
               <Target size={18} />
             </div>
@@ -538,7 +538,7 @@ export default function HabitTrackerTab({
 
           {/* LEFT CARD */}
           <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
-            isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0E1322] border-white/10"
+            isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
           }`}>
             <div>
               <div className={`text-[10px] font-extrabold tracking-widest uppercase ${
@@ -553,7 +553,7 @@ export default function HabitTrackerTab({
               </div>
             </div>
             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-              isLight ? "bg-[#F7F6F2] text-[#77736B]" : "bg-white/5 text-slate-300"
+              isLight ? "bg-[#FAF8F5] text-[#77736B]" : "bg-white/5 text-slate-300"
             }`}>
               <Flame size={18} className="text-amber-500" />
             </div>
@@ -564,7 +564,7 @@ export default function HabitTrackerTab({
         {/* Right: OVERALL STATS Circular Gauge */}
         <div className={`lg:col-span-3 rounded-2xl border p-5 flex flex-col items-center justify-between text-center ${
           isLight 
-            ? "bg-[#FFFFFF] border-[#E3E0D8] shadow-2xs" 
+            ? "bg-[#FFFFFF] border-[#E8D7C9] shadow-2xs" 
             : "bg-[#0E1322] border-white/10 shadow-sm"
         }`}>
           <div className={`text-xs font-black tracking-widest uppercase ${
@@ -580,7 +580,7 @@ export default function HabitTrackerTab({
                 cx="52"
                 cy="52"
                 r={donutStroke.radius}
-                className={isLight ? "stroke-[#E3E0D8]" : "stroke-white/10"}
+                className={isLight ? "stroke-[#E8D7C9]" : "stroke-white/10"}
                 strokeWidth="9"
                 fill="transparent"
               />
@@ -611,7 +611,7 @@ export default function HabitTrackerTab({
 
           {/* Today summary pill */}
           <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            isLight ? "bg-[#F7F6F2] text-[#77736B]" : "bg-white/5 text-slate-300"
+            isLight ? "bg-[#FAF8F5] text-[#77736B]" : "bg-white/5 text-slate-300"
           }`}>
             Today: <span className="font-bold text-[#C96F55]">{stats.todayCompleted}</span> / {stats.todayTotal} done
           </div>
@@ -624,7 +624,7 @@ export default function HabitTrackerTab({
       {/* ========================================================================= */}
       <div className={`rounded-2xl border p-3 flex flex-wrap items-center justify-between gap-3 ${
         isLight 
-          ? "bg-[#FFFFFF] border-[#E3E0D8] shadow-2xs" 
+          ? "bg-[#FFFFFF] border-[#E8D7C9] shadow-2xs" 
           : "bg-[#0E1322] border-white/10 shadow-sm"
       }`}>
         
@@ -638,7 +638,7 @@ export default function HabitTrackerTab({
               title="Previous starting day"
               className={`p-2 transition cursor-pointer ${
                 isLight 
-                  ? "bg-[#F7F6F2] hover:bg-[#E8D7C9] text-[#1D1D1B]" 
+                  ? "bg-[#FAF8F5] hover:bg-[#E8D7C9] text-[#1D1D1B]" 
                   : "bg-white/5 hover:bg-white/10 text-white"
               }`}
             >
@@ -655,7 +655,7 @@ export default function HabitTrackerTab({
               title="Next starting day"
               className={`p-2 transition cursor-pointer ${
                 isLight 
-                  ? "bg-[#F7F6F2] hover:bg-[#E8D7C9] text-[#1D1D1B]" 
+                  ? "bg-[#FAF8F5] hover:bg-[#E8D7C9] text-[#1D1D1B]" 
                   : "bg-white/5 hover:bg-white/10 text-white"
               }`}
             >
@@ -679,7 +679,7 @@ export default function HabitTrackerTab({
 
           {/* Range Pills (7D, 14D, 21D, 30D) */}
           <div className={`flex items-center border rounded-xl p-0.5 ${
-            isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-white/5 border-white/10"
+            isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-white/5 border-white/10"
           }`}>
             {([7, 14, 21, 30] as const).map((r) => (
               <button
@@ -717,7 +717,7 @@ export default function HabitTrackerTab({
           {/* Data Saved Indicator */}
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
             isLight 
-              ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#66856D]" 
+              ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#66856D]" 
               : "bg-white/5 border-white/10 text-emerald-400"
           }`}>
             <CheckCircle2 size={13} className="text-[#66856D]" />
@@ -730,7 +730,7 @@ export default function HabitTrackerTab({
             title="Mark all habits completed for today"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
               isLight 
-                ? "bg-[#FFFFFF] hover:bg-[#F7F6F2] text-[#1D1D1B] border-[#E3E0D8]" 
+                ? "bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#1D1D1B] border-[#E8D7C9]" 
                 : "bg-white/5 hover:bg-white/10 text-white border-white/10"
             }`}
           >
@@ -744,7 +744,7 @@ export default function HabitTrackerTab({
             title="Reset starting anchor to today's date"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
               isLight 
-                ? "bg-[#FFFFFF] hover:bg-[#F7F6F2] text-[#1D1D1B] border-[#E3E0D8]" 
+                ? "bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#1D1D1B] border-[#E8D7C9]" 
                 : "bg-white/5 hover:bg-white/10 text-white border-white/10"
             }`}
           >
@@ -758,7 +758,7 @@ export default function HabitTrackerTab({
             title="Reset habit checks"
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border ${
               isLight 
-                ? "text-[#77736B] hover:text-red-600 hover:border-red-200 border-[#E3E0D8]" 
+                ? "text-[#77736B] hover:text-red-600 hover:border-red-200 border-[#E8D7C9]" 
                 : "text-slate-400 hover:text-red-400 hover:border-red-500/30 border-white/10"
             }`}
           >
@@ -774,7 +774,7 @@ export default function HabitTrackerTab({
       {/* ========================================================================= */}
       <div className={`rounded-2xl border overflow-hidden shadow-2xs ${
         isLight 
-          ? "bg-[#FFFFFF] border-[#E3E0D8]" 
+          ? "bg-[#FFFFFF] border-[#E8D7C9]" 
           : "bg-[#0E1322] border-white/10"
       }`}>
         <div className="overflow-x-auto">
@@ -805,11 +805,11 @@ export default function HabitTrackerTab({
               {/* Sub-header 1: Day of Week (Sa, Su, Mo, Tu, We, Th, Fr) */}
               <tr className={`border-b text-[11px] font-bold ${
                 isLight 
-                  ? "bg-[#F7F6F2] text-[#77736B] border-[#E3E0D8]" 
+                  ? "bg-[#FAF8F5] text-[#77736B] border-[#E8D7C9]" 
                   : "bg-white/5 text-slate-400 border-white/10"
               }`}>
                 <th className={`sticky left-0 z-20 px-4 py-2 border-r uppercase tracking-wider text-[10px] font-extrabold ${
-                  isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#77736B]" : "bg-[#0A0E1C] border-white/10 text-slate-400"
+                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-[#0A0E1C] border-white/10 text-slate-400"
                 }`}>
                   DAY OF WEEK
                 </th>
@@ -819,7 +819,7 @@ export default function HabitTrackerTab({
                     className={`px-1.5 py-1.5 text-center border-r min-w-[38px] ${
                       d.isToday 
                         ? (isLight ? "bg-[#FFF1EC] text-[#C96F55] font-black border-[#E8D7C9]" : "bg-[#C96F55]/20 text-white font-black border-[#C96F55]/40")
-                        : (isLight ? "border-[#E3E0D8]" : "border-white/10")
+                        : (isLight ? "border-[#E8D7C9]" : "border-white/10")
                     }`}
                   >
                     {d.dayOfWeek}
@@ -830,11 +830,11 @@ export default function HabitTrackerTab({
               {/* Sub-header 2: Day & Date Number (D1 12, D2 13...) */}
               <tr className={`border-b text-xs font-semibold ${
                 isLight 
-                  ? "bg-[#FFFFFF] text-[#1D1D1B] border-[#E3E0D8]" 
+                  ? "bg-[#FFFFFF] text-[#1D1D1B] border-[#E8D7C9]" 
                   : "bg-[#0E1322] text-white border-white/10"
               }`}>
                 <th className={`sticky left-0 z-20 px-4 py-2 border-r text-[10px] font-extrabold tracking-wider uppercase ${
-                  isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#77736B]" : "bg-[#0E1322] border-white/10 text-slate-400"
+                  isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#77736B]" : "bg-[#0E1322] border-white/10 text-slate-400"
                 }`}>
                   DAY & DATE
                 </th>
@@ -844,7 +844,7 @@ export default function HabitTrackerTab({
                     className={`px-1 py-1.5 text-center border-r ${
                       d.isToday 
                         ? (isLight ? "bg-[#FFF1EC] border-[#E8D7C9]" : "bg-[#C96F55]/15 border-[#C96F55]/40")
-                        : (isLight ? "border-[#E3E0D8]" : "border-white/10")
+                        : (isLight ? "border-[#E8D7C9]" : "border-white/10")
                     }`}
                   >
                     <div className="flex flex-col items-center">
@@ -888,13 +888,13 @@ export default function HabitTrackerTab({
                     key={habit.id}
                     className={`border-b transition group ${
                       isLight 
-                        ? "hover:bg-[#FAF9F5] border-[#E3E0D8]" 
+                        ? "hover:bg-[#FAF9F5] border-[#E8D7C9]" 
                         : "hover:bg-white/[0.02] border-white/10"
                     }`}
                   >
                     {/* Sticky Habit Info Column */}
                     <td className={`sticky left-0 z-10 px-4 py-2.5 border-r ${
-                      isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0E1322] border-white/10"
+                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
                     }`}>
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -925,7 +925,7 @@ export default function HabitTrackerTab({
                           className={`p-1 text-center border-r ${
                             d.isToday 
                               ? (isLight ? "bg-[#FFF1EC]/50 border-[#E8D7C9]" : "bg-[#C96F55]/5 border-[#C96F55]/30")
-                              : (isLight ? "border-[#E3E0D8]" : "border-white/10")
+                              : (isLight ? "border-[#E8D7C9]" : "border-white/10")
                           }`}
                         >
                           <button
@@ -954,10 +954,10 @@ export default function HabitTrackerTab({
               
               {/* MOOD (1-10) ROW */}
               <tr className={`border-b ${
-                isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/30 border-white/10"
+                isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/10"
               }`}>
                 <td className={`sticky left-0 z-10 px-4 py-2.5 border-r ${
-                  isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-[#0A0E1C] border-white/10"
+                  isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#0A0E1C] border-white/10"
                 }`}>
                   <div className="flex items-center gap-2">
                     <Smile size={16} className="text-amber-500" />
@@ -976,7 +976,7 @@ export default function HabitTrackerTab({
                       className={`p-1 text-center border-r ${
                         d.isToday 
                           ? (isLight ? "bg-[#FFF1EC]/50 border-[#E8D7C9]" : "bg-[#C96F55]/5 border-[#C96F55]/30")
-                          : (isLight ? "border-[#E3E0D8]" : "border-white/10")
+                          : (isLight ? "border-[#E8D7C9]" : "border-white/10")
                       }`}
                     >
                       <button
@@ -1008,10 +1008,10 @@ export default function HabitTrackerTab({
 
               {/* SLEEP (1-10) ROW */}
               <tr className={`border-b ${
-                isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-black/30 border-white/10"
+                isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/10"
               }`}>
                 <td className={`sticky left-0 z-10 px-4 py-2.5 border-r ${
-                  isLight ? "bg-[#FAF9F5] border-[#E3E0D8]" : "bg-[#0A0E1C] border-white/10"
+                  isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#0A0E1C] border-white/10"
                 }`}>
                   <div className="flex items-center gap-2">
                     <Moon size={16} className="text-indigo-400" />
@@ -1030,7 +1030,7 @@ export default function HabitTrackerTab({
                       className={`p-1 text-center border-r ${
                         d.isToday 
                           ? (isLight ? "bg-[#FFF1EC]/50 border-[#E8D7C9]" : "bg-[#C96F55]/5 border-[#C96F55]/30")
-                          : (isLight ? "border-[#E3E0D8]" : "border-white/10")
+                          : (isLight ? "border-[#E8D7C9]" : "border-white/10")
                       }`}
                     >
                       <button
@@ -1063,7 +1063,7 @@ export default function HabitTrackerTab({
               {/* TREND LINE FOOTER ROW (from user image) */}
               <tr className={isLight ? "bg-[#FFFFFF]" : "bg-[#0E1322]"}>
                 <td className={`sticky left-0 z-10 px-4 py-2 border-r ${
-                  isLight ? "bg-[#FFFFFF] border-[#E3E0D8]" : "bg-[#0E1322] border-white/10"
+                  isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
                 }`}>
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-black tracking-wider uppercase text-[#77736B]">
@@ -1112,7 +1112,7 @@ export default function HabitTrackerTab({
           >
             <div 
               className={`absolute p-2.5 rounded-xl border shadow-xl ${
-                isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#141A2D] border-white/20 text-white"
+                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#141A2D] border-white/20 text-white"
               }`}
               style={{
                 left: Math.min(Math.max(16, ratingPopover.x - 60), window.innerWidth - 180),
@@ -1157,7 +1157,7 @@ export default function HabitTrackerTab({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className={`w-full max-w-md rounded-2xl border p-6 shadow-2xl ${
-                isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0E1322] border-white/15 text-white"
+                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0E1322] border-white/15 text-white"
               }`}
             >
               <div className="flex items-center justify-between mb-4">
@@ -1194,7 +1194,7 @@ export default function HabitTrackerTab({
                     placeholder="e.g. Read 20 mins, Solve Physics, Review Flashcards"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition ${
                       isLight 
-                        ? "bg-[#F7F6F2] border-[#E3E0D8] focus:border-[#C96F55]" 
+                        ? "bg-[#FAF8F5] border-[#E8D7C9] focus:border-[#C96F55]" 
                         : "bg-white/5 border-white/10 focus:border-[#C96F55]"
                     }`}
                   />
@@ -1215,7 +1215,7 @@ export default function HabitTrackerTab({
                           newHabitEmoji === em
                             ? "bg-[#C96F55]/20 border-[#C96F55] scale-110 shadow-xs"
                             : isLight
-                              ? "bg-[#F7F6F2] border-[#E3E0D8] hover:border-slate-400"
+                              ? "bg-[#FAF8F5] border-[#E8D7C9] hover:border-slate-400"
                               : "bg-white/5 border-white/10 hover:border-white/30"
                         }`}
                       >
@@ -1258,7 +1258,7 @@ export default function HabitTrackerTab({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className={`w-full max-w-sm rounded-2xl border p-6 shadow-2xl ${
-                isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0E1322] border-white/15 text-white"
+                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0E1322] border-white/15 text-white"
               }`}
             >
               <div className="w-10 h-10 rounded-xl bg-red-500/15 text-red-500 flex items-center justify-center mb-3">

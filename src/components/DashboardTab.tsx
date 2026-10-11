@@ -56,7 +56,7 @@ export default function DashboardTab({
   pomodoroMode = "work",
   isPaused = false,
   pomodoroCount = 0,
-  themeMode = "light"
+  themeMode = "dark"
 }: DashboardTabProps) {
 
   const isLight = themeMode === "light";
@@ -94,7 +94,7 @@ export default function DashboardTab({
       {/* 1. SEAMLESS TOP GREETING BANNER WITH DYNAMIC METRICS */}
       <div className={`relative overflow-hidden ${
         isLight 
-          ? "bg-[#FFFFFF] border border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" 
+          ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" 
           : "bg-[#0A0714]/85 border border-white/10 text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)] backdrop-blur-2xl"
       } p-6 md:p-8 rounded-3xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6`}>
         
@@ -127,7 +127,7 @@ export default function DashboardTab({
           </div>
 
           <h1 className={`text-3xl md:text-4xl font-extrabold ${isLight ? "text-[#1D1D1B]" : "text-white"} mt-3 tracking-tight`}>
-            Yalla, <span className="bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-[#DDD6FE] text-transparent bg-clip-text font-black inline-block">engez nafsak</span> today! ⚡
+            Yalla, <span className={`${isLight ? "bg-gradient-to-r from-[#C96F55] via-[#DE7A5E] to-[#C96F55]" : "bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-[#DDD6FE]"} text-transparent bg-clip-text font-black inline-block`}>engez nafsak</span> today! ⚡
           </h1>
           <p className={`text-sm md:text-base mt-2 tracking-tight flex flex-wrap items-center gap-3 font-semibold ${
             isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"
@@ -141,7 +141,7 @@ export default function DashboardTab({
         {/* Global Streak / Focus Counter Block */}
         <div className={`flex items-center gap-4 ${
           isLight 
-            ? "bg-[#F7F6F2] border border-[#E3E0D8]" 
+            ? "bg-[#FAF8F5] border border-[#E8D7C9]" 
             : "bg-[#0A0714]/85 border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl"
         } px-5 py-3.5 rounded-2xl self-stretch lg:self-auto justify-around lg:justify-start`}>
           <div className="flex items-center gap-3">
@@ -154,7 +154,7 @@ export default function DashboardTab({
             </div>
           </div>
           
-          <div className={`w-px h-10 ${isLight ? "bg-[#E3E0D8]" : "bg-white/10"}`} />
+          <div className={`w-px h-10 ${isLight ? "bg-[#E8D7C9]" : "bg-white/10"}`} />
 
           <div className="flex items-center gap-3">
             <div className={`w-11 h-11 rounded-xl ${isLight ? "bg-[#C96F55]" : "bg-[#7C3AED] shadow-lg shadow-[#7C3AED]/30"} text-white shadow-xs flex items-center justify-center`}>
@@ -174,13 +174,13 @@ export default function DashboardTab({
         {/* TIER A: AI PRIORITIZER TASK MATRIX (Spans 4 Columns) */}
         <div className={`md:col-span-4 ${
           isLight 
-            ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs" 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs" 
             : "bg-[#0A0714]/85 border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
         } rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden h-fit md:min-h-[300px]`}>
           {!isLight && <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B5CF6]/10 rounded-full blur-2xl pointer-events-none" />}
           
           <div>
-            <div className={`flex justify-between items-center mb-5 border-b ${isLight ? "border-[#E3E0D8]" : "border-white/10"} pb-3`}>
+            <div className={`flex justify-between items-center mb-5 border-b ${isLight ? "border-[#E8D7C9]" : "border-white/10"} pb-3`}>
               <div>
                 <h2 className={`text-md font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"} tracking-wide font-sans`}>Your Tasks</h2>
                 <p className={`text-[10px] font-mono ${isLight ? "text-[#C96F55]" : "text-[#C084FC]"} uppercase tracking-wider font-semibold`}>Priority Action Queue</p>
@@ -203,7 +203,7 @@ export default function DashboardTab({
             <div className="space-y-3 max-h-[170px] overflow-y-auto pr-1">
               {tasks.length === 0 ? (
                 <div className={`p-8 text-center ${
-                  isLight ? "text-[#77736B] border border-dashed border-[#E3E0D8] bg-[#F7F6F2]" : "text-[#C4B5FD]/75 border border-dashed border-white/10 bg-[#120E22]"
+                  isLight ? "text-[#77736B] border border-dashed border-[#E8D7C9] bg-[#FAF8F5]" : "text-[#C4B5FD]/75 border border-dashed border-white/10 bg-[#120E22]"
                 } rounded-2xl`}>
                   <p className="text-xs font-mono">No assignments today.</p>
                   <p className={`text-[10px] mt-1 ${isLight ? "text-[#9B9890]" : "text-[#8B82A8]"}`}>You're all caught up!</p>
@@ -214,7 +214,7 @@ export default function DashboardTab({
                     key={task.id}
                     className={`p-3 rounded-2xl border transition duration-300 relative group flex gap-3 items-start ${
                       isLight 
-                        ? "border-[#E3E0D8] bg-[#F7F6F2]" 
+                        ? "border-[#E8D7C9] bg-[#FAF8F5]" 
                         : "border-white/10 bg-[#120E22]"
                     } ${task.completed ? "opacity-60" : ""}`}
                   >
@@ -231,7 +231,7 @@ export default function DashboardTab({
                       <div className="flex items-center gap-2 mt-2">
                         <span className={`text-[9px] font-mono ${
                           isLight 
-                            ? "text-[#77736B] bg-[#FFFFFF] border border-[#E3E0D8]" 
+                            ? "text-[#77736B] bg-[#FFFFFF] border border-[#E8D7C9]" 
                             : "text-[#C4B5FD] bg-[#0A0714] border border-white/10"
                         } px-2 py-0.5 rounded max-w-[120px] truncate`}>
                           {task.subject}
@@ -258,7 +258,7 @@ export default function DashboardTab({
             id="dashboard-create-task-matrix-btn"
             className={`w-full py-2.5 mt-4 ${
               isLight 
-                ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E3E0D8]" 
+                ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E8D7C9]" 
                 : "bg-[#120E22] hover:bg-[#1A1432] text-white border border-white/10"
             } rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-2`}
           >
@@ -270,7 +270,7 @@ export default function DashboardTab({
         {/* TIER B: SCHOLAR WORKSPACE PROGRESS CIRCLE (Spans 8 Columns for wide balance) */}
         <div className={`md:col-span-8 ${
           isLight 
-            ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs" 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs" 
             : "bg-[#0A0714]/85 border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
         } rounded-3xl p-6 flex flex-col justify-between relative min-h-[300px] overflow-hidden`}>
           {!isLight && (
@@ -309,7 +309,7 @@ export default function DashboardTab({
                   cx="56"
                   cy="56"
                   r="44"
-                  className={isLight ? "stroke-[#E3E0D8] fill-transparent" : "stroke-[#38312B] fill-transparent"}
+                  className={isLight ? "stroke-[#E8D7C9] fill-transparent" : "stroke-[#38312B] fill-transparent"}
                   strokeWidth="8"
                 />
                 {/* Dynamic progress track */}
@@ -343,7 +343,7 @@ export default function DashboardTab({
 
           <div className={`${
             isLight 
-              ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#77736B]" 
+              ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#77736B]" 
               : "bg-[#28231F] border border-[#38312B] text-[#B8AFA6]"
           } p-2.5 rounded-xl text-[9px] font-mono text-center uppercase tracking-wider font-semibold flex items-center justify-center gap-2`}>
             <TrendingUp size={12} className={isLight ? "text-[#66856D]" : "text-emerald-400"} />
@@ -354,7 +354,7 @@ export default function DashboardTab({
         {/* TIER D: THE FOCUS TIMER BLOCK (Spans 4 Columns) */}
         <div className={`md:col-span-4 rounded-3xl p-6 flex flex-col justify-between shadow-2xs relative overflow-hidden min-h-[260px] transition-all duration-300 ${
           isLight
-            ? "bg-[#FFFFFF] border border-[#E3E0D8]"
+            ? "bg-[#FFFFFF] border border-[#E8D7C9]"
             : "bg-[#0A0714]/85 border border-white/10 text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)]"
         }`}>
           {!isLight && (
@@ -374,7 +374,7 @@ export default function DashboardTab({
                 </span>
                 {pomodoroCount > 0 && (
                   <span className={`text-[8px] font-mono ${
-                    isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E3E0D8]" : "text-white bg-white/10 border border-white/15"
+                    isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E8D7C9]" : "text-white bg-white/10 border border-white/15"
                   } px-1.5 py-0.5 rounded font-bold`}>
                     🍅 {pomodoroCount}
                   </span>
@@ -389,7 +389,7 @@ export default function DashboardTab({
                   ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]"
                   : isPaused
                   ? "bg-[#F4E9D0] border-[#B98A4A]/30 text-[#B98A4A]"
-                  : "bg-[#F0EEE8] border-[#E3E0D8] text-[#77736B]"
+                  : "bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B]"
                 : focusModeActive
                 ? "bg-[#8B5CF6]/25 border-[#8B5CF6]/45 text-[#C084FC]"
                 : isPaused
@@ -459,7 +459,7 @@ export default function DashboardTab({
                 id="dashboard-timer-reset-btn"
                 className={`px-3 rounded-xl ${
                   isLight 
-                    ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E3E0D8]" 
+                    ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E8D7C9]" 
                     : "bg-[#120E22] hover:bg-[#1A1432] text-white border border-white/10"
                 } transition font-mono text-xs cursor-pointer flex items-center justify-center`}
                 title="Reset timer"
@@ -473,7 +473,7 @@ export default function DashboardTab({
               id="dashboard-timer-navigate-btn"
               className={`px-3 rounded-xl ${
                 isLight 
-                  ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E3E0D8]" 
+                  ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E8D7C9]" 
                   : "bg-[#120E22] hover:bg-[#1A1432] text-white border border-white/10"
               } transition font-mono text-xs cursor-pointer flex items-center justify-center`}
               title="Open full Pomodoro settings & cycles"
@@ -486,13 +486,13 @@ export default function DashboardTab({
         {/* TIER E: EXAM READINESS & REVISION HUB (Spans 8 Columns) */}
         <div className={`md:col-span-8 ${
           isLight 
-            ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs" 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs" 
             : "bg-[#0A0714]/85 border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
         } rounded-3xl p-6 flex flex-col justify-between min-h-[260px] relative overflow-hidden`}>
           {!isLight && <div className="absolute top-0 right-0 w-48 h-48 bg-[#8B5CF6]/10 rounded-full blur-3xl pointer-events-none" />}
           
           <div>
-            <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isLight ? "border-[#E3E0D8]" : "border-white/10"}`}>
+            <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isLight ? "border-[#E8D7C9]" : "border-white/10"}`}>
               <div>
                 <h2 className={`text-md font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"} tracking-wide flex items-center gap-2 font-sans`}>
                   <span>Exam Readiness & Quick Launch</span>
@@ -516,7 +516,7 @@ export default function DashboardTab({
                 onClick={() => onNavigateTab("countdown")}
                 className={`p-4 ${
                   isLight 
-                    ? "bg-[#F7F6F2] hover:bg-[#F0EEE8] border border-[#E3E0D8] hover:border-[#C96F55]/30" 
+                    ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border border-[#E8D7C9] hover:border-[#C96F55]/30" 
                     : "bg-[#120E22] hover:bg-[#1A1432] border border-white/10 hover:border-[#8B5CF6]/50 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
                 } rounded-2xl text-left transition group cursor-pointer flex items-start gap-3.5`}
               >
@@ -537,7 +537,7 @@ export default function DashboardTab({
                 onClick={() => onNavigateTab("scholar")}
                 className={`p-4 ${
                   isLight 
-                    ? "bg-[#F7F6F2] hover:bg-[#F0EEE8] border border-[#E3E0D8] hover:border-[#C96F55]/30" 
+                    ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border border-[#E8D7C9] hover:border-[#C96F55]/30" 
                     : "bg-[#120E22] hover:bg-[#1A1432] border border-white/10 hover:border-[#8B5CF6]/50 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
                 } rounded-2xl text-left transition group cursor-pointer flex items-start gap-3.5`}
               >
@@ -558,7 +558,7 @@ export default function DashboardTab({
                 onClick={() => onNavigateTab("matrix")}
                 className={`p-4 ${
                   isLight 
-                    ? "bg-[#F7F6F2] hover:bg-[#F0EEE8] border border-[#E3E0D8] hover:border-[#C96F55]/30" 
+                    ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border border-[#E8D7C9] hover:border-[#C96F55]/30" 
                     : "bg-[#120E22] hover:bg-[#1A1432] border border-white/10 hover:border-[#8B5CF6]/50 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
                 } rounded-2xl text-left transition group cursor-pointer flex items-start gap-3.5`}
               >
@@ -578,7 +578,7 @@ export default function DashboardTab({
           </div>
 
           <div className={`flex items-center justify-between mt-4 pt-3 border-t ${
-            isLight ? "border-[#E3E0D8] text-[#77736B]" : "border-white/10 text-[#C4B5FD]/75"
+            isLight ? "border-[#E8D7C9] text-[#77736B]" : "border-white/10 text-[#C4B5FD]/75"
           } text-[10px] font-mono`}>
             <span className="flex items-center gap-1.5">
               <Zap size={11} className={isLight ? "text-[#C96F55]" : "text-[#8B5CF6]"} />

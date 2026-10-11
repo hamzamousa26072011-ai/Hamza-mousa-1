@@ -73,7 +73,7 @@ export default function TaskMatrixTab({
   timeSystem,
   currentUser,
   onLogin,
-  themeMode = "light"
+  themeMode = "dark"
 }: TaskMatrixTabProps) {
   
   const isLight = themeMode === "light";
@@ -261,7 +261,7 @@ export default function TaskMatrixTab({
       
       {/* Title Header matching Screenshot 2 */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${
-        isLight ? "border-[#E3E0D8]" : "border-white/5"
+        isLight ? "border-[#E8D7C9]" : "border-white/5"
       } pb-5`}>
         <div>
           <span className={`text-[10px] font-mono ${isLight ? "text-[#C96F55]" : "text-indigo-400"} font-bold uppercase tracking-widest`}>
@@ -296,7 +296,7 @@ export default function TaskMatrixTab({
                     type="button"
                     onClick={() => setShowClearConfirm(false)}
                     className={`py-1.5 px-3 ${
-                      isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E3E0D8]" : "bg-white/5 text-slate-300 border border-white/5"
+                      isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E8D7C9]" : "bg-white/5 text-slate-300 border border-white/5"
                     } rounded-xl text-[10px] font-bold uppercase transition cursor-pointer`}
                   >
                     Cancel
@@ -339,7 +339,7 @@ export default function TaskMatrixTab({
         {/* Academic Tasks Overview Card */}
         <div className={`lg:col-span-6 p-4 ${
           isLight 
-            ? "bg-[#FFFFFF] border border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" 
             : "bg-[#140E26] border border-[#2C1F4A] text-[#FAF8F5] shadow-lg"
         } rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
           <div className="flex items-center gap-3">
@@ -382,22 +382,22 @@ export default function TaskMatrixTab({
         {/* 4 Stats Cards */}
         <div className={`lg:col-span-6 p-4 ${
           isLight 
-            ? "bg-[#FFFFFF] border border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" 
             : "bg-[#140E26] border border-[#2C1F4A] text-[#FAF8F5] shadow-lg"
         } rounded-2xl grid grid-cols-4 gap-2 text-center`}>
           <div className="flex flex-col items-center justify-center p-1">
             <span className={`text-[10px] font-mono uppercase font-bold ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"}`}>Total</span>
             <span className={`text-base font-black ${isLight ? "text-[#1D1D1B]" : "text-[#FAF8F5]"}`}>{totalCount}</span>
           </div>
-          <div className={`flex flex-col items-center justify-center p-1 border-l ${isLight ? "border-[#E3E0D8]" : "border-[#2C1F4A]"}`}>
+          <div className={`flex flex-col items-center justify-center p-1 border-l ${isLight ? "border-[#E8D7C9]" : "border-[#2C1F4A]"}`}>
             <span className={`text-[10px] font-mono uppercase font-bold ${isLight ? "text-[#66856D]" : "text-emerald-400"}`}>Done</span>
             <span className={`text-base font-black ${isLight ? "text-[#66856D]" : "text-emerald-400"}`}>{completedCount}</span>
           </div>
-          <div className={`flex flex-col items-center justify-center p-1 border-l ${isLight ? "border-[#E3E0D8]" : "border-[#2C1F4A]"}`}>
+          <div className={`flex flex-col items-center justify-center p-1 border-l ${isLight ? "border-[#E8D7C9]" : "border-[#2C1F4A]"}`}>
             <span className={`text-[10px] font-mono uppercase font-bold ${isLight ? "text-[#C96F55]" : "text-[#C084FC]"}`}>To Do</span>
             <span className={`text-base font-black ${isLight ? "text-[#C96F55]" : "text-[#C084FC]"}`}>{todoCount}</span>
           </div>
-          <div className={`flex flex-col items-center justify-center p-1 border-l ${isLight ? "border-[#E3E0D8]" : "border-[#2C1F4A]"}`}>
+          <div className={`flex flex-col items-center justify-center p-1 border-l ${isLight ? "border-[#E8D7C9]" : "border-[#2C1F4A]"}`}>
             <span className={`text-[10px] font-mono uppercase font-bold ${isLight ? "text-[#B85C5C]" : "text-rose-400"}`}>Overdue</span>
             <span className={`text-base font-black ${isLight ? "text-[#B85C5C]" : "text-rose-400"}`}>{overdueCount}</span>
           </div>
@@ -407,7 +407,7 @@ export default function TaskMatrixTab({
 
       {/* Master Horizontal Subject/Sync Tabs */}
       <div className={`flex items-center gap-1.5 overflow-x-auto pb-2 border-b ${
-        isLight ? "border-[#E3E0D8]" : "border-white/5"
+        isLight ? "border-[#E8D7C9]" : "border-white/5"
       } scrollbar-thin`}>
         {dynamicTabs.map((tab) => {
           const isActive = selectedSubjectTab === tab;
@@ -420,7 +420,7 @@ export default function TaskMatrixTab({
             ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]" 
             : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400";
           let inactiveStyleClass = isLight
-            ? "border-[#E3E0D8] bg-[#FFFFFF] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F0EEE8]"
+            ? "border-[#E8D7C9] bg-[#FFFFFF] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F0EEE8]"
             : "border-transparent text-slate-400 hover:text-white hover:bg-white/5";
 
           if (tab === "All") {
@@ -458,7 +458,7 @@ export default function TaskMatrixTab({
       {/* Task Creation Form Frame */}
       {showAddForm && (
         <form onSubmit={handleSubmit} className={`p-6 ${
-          isLight ? "bg-[#FFFFFF] border border-[#E3E0D8] text-[#1D1D1B] shadow-sm" : "bg-[#0A0714]/85 border border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+          isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B] shadow-sm" : "bg-[#0A0714]/85 border border-white/10 text-white shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
         } rounded-2xl relative space-y-4`}>
           {!isLight && <div className="absolute top-0 right-0 w-48 h-48 bg-[#8B5CF6]/10 rounded-full blur-3xl pointer-events-none" />}
           
@@ -480,7 +480,7 @@ export default function TaskMatrixTab({
                 placeholder="Review Paper 42 Electromagnetic force question..."
                 className={`w-full mt-1.5 px-4 py-2 ${
                   isLight 
-                    ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#1D1D1B] placeholder-[#9B9890] focus:border-[#C96F55]" 
+                    ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] placeholder-[#9B9890] focus:border-[#C96F55]" 
                     : "bg-[#120E22] border border-white/10 text-white placeholder-[#8B82A8] focus:border-[#8B5CF6]"
                 } rounded-xl text-xs transition shadow-inner focus:outline-none`}
                 required
@@ -498,7 +498,7 @@ export default function TaskMatrixTab({
                 onChange={(e) => setDueDate(e.target.value)}
                 className={`w-full mt-1.5 px-4 py-2 ${
                   isLight 
-                    ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55]" 
+                    ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
                     : "bg-[#120E22] border border-white/10 text-white focus:border-[#8B5CF6]"
                 } rounded-xl text-xs transition cursor-pointer focus:outline-none`}
                 required
@@ -516,7 +516,7 @@ export default function TaskMatrixTab({
                 onChange={(e) => setDueTime(e.target.value)}
                 className={`w-full mt-1.5 px-4 py-2 ${
                   isLight 
-                    ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55]" 
+                    ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
                     : "bg-[#120E22] border border-white/10 text-white focus:border-[#8B5CF6]"
                 } rounded-xl text-xs transition cursor-pointer focus:outline-none`}
                 required
@@ -525,7 +525,7 @@ export default function TaskMatrixTab({
 
             {/* Priority Indicator */}
             <div className={`md:col-span-2 ${
-              isLight ? "bg-[#F7F6F2] border border-[#E3E0D8]" : "bg-[#120E22] border border-white/10"
+              isLight ? "bg-[#FAF8F5] border border-[#E8D7C9]" : "bg-[#120E22] border border-white/10"
             } p-4 rounded-xl space-y-3.5`}>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
@@ -537,7 +537,7 @@ export default function TaskMatrixTab({
                   </p>
                 </div>
 
-                <div className={`flex border ${isLight ? "border-[#E3E0D8] bg-[#FFFFFF]" : "border-white/10 bg-[#0A0714]"} p-1 rounded-xl shrink-0`}>
+                <div className={`flex border ${isLight ? "border-[#E8D7C9] bg-[#FFFFFF]" : "border-white/10 bg-[#0A0714]"} p-1 rounded-xl shrink-0`}>
                   <button
                     type="button"
                     onClick={() => setUseAutoPriority(true)}
@@ -580,7 +580,7 @@ export default function TaskMatrixTab({
                       className={`flex-1 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase border transition ${
                         priority === lvl 
                           ? isLight ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]" : "bg-[#8B5CF6]/25 border-[#8B5CF6]/50 text-[#E9D5FF]"
-                          : isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#77736B]" : "bg-[#120E22] border-white/10 text-[#C4B5FD]/75"
+                          : isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#77736B]" : "bg-[#120E22] border-white/10 text-[#C4B5FD]/75"
                       }`}
                     >
                       {lvl}
@@ -601,7 +601,7 @@ export default function TaskMatrixTab({
               placeholder="e.g. Focus on electromagnetic direction rules and formula substitution..."
               className={`w-full mt-1.5 px-4 py-3 ${
                 isLight 
-                  ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#1D1D1B] placeholder-[#9B9890] focus:border-[#C96F55]" 
+                  ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] placeholder-[#9B9890] focus:border-[#C96F55]" 
                   : "bg-[#120E22] border border-white/10 text-white placeholder-[#8B82A8] focus:border-[#8B5CF6]"
               } rounded-xl text-xs transition h-20 focus:outline-none`}
             />
@@ -624,7 +624,7 @@ export default function TaskMatrixTab({
       <div className="space-y-4">
         {tasks.length === 0 ? (
           <div className={`p-14 text-center border-2 border-dashed ${
-            isLight ? "border-[#E3E0D8] bg-[#FFFFFF]" : "border-white/10 bg-[#0A0714]/70"
+            isLight ? "border-[#E8D7C9] bg-[#FFFFFF]" : "border-white/10 bg-[#0A0714]/70"
           } rounded-3xl`}>
             <Sparkles size={36} className={`mx-auto ${isLight ? "text-[#C96F55]" : "text-[#A855F7]"}`} />
             <h3 className={`text-sm font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"} mt-4 font-mono uppercase`}>
@@ -636,7 +636,7 @@ export default function TaskMatrixTab({
           </div>
         ) : filteredTasks.length === 0 ? (
           <div className={`p-12 text-center border border-dashed ${
-            isLight ? "border-[#E3E0D8] bg-[#FFFFFF]" : "border-white/10 bg-[#0A0714]/50"
+            isLight ? "border-[#E8D7C9] bg-[#FFFFFF]" : "border-white/10 bg-[#0A0714]/50"
           } rounded-3xl space-y-3`}>
             <Sparkles size={24} className={`mx-auto ${isLight ? "text-[#9B9890]" : "text-[#8B82A8]"}`} />
             <h3 className={`text-sm font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"} font-mono uppercase`}>
@@ -663,7 +663,7 @@ export default function TaskMatrixTab({
                           ? "bg-[#FFFFFF] border-[#F5E2E2] shadow-2xs"
                           : "bg-[#0A0714]/90 border-rose-500/35 shadow-lg shadow-rose-950/20"
                         : isLight
-                          ? "bg-[#FFFFFF] border-[#E3E0D8] shadow-2xs hover:border-[#C96F55]/40"
+                          ? "bg-[#FFFFFF] border-[#E8D7C9] shadow-2xs hover:border-[#C96F55]/40"
                           : "bg-[#0A0714]/85 border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:border-[#8B5CF6]/50 backdrop-blur-md"
                   }`}
                 >
@@ -687,7 +687,7 @@ export default function TaskMatrixTab({
                             ? isLight ? "bg-[#E3EEE5] border-[#C5DAC9] text-[#66856D]" : "bg-emerald-500/20 border-emerald-400 text-emerald-400" 
                             : isOverdue
                               ? isLight ? "border-[#B85C5C] hover:border-[#B85C5C] text-transparent" : "border-rose-550 hover:border-rose-400 text-transparent"
-                              : isLight ? "border-[#E3E0D8] hover:border-[#C96F55] text-transparent" : "border-white/20 hover:border-indigo-400 text-transparent"
+                              : isLight ? "border-[#E8D7C9] hover:border-[#C96F55] text-transparent" : "border-white/20 hover:border-indigo-400 text-transparent"
                         }`}
                       >
                         <CheckCircle size={12} fill="currentColor" />
@@ -728,7 +728,7 @@ export default function TaskMatrixTab({
                       
                       {task.estimatedMinutes && (
                         <span className={`text-[9px] font-mono ${
-                          isLight ? "text-[#77736B] bg-[#F0EEE8] border border-[#E3E0D8]" : "text-indigo-400 bg-indigo-950/40 border border-indigo-900/40"
+                          isLight ? "text-[#77736B] bg-[#F0EEE8] border border-[#E8D7C9]" : "text-indigo-400 bg-indigo-950/40 border border-indigo-900/40"
                         } px-2.5 py-0.5 rounded-lg flex items-center gap-1`}>
                           <Clock size={10} />
                           <span>Estimate: {task.estimatedMinutes} mins</span>

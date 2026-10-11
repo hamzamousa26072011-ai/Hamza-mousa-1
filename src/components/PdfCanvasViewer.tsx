@@ -85,7 +85,7 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
   return (
     <div className={`w-full flex flex-col items-center justify-between relative ${className}`}>
       {/* Top bar with page navigation if multi-page */}
-      <div className="w-full flex items-center justify-between px-3 py-1.5 bg-[#FAF9F5] border-b border-[#E3E0D8] rounded-t-lg text-xs">
+      <div className="w-full flex items-center justify-between px-3 py-1.5 bg-[#FAF9F5] border-b border-[#E8D7C9] rounded-t-lg text-xs">
         <div className="flex items-center gap-2 min-w-0">
           <FileText size={14} className="text-[#C96F55] shrink-0" />
           <span className="truncate font-medium text-[#1D1D1B] max-w-[180px] sm:max-w-xs">{title}</span>
@@ -141,7 +141,7 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
         )}
 
         {renderError ? (
-          <div className="text-center p-6 bg-white rounded-lg border border-[#E3E0D8]">
+          <div className="text-center p-6 bg-white rounded-lg border border-[#E8D7C9]">
             <FileText size={32} className="text-[#C96F55] mx-auto mb-2 opacity-70" />
             <p className="text-xs font-bold text-[#1D1D1B]">{title}</p>
             <p className="text-[11px] text-[#77736B] mt-1 mb-3">{renderError}</p>
@@ -156,7 +156,7 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
             </a>
           </div>
         ) : (
-          <div className="shadow-md rounded border border-[#E3E0D8] bg-white overflow-hidden max-w-full">
+          <div className="shadow-md rounded border border-[#E8D7C9] bg-white overflow-hidden max-w-full">
             <canvas ref={canvasRef} className="max-w-full h-auto block" />
           </div>
         )}

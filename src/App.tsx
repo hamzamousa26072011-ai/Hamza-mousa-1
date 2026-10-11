@@ -575,17 +575,28 @@ export default function App() {
 
   // SYSTEM LOGISTICS AND DISPLAY SETTINGS
   const [settings, setSettings] = useState(() => {
+    const hasExplicitThemeChoice = localStorage.getItem("ENGEZ_THEME_USER_OVERRIDE");
     const saved = localStorage.getItem("ENGEZ_SETTINGS_V3");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (!hasExplicitThemeChoice) {
+          return {
+            ...parsed,
+            themeMode: "dark" as "light" | "dark"
+          };
+        }
+        return {
+          ...parsed,
+          themeMode: parsed.themeMode || "dark"
+        };
       } catch (e) {
         console.error("Failed to parse settings:", e);
       }
     }
     return {
       timeSystem: "12" as "12" | "24",
-      themeMode: "light" as "light" | "dark"
+      themeMode: "dark" as "light" | "dark"
     };
   });
 
@@ -604,6 +615,9 @@ export default function App() {
   }, [settings]);
 
   const handleUpdateSettings = (newSettingsFields: Partial<typeof settings>) => {
+    if (newSettingsFields.themeMode) {
+      localStorage.setItem("ENGEZ_THEME_USER_OVERRIDE", "true");
+    }
     setSettings((prev) => ({
       ...prev,
       ...newSettingsFields
@@ -1477,7 +1491,7 @@ export default function App() {
 
   return (
     <div className={`flex min-h-screen ${
-      settings.themeMode === "light" ? "bg-[#F7F6F2] text-[#1D1D1B]" : "bg-[#000000] text-white"
+      settings.themeMode === "light" ? "bg-[#FAF8F5] text-[#1D1D1B]" : "bg-[#000000] text-white"
     } overflow-x-hidden relative transition-colors duration-300 font-sans`}>
       
       {/* CYBER WAVE PERSPECTIVE GRID & CELESTIAL GLOWING SPHERES */}
@@ -1503,7 +1517,7 @@ export default function App() {
         {/* TOP STATUS & PROFILE HEADER BAR */}
         <header className={`flex flex-row items-center justify-between gap-3 ${
           settings.themeMode === "light" 
-            ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-2xs" 
+            ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" 
             : "bg-[#0A0714]/85 border-white/10 text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)]"
         } border rounded-2xl p-3 sm:p-4 md:px-6 backdrop-blur-2xl transition-all duration-300`}>
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -1539,14 +1553,14 @@ export default function App() {
                     ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55] animate-pulse"
                     : "bg-[#8B5CF6]/25 border-[#8B5CF6]/50 text-[#C084FC] shadow-xs animate-pulse"
                   : settings.themeMode === "light"
-                  ? "bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B] hover:bg-[#E8D7C9]"
+                  ? "bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#E8D7C9]"
                   : "bg-[#120E22]/90 border-white/10 text-white hover:bg-[#1A1432]"
               }`}
               title="Focus timer"
             >
-              <Clock size={13} className={focusModeActive ? "text-[#8B5CF6]" : settings.themeMode === "light" ? "text-[#77736B]" : "text-[#C4B5FD]"} />
+              <Clock size={13} className={focusModeActive ? (settings.themeMode === "light" ? "text-[#C96F55]" : "text-[#8B5CF6]") : settings.themeMode === "light" ? "text-[#77736B]" : "text-[#C4B5FD]"} />
               <span className="text-[11px] sm:text-xs">{formatFocusTime()}</span>
-              {focusModeActive && <span className="w-1.5 h-1.5 bg-[#8B5CF6] rounded-full animate-ping" />}
+              {focusModeActive && <span className={`w-1.5 h-1.5 ${settings.themeMode === "light" ? "bg-[#C96F55]" : "bg-[#8B5CF6]"} rounded-full animate-ping`} />}
             </button>
 
             {/* Streak Badge */}
@@ -1555,34 +1569,15 @@ export default function App() {
                 ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]"
                 : "bg-[#8B5CF6]/15 border-[#8B5CF6]/35 text-[#C084FC]"
             } border text-[11px] sm:text-xs font-mono font-bold flex items-center gap-1 sm:gap-1.5 shadow-2xs min-h-[38px]`}>
-              <Flame size={13} className="fill-current text-[#8B5CF6] dark:text-[#C084FC]" />
+              <Flame size={13} className={`fill-current ${settings.themeMode === "light" ? "text-[#C96F55]" : "text-[#8B5CF6] dark:text-[#C084FC]"}`} />
               <span>{streak}d</span>
             </div>
-
-            {/* Custom DNS Domain Hub Pill */}
-            <button
-              onClick={() => setShowDnsModal(true)}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer min-h-[38px] ${
-                settings.themeMode === "light"
-                  ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F0EEE8]"
-                  : "bg-[#120E22]/90 border-white/10 text-white hover:bg-[#1A1432]"
-              }`}
-              title="Custom DNS & Domain Hub (engeznafsak.com)"
-            >
-              <Globe size={13} className="text-[#8B5CF6] dark:text-[#C084FC]" />
-              <span className="hidden sm:inline">engeznafsak.com</span>
-              <span className="sm:hidden">DNS</span>
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Connected
-              </span>
-            </button>
 
             {/* User Profile Pill */}
             {currentUser ? (
               <div className={`flex items-center gap-1.5 sm:gap-2 ${
                 settings.themeMode === "light"
-                  ? "bg-[#F0EEE8] border-[#E3E0D8] text-[#1D1D1B]"
+                  ? "bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]"
                   : "bg-[#1E1735] border-[#2C1F4A] text-[#FAF8F5]"
               } border px-2 sm:px-3 py-1.5 rounded-xl min-h-[38px]`}>
                 {currentUser.photoURL ? (
@@ -1837,7 +1832,7 @@ export default function App() {
 
         {/* Unified sleek footer */}
         <footer className={`border-t ${
-          settings.themeMode === "light" ? "border-[#E3E0D8] text-[#77736B]" : "border-white/5 text-slate-400"
+          settings.themeMode === "light" ? "border-[#E8D7C9] text-[#77736B]" : "border-white/5 text-slate-400"
         } pt-5 flex flex-col sm:flex-row items-center justify-between text-xs font-sans gap-3.5 mt-8 shrink-0`}>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span>Engez Nafsak (إنجز نفسك) • Engineered for Elite Academic Success</span>
@@ -1882,7 +1877,7 @@ export default function App() {
               transition={{ type: "spring", damping: 25, stiffness: 240 }}
               className={`w-full max-w-md ${
                 settings.themeMode === "light"
-                  ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] shadow-2xl"
+                  ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xl"
                   : "bg-[#0A0714] border-white/15 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
               } border rounded-3xl p-6 md:p-8 space-y-6 relative overflow-hidden text-center`}
             >
@@ -1965,7 +1960,7 @@ export default function App() {
                     </p>
                   </div>
 
-                  <div className={`p-2.5 ${settings.themeMode === "light" ? "bg-white border-[#E3E0D8]" : "bg-black/40 border-white/10"} border rounded-xl flex items-center justify-between gap-2`}>
+                  <div className={`p-2.5 ${settings.themeMode === "light" ? "bg-white border-[#E8D7C9]" : "bg-black/40 border-white/10"} border rounded-xl flex items-center justify-between gap-2`}>
                     <div className="truncate">
                       <span className="text-[10px] uppercase font-mono tracking-wider text-[#77736B] block">Your Custom Domain</span>
                       <span className="font-mono text-xs font-bold text-[#1D1D1B] dark:text-white truncate">{unauthorizedDomain}</span>
@@ -1980,7 +1975,7 @@ export default function App() {
                       className={`px-3 py-1.5 ${
                         isDomainCopied 
                           ? "bg-[#EAF3EC] text-[#66856D] border-[#D1E6D6]" 
-                          : "bg-[#FAF9F5] hover:bg-[#F0EEE8] text-[#1D1D1B] border-[#E3E0D8]"
+                          : "bg-[#FAF9F5] hover:bg-[#F0EEE8] text-[#1D1D1B] border-[#E8D7C9]"
                       } border rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0`}
                     >
                       {isDomainCopied ? <Check size={12} /> : <Copy size={12} />}
@@ -2037,7 +2032,7 @@ export default function App() {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className={`w-full max-w-sm ${settings.themeMode === "light" ? "bg-white border-[#E3E0D8]" : "bg-[#0f1528] border-white/15"} border rounded-3xl p-5 space-y-4 text-left shadow-2xl`}
+                    className={`w-full max-w-sm ${settings.themeMode === "light" ? "bg-white border-[#E8D7C9]" : "bg-[#0f1528] border-white/15"} border rounded-3xl p-5 space-y-4 text-left shadow-2xl`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -2081,7 +2076,7 @@ export default function App() {
                           onChange={(e) => setModalProjectId(e.target.value)}
                           placeholder="e.g. engez-nafsak"
                           className={`w-full px-3 py-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E3E0D8] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
+                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
                           } outline-none focus:border-[#C96F55]`}
                         />
                       </div>
@@ -2096,7 +2091,7 @@ export default function App() {
                           onChange={(e) => setModalApiKey(e.target.value)}
                           placeholder="e.g. AIzaSy..."
                           className={`w-full px-3 py-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E3E0D8] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
+                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
                           } outline-none focus:border-[#C96F55]`}
                         />
                       </div>
@@ -2111,7 +2106,7 @@ export default function App() {
                           onChange={(e) => setModalSnippet(e.target.value)}
                           placeholder="const firebaseConfig = { ... };"
                           className={`w-full p-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E3E0D8] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
+                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
                           } outline-none focus:border-[#C96F55] resize-none`}
                         />
                       </div>
@@ -2147,7 +2142,7 @@ export default function App() {
                   disabled={isGoogleLoading || isAuthSubmitLoading}
                   className={`w-full py-3 px-4 ${
                     settings.themeMode === "light"
-                      ? "bg-[#FFFFFF] hover:bg-[#FAF9F5] text-[#1D1D1B] border-[#E3E0D8] shadow-xs"
+                      ? "bg-[#FFFFFF] hover:bg-[#FAF9F5] text-[#1D1D1B] border-[#E8D7C9] shadow-xs"
                       : "bg-[#2D2824] hover:bg-[#36302B] text-[#F6F3EE] border-[#3D3833] shadow-md"
                   } disabled:opacity-60 disabled:cursor-not-allowed font-sans font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-3 border active:scale-[0.99]`}
                 >
@@ -2172,23 +2167,23 @@ export default function App() {
 
                 {/* DIVIDER */}
                 <div className="flex items-center gap-3">
-                  <div className={`h-px ${settings.themeMode === "light" ? "bg-[#E3E0D8]" : "bg-white/10"} flex-1`} />
+                  <div className={`h-px ${settings.themeMode === "light" ? "bg-[#E8D7C9]" : "bg-white/10"} flex-1`} />
                   <span className={`text-[10px] font-sans uppercase tracking-widest ${settings.themeMode === "light" ? "text-[#77736B]" : "text-slate-400"} font-medium`}>
                     or with email
                   </span>
-                  <div className={`h-px ${settings.themeMode === "light" ? "bg-[#E3E0D8]" : "bg-white/10"} flex-1`} />
+                  <div className={`h-px ${settings.themeMode === "light" ? "bg-[#E8D7C9]" : "bg-white/10"} flex-1`} />
                 </div>
 
                 {/* EMAIL AUTH PORTAL (Interactive Tabbed Card) */}
                 <div className={`${
                   settings.themeMode === "light"
-                    ? "bg-[#F7F6F2] border-[#E3E0D8]"
+                    ? "bg-[#FAF8F5] border-[#E8D7C9]"
                     : "bg-[#120E22] border-white/10 text-white"
                 } border rounded-2xl p-4 text-left space-y-4`}>
                   
                   {/* Mode Selector Tabs: Log In vs Sign Up */}
                   <div className={`grid grid-cols-2 p-1 ${
-                    settings.themeMode === "light" ? "bg-[#F0EEE8] border-[#E3E0D8]" : "bg-[#0A0714] border-white/10"
+                    settings.themeMode === "light" ? "bg-[#F0EEE8] border-[#E8D7C9]" : "bg-[#0A0714] border-white/10"
                   } rounded-xl border`}>
                     <button
                       type="button"
@@ -2243,7 +2238,7 @@ export default function App() {
                             placeholder="Student Name"
                             className={`w-full px-3.5 py-2.5 ${
                               settings.themeMode === "light"
-                                ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
+                                ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
                                 : "bg-[#0b0f1d] border-white/10 focus:border-indigo-500 text-white placeholder:text-slate-500"
                             } border rounded-xl text-xs focus:outline-none transition font-sans`}
                           />
@@ -2264,7 +2259,7 @@ export default function App() {
                           placeholder="student@example.com"
                           className={`w-full px-3.5 py-2.5 ${
                             settings.themeMode === "light"
-                              ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
+                              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
                               : "bg-[#0b0f1d] border-white/10 focus:border-indigo-500 text-white placeholder:text-slate-500"
                           } border rounded-xl text-xs focus:outline-none transition font-sans`}
                         />
@@ -2286,7 +2281,7 @@ export default function App() {
                           placeholder="Enter password"
                           className={`w-full px-3.5 py-2.5 pr-10 ${
                             settings.themeMode === "light"
-                              ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
+                              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
                               : "bg-[#0b0f1d] border-white/10 focus:border-indigo-500 text-white placeholder:text-slate-500"
                           } border rounded-xl text-xs focus:outline-none transition font-sans`}
                         />
@@ -2337,7 +2332,7 @@ export default function App() {
               </div>
 
               {/* Balanced Footer Inspiration */}
-              <div className={`pt-2 text-center text-[10px] ${settings.themeMode === "light" ? "text-[#77736B] border-[#E3E0D8]" : "text-slate-500 border-white/5"} font-sans border-t flex items-center justify-center gap-1.5`}>
+              <div className={`pt-2 text-center text-[10px] ${settings.themeMode === "light" ? "text-[#77736B] border-[#E8D7C9]" : "text-slate-500 border-white/5"} font-sans border-t flex items-center justify-center gap-1.5`}>
                 <ShieldCheck size={13} className="text-[#C96F55]" />
                 <span>Protected with Google OAuth 2.0 & Firebase Cloud Security</span>
               </div>

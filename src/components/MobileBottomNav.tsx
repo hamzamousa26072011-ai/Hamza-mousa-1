@@ -27,7 +27,7 @@ export default function MobileBottomNav({
   pendingTasksCount,
   focusModeActive,
   focusTimeRemaining,
-  themeMode = "light"
+  themeMode = "dark"
 }: MobileBottomNavProps) {
   const isLight = themeMode === "light";
 
@@ -45,7 +45,7 @@ export default function MobileBottomNav({
   return (
     <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-40 ${
       isLight 
-        ? "bg-[#FFFFFF]/95 border-t border-[#E3E0D8] text-[#1D1D1B]" 
+        ? "bg-[#FFFFFF]/95 border-t border-[#E8D7C9] text-[#1D1D1B]" 
         : "bg-[#000000]/90 border-t border-white/10 text-white"
     } backdrop-blur-2xl px-2 py-1.5 safe-area-bottom shadow-lg`}>
       <div className="flex items-center justify-around max-w-lg mx-auto">

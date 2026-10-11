@@ -43,7 +43,7 @@ export default function Sidebar({
   onLogin,
   onLogout,
   isFirestoreOffline = false,
-  themeMode = "light"
+  themeMode = "dark"
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   
@@ -63,7 +63,7 @@ export default function Sidebar({
   return (
     <nav className={`hidden md:flex shrink-0 flex-col items-center py-6 lg:py-7 gap-6 lg:gap-7 ${
       isLight 
-        ? "bg-[#FFFFFF] border-r border-[#E3E0D8] text-[#1D1D1B]" 
+        ? "bg-[#FFFFFF] border-r border-[#E8D7C9] text-[#1D1D1B]" 
         : "bg-[#000000]/85 border-r border-white/10 text-white"
     } backdrop-blur-2xl z-20 transition-all duration-300 ${
       isCollapsed ? "w-20 md:w-20 lg:w-24" : "w-56 md:w-60 lg:w-64"
@@ -89,7 +89,7 @@ export default function Sidebar({
                 <span className={`text-base font-black tracking-tight leading-tight ${isLight ? "text-[#1D1D1B]" : "text-[#FAF8F5]"} font-sans`}>
                   Engez Nafsak
                 </span>
-                <span className="text-[11px] font-bold text-[#8B5CF6] dark:text-[#A855F7] leading-tight font-sans">
+                <span className={`text-[11px] font-bold ${isLight ? "text-[#C96F55]" : "text-[#8B5CF6] dark:text-[#A855F7]"} leading-tight font-sans`}>
                   إنجز نفسك
                 </span>
               </div>
@@ -102,7 +102,7 @@ export default function Sidebar({
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={`p-2 rounded-xl transition cursor-pointer border shadow-2xs ${
             isLight 
-              ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] border-[#E3E0D8]" 
+              ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] border-[#E8D7C9]" 
               : "bg-[#161026] hover:bg-[#231B3B] text-[#C4B5FD] hover:text-[#FAF8F5] border-[#36255B]"
           }`}
           title={isCollapsed ? "Expand side menu" : "Collapse side menu"}
@@ -111,7 +111,7 @@ export default function Sidebar({
         </button>
       </div>
 
-      {/* Navigation Icon/Text Queue */}
+      {/* Navigation Icon/Queue */}
       <div className="flex-1 flex flex-col items-center gap-2.5 w-full px-3">
         {navItems.map((item) => {
           const IconComponent = item.icon;
@@ -135,7 +135,7 @@ export default function Sidebar({
                     : "text-[#C4B5FD]/70 hover:text-[#FAF8F5] hover:bg-[#1B1333] border-transparent"
               }`}
             >
-              <IconComponent size={19} className={isActive ? "scale-105 shrink-0 text-[#8B5CF6] dark:text-[#C084FC]" : "scale-100 group-hover:scale-105 duration-200 shrink-0 text-[#C4B5FD]/60"} />
+              <IconComponent size={19} className={isActive ? (isLight ? "scale-105 shrink-0 text-[#C96F55]" : "scale-105 shrink-0 text-[#8B5CF6] dark:text-[#C084FC]") : (isLight ? "scale-100 group-hover:scale-105 duration-200 shrink-0 text-[#77736B]" : "scale-100 group-hover:scale-105 duration-200 shrink-0 text-[#C4B5FD]/60")} />
               
               {/* If Sidebar is expanded, show the label directly beside the icon */}
               {!isCollapsed && (
@@ -147,7 +147,7 @@ export default function Sidebar({
               {/* Tooltip Overlay (Only show if sidebar is collapsed) */}
               {isCollapsed && (
                 <div className={`absolute left-16 md:left-20 scale-0 group-hover:scale-100 opacity-0 group-hover:opacity-100 transition-all duration-200 origin-left ${
-                  isLight ? "bg-[#FFFFFF] text-[#1D1D1B] border-[#E3E0D8]" : "bg-[#18112C] text-[#FAF8F5] border-[#36255B]"
+                  isLight ? "bg-[#FFFFFF] text-[#1D1D1B] border-[#E8D7C9]" : "bg-[#18112C] text-[#FAF8F5] border-[#36255B]"
                 } text-xs font-mono font-medium py-1.5 px-3 rounded-lg border shadow-xl whitespace-nowrap z-50 pointer-events-none`}>
                   {item.label}
                 </div>
@@ -164,7 +164,7 @@ export default function Sidebar({
 
       {/* Account Profile Connection Card */}
       <div className={`w-full px-3 border-t pt-4 flex flex-col items-center gap-3 ${
-        isLight ? "border-[#E3E0D8]" : "border-white/10"
+        isLight ? "border-[#E8D7C9]" : "border-white/10"
       }`}>
         {isAuthLoading ? (
           <div className="py-2 flex items-center justify-center">
@@ -172,7 +172,7 @@ export default function Sidebar({
           </div>
         ) : currentUser ? (
           <div className={`w-full flex ${isCollapsed ? "flex-col items-center gap-2.5" : "flex-row items-center justify-between gap-1.5"} p-2 ${
-            isLight ? "bg-[#F7F6F2] border border-[#E3E0D8]" : "bg-[#0A0714] border border-white/10 text-white"
+            isLight ? "bg-[#FAF8F5] border border-[#E8D7C9]" : "bg-[#0A0714] border border-white/10 text-white"
           } rounded-xl`}>
             <div className="flex items-center gap-2 min-w-0">
               {currentUser.photoURL ? (

@@ -98,7 +98,7 @@ export default function AiScholarTab({
   onLogin,
   onOpenAuthModal,
   onOpenPrivacyPolicy,
-  themeMode = "light"
+  themeMode = "dark"
 }: AiScholarTabProps) {
 
   const isLight = themeMode === "light";
@@ -158,27 +158,7 @@ export default function AiScholarTab({
   const [previewModal, setPreviewModal] = useState<{ images: string[]; activeIndex: number } | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  // Deep Examiner reasoning stage tracking for accuracy-first assessment
-  const [thinkingStage, setThinkingStage] = useState(0);
 
-  const THINKING_STAGES = [
-    "Reading question, diagrams & attached study files thoroughly...",
-    "Deconstructing method steps [M], formula manipulation & algebraic substitutions...",
-    "Checking numerical precision [A], SI units & Cambridge 3 significant figures rule...",
-    "Cross-referencing official Cambridge CIE & Pearson Edexcel mark scheme criteria...",
-    "Finalizing earned key points [M/A/B], points lost & pristine 100% model answer..."
-  ];
-
-  useEffect(() => {
-    if (!isAiLoading) {
-      setThinkingStage(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setThinkingStage(prev => (prev + 1) % 5);
-    }, 3500);
-    return () => clearInterval(interval);
-  }, [isAiLoading]);
 
   // Compress image helper for chat tutor
   const compressImageForChat = (dataUrl: string, maxDimension = 1600, quality = 0.82): Promise<string> => {
@@ -1088,7 +1068,7 @@ export default function AiScholarTab({
       
 
       {/* Tab Header Banner */}
-      <div className={`border-b ${isLight ? "border-[#E3E0D8]" : "border-white/5"} pb-4 sm:pb-5`}>
+      <div className={`border-b ${isLight ? "border-[#E8D7C9]" : "border-white/5"} pb-4 sm:pb-5`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
@@ -1111,7 +1091,7 @@ export default function AiScholarTab({
               type="button"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={`hidden lg:flex px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition items-center gap-1.5 cursor-pointer ${
-                isLight ? "bg-[#FFFFFF] border-[#E3E0D8] text-[#1D1D1B] hover:bg-[#F7F5F0]" : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F7F5F0]" : "bg-white/5 border-white/10 text-white hover:bg-white/10"
               }`}
               title="Toggle sidebar"
             >
@@ -1134,7 +1114,7 @@ export default function AiScholarTab({
 
         {/* Mobile & Tablet Segmented View Switcher (< lg screens) */}
         <div className={`flex lg:hidden items-center gap-1.5 mt-3 p-1 ${
-          isLight ? "bg-[#F0EEE8] border border-[#E3E0D8]" : "bg-black/40 border border-white/10"
+          isLight ? "bg-[#F0EEE8] border border-[#E8D7C9]" : "bg-black/40 border border-white/10"
         } rounded-xl w-full max-w-md`}>
           <button
             type="button"
@@ -1186,12 +1166,12 @@ export default function AiScholarTab({
           className={`${mobileView === "history" ? "flex" : "hidden"} ${
             isSidebarOpen ? "lg:flex lg:col-span-2" : "lg:hidden"
           } ${
-            isLight ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
+            isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
           } rounded-2xl lg:rounded-3xl p-4 lg:p-5 flex-col h-full overflow-hidden select-none`}
         >
           
           <div className={`flex items-center justify-between pb-3.5 border-b ${
-            isLight ? "border-[#E3E0D8]" : "border-white/5"
+            isLight ? "border-[#E8D7C9]" : "border-white/5"
           } mb-4 shrink-0`}>
             <span className={`text-xs font-bold ${isLight ? "text-[#1D1D1B]" : "text-slate-200"} tracking-wide flex items-center gap-1.5 font-mono uppercase`}>
               <History size={13} className={isLight ? "text-[#77736B]" : "text-slate-400"} />
@@ -1246,7 +1226,7 @@ export default function AiScholarTab({
                           ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#1D1D1B] font-bold shadow-2xs"
                           : "bg-[#1E253A] border-indigo-500/50 text-white font-bold shadow-md"
                         : isLight
-                          ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F0EEE8]"
+                          ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F0EEE8]"
                           : "bg-[#111626]/40 border-white/5 text-slate-400 hover:text-slate-200 hover:bg-[#111626]/80"
                     }`}
                   >
@@ -1277,11 +1257,11 @@ export default function AiScholarTab({
           className={`${mobileView === "document" ? "flex" : "hidden"} ${
             isSidebarOpen ? "lg:flex lg:col-span-3" : "lg:hidden"
           } ${
-            isLight ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
+            isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
           } rounded-2xl lg:rounded-3xl p-4 lg:p-5 flex-col h-full overflow-hidden select-none relative`}
         >
           {/* Header */}
-          <div className={`flex items-center justify-between pb-3.5 border-b ${isLight ? "border-[#E3E0D8]" : "border-white/5"} mb-3 shrink-0`}>
+          <div className={`flex items-center justify-between pb-3.5 border-b ${isLight ? "border-[#E8D7C9]" : "border-white/5"} mb-3 shrink-0`}>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold`}>
@@ -1289,7 +1269,7 @@ export default function AiScholarTab({
                 </span>
                 <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded border ${
                   isLight 
-                    ? "bg-[#F0EEE8] text-[#77736B] border-[#E3E0D8]" 
+                    ? "bg-[#F0EEE8] text-[#77736B] border-[#E8D7C9]" 
                     : "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
                 }`}>
                   {formatFileSize(totalFilesSizeBytes)} / 100 MB
@@ -1319,7 +1299,7 @@ export default function AiScholarTab({
           <div className="flex-1 overflow-y-auto space-y-3 min-h-0 pr-1 flex flex-col">
             {showCustomForm ? (
               <form onSubmit={handleApplyCustomFile} className={`p-4 rounded-2xl space-y-3 flex flex-col h-full justify-between overflow-y-auto min-h-0 ${
-                isLight ? "bg-[#F7F6F2] border border-[#E3E0D8]" : "bg-[#111728]/90 border border-white/5"
+                isLight ? "bg-[#FAF8F5] border border-[#E8D7C9]" : "bg-[#111728]/90 border border-white/5"
               }`}>
                 <div className="space-y-3 min-h-0 flex-1 overflow-y-auto pr-1">
                   <div className="flex items-center justify-between">
@@ -1327,7 +1307,7 @@ export default function AiScholarTab({
                     <button 
                       type="button" 
                       onClick={() => setShowCustomForm(false)} 
-                      className={`p-1 rounded ${isLight ? "bg-[#E3E0D8] text-[#1D1D1B]" : "bg-white/5 text-slate-400"} cursor-pointer`}
+                      className={`p-1 rounded ${isLight ? "bg-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 text-slate-400"} cursor-pointer`}
                     >
                       <X size={12} />
                     </button>
@@ -1341,7 +1321,7 @@ export default function AiScholarTab({
                       onChange={(e) => setCustomTitle(e.target.value)}
                       placeholder="e.g., Biology Midterm Notes"
                       className={`w-full mt-1 px-3 py-2 ${
-                        isLight ? "bg-[#FFFFFF] border border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0C101C] border border-white/10 text-white"
+                        isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0C101C] border border-white/10 text-white"
                       } rounded-xl text-xs focus:outline-none`}
                       required
                     />
@@ -1354,7 +1334,7 @@ export default function AiScholarTab({
                       onChange={(e) => setCustomContent(e.target.value)}
                       placeholder="Paste your course notes, textbooks snippets, definition indexes or worksheets text here..."
                       className={`w-full flex-1 px-3 py-2 ${
-                        isLight ? "bg-[#FFFFFF] border border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0C101C] border border-white/10 text-white"
+                        isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0C101C] border border-white/10 text-white"
                       } rounded-xl text-xs font-mono resize-none focus:outline-none`}
                       required
                     />
@@ -1380,7 +1360,7 @@ export default function AiScholarTab({
                 className={`flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-2xl transition duration-300 cursor-pointer h-full group relative overflow-hidden ${
                   isDragging 
                     ? isLight ? "border-[#C96F55] bg-[#FFF1EC]" : "border-indigo-500 bg-indigo-500/10"
-                    : isLight ? "border-[#E3E0D8] bg-[#F7F6F2] hover:border-[#C96F55]/60 hover:bg-[#FFF1EC]/30" : "border-white/5 bg-[#11111f]/20 hover:border-indigo-500/30"
+                    : isLight ? "border-[#E8D7C9] bg-[#FAF8F5] hover:border-[#C96F55]/60 hover:bg-[#FFF1EC]/30" : "border-white/5 bg-[#11111f]/20 hover:border-indigo-500/30"
                 }`}
               >
                 {isExtracting ? (
@@ -1402,7 +1382,7 @@ export default function AiScholarTab({
                         setShowCustomForm(true);
                       }}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold ${
-                        isLight ? "bg-[#FFFFFF] border border-[#E3E0D8] text-[#1D1D1B]" : "bg-white/5 text-slate-300"
+                        isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 text-slate-300"
                       }`}
                     >
                       + Paste text directly
@@ -1424,7 +1404,7 @@ export default function AiScholarTab({
                         className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 cursor-pointer transition ${
                           isDocActive
                             ? isLight ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#1B233D] border-indigo-500/40 text-white"
-                            : isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#77736B]" : "bg-white/5 border-white/5 text-slate-400"
+                            : isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-white/5 border-white/5 text-slate-400"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1473,7 +1453,7 @@ export default function AiScholarTab({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className={`py-2 w-full rounded-xl text-xs font-mono font-bold uppercase flex items-center justify-center gap-1.5 ${
-                    isLight ? "bg-[#F0EEE8] border border-[#E3E0D8] text-[#1D1D1B] hover:bg-[#E8D7C9]" : "bg-white/5 hover:bg-white/10 text-slate-300"
+                    isLight ? "bg-[#F0EEE8] border border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#E8D7C9]" : "bg-white/5 hover:bg-white/10 text-slate-300"
                   }`}
                 >
                   <Plus size={13} />
@@ -1490,17 +1470,17 @@ export default function AiScholarTab({
           className={`${mobileView === "chat" ? "flex" : "hidden lg:flex"} ${
             isSidebarOpen ? "lg:col-span-7" : "lg:col-span-12"
           } ${
-            isLight ? "bg-[#FFFFFF] border border-[#E3E0D8] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
+            isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
           } rounded-2xl lg:rounded-3xl p-4 lg:p-5 flex flex-col h-full overflow-hidden`}
         >
           {/* Header */}
-          <div className={`flex items-center justify-between pb-3.5 border-b ${isLight ? "border-[#E3E0D8]" : "border-white/5"} mb-3 shrink-0`}>
+          <div className={`flex items-center justify-between pb-3.5 border-b ${isLight ? "border-[#E8D7C9]" : "border-white/5"} mb-3 shrink-0`}>
             <div className="flex items-center gap-2.5 min-w-0">
               <button
                 type="button"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className={`hidden lg:flex p-1.5 rounded-xl border ${
-                  isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B]" : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]" : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
                 } transition cursor-pointer`}
                 title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
               >
@@ -1515,7 +1495,7 @@ export default function AiScholarTab({
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <label className={`flex items-center gap-1.5 text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg border cursor-pointer ${
-                    isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B]" : "bg-white/5 border-white/10 text-slate-200"
+                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 border-white/10 text-slate-200"
                   }`}>
                     <BookOpen size={11} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
                     <span className={isLight ? "text-[#77736B]" : "text-slate-400"}>Subject:</span>
@@ -1587,7 +1567,7 @@ export default function AiScholarTab({
                 }}
                 disabled={activeThread.messages.length === 0}
                 className={`p-1.5 rounded-xl border transition cursor-pointer disabled:opacity-30 ${
-                  isLight ? "border-[#E3E0D8] text-[#77736B] hover:text-rose-600 hover:bg-rose-50" : "border-white/10 text-slate-400 hover:text-rose-400"
+                  isLight ? "border-[#E8D7C9] text-[#77736B] hover:text-rose-600 hover:bg-rose-50" : "border-white/10 text-slate-400 hover:text-rose-400"
                 }`}
                 title="Clear conversation messages"
               >
@@ -1598,7 +1578,7 @@ export default function AiScholarTab({
                 type="button"
                 onClick={() => setShowAiModal(true)}
                 className={`p-1.5 rounded-xl border transition cursor-pointer ${
-                  isLight ? "border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F7F5F0]" : "border-white/10 text-slate-400 hover:text-white"
+                  isLight ? "border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F7F5F0]" : "border-white/10 text-slate-400 hover:text-white"
                 }`}
                 title="DNS & Gemini Model Info"
               >
@@ -1631,7 +1611,7 @@ export default function AiScholarTab({
                       onClick={() => handleSend(sug.prompt)}
                       className={`w-full p-2.5 rounded-xl border text-xs transition cursor-pointer text-left ${
                         isLight 
-                          ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B] hover:bg-[#FFF1EC] hover:border-[#E8D7C9]" 
+                          ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#FFF1EC] hover:border-[#E8D7C9]" 
                           : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
                       }`}
                     >
@@ -1648,21 +1628,21 @@ export default function AiScholarTab({
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                       isAi 
                         ? isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-[#1B233D] text-indigo-400 border border-indigo-500/20"
-                        : isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E3E0D8]" : "bg-white/5 text-slate-300 border border-white/10"
+                        : isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E8D7C9]" : "bg-white/5 text-slate-300 border border-white/10"
                     }`}>
                       {isAi ? <Bot size={14} /> : <User size={14} />}
                     </div>
 
                     <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-xs ${
                       isAi 
-                        ? isLight ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#1D1D1B] w-full" : "bg-[#111626] border border-white/10 text-slate-100 w-full"
+                        ? isLight ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] w-full" : "bg-[#111626] border border-white/10 text-slate-100 w-full"
                         : isLight ? "bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-indigo-600 text-white"
                     }`}>
                       {isAi ? (
                         <div className="space-y-3">
                           <FormattedScholarResponse content={msg.content} />
                           {msg.provider && (
-                            <div className={`pt-2.5 border-t ${isLight ? "border-[#E3E0D8]" : "border-white/5"} flex items-center justify-between text-[10px] font-mono ${
+                            <div className={`pt-2.5 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/5"} flex items-center justify-between text-[10px] font-mono ${
                               isLight ? "text-[#77736B]" : "text-slate-400"
                             }`}>
                               <span className="flex items-center gap-1.5">
@@ -1723,46 +1703,20 @@ export default function AiScholarTab({
             )}
 
             {isAiLoading && (
-              <div className="flex gap-3 max-w-[92%] mr-auto animate-in fade-in duration-200">
+              <div className="flex gap-3 max-w-[92%] mr-auto animate-in fade-in duration-200 items-center">
                 <div className={`w-9 h-9 rounded-2xl ${
                   isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-[#1B233D] text-indigo-400 border border-indigo-500/20"
                 } flex items-center justify-center shrink-0 animate-pulse shadow-2xs`}>
                   <Bot size={18} />
                 </div>
-                <div className={`p-4 ${isLight ? "bg-[#F7F6F2] border border-[#E3E0D8]" : "bg-[#111626] border border-white/10"} rounded-2xl space-y-2.5 max-w-lg shadow-2xs`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className={`flex items-center gap-2 text-xs font-mono font-bold ${isLight ? "text-[#C96F55]" : "text-indigo-400"}`}>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                      <span>Deep Examiner Assessment (Accuracy Priority)</span>
-                    </span>
-                    <span className="text-[10px] font-mono text-[#77736B]">
-                      Phase {thinkingStage + 1} of 5
-                    </span>
-                  </div>
-
-                  <p className={`text-xs leading-relaxed ${isLight ? "text-[#1D1D1B]" : "text-slate-200"}`}>
-                    {THINKING_STAGES[thinkingStage]}
-                  </p>
-
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    {[0, 1, 2, 3, 4].map((stepIdx) => (
-                      <div
-                        key={stepIdx}
-                        className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                          stepIdx === thinkingStage
-                            ? (isLight ? "bg-[#C96F55]" : "bg-indigo-400")
-                            : stepIdx < thinkingStage
-                            ? "bg-emerald-500"
-                            : (isLight ? "bg-[#E3E0D8]" : "bg-white/10")
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-1.5 pt-0.5 text-[10px] font-mono text-[#77736B]">
-                    <ShieldCheck size={12} className="text-emerald-500 shrink-0" />
-                    <span>Cross-verifying mark schemes, algebraic working & numerical precision</span>
-                  </div>
+                <div className={`px-4 py-2.5 ${isLight ? "bg-[#FAF8F5] border border-[#E8D7C9]" : "bg-[#111626] border border-white/10"} rounded-2xl shadow-2xs flex items-center gap-2.5`}>
+                  <span className="relative flex h-2 w-2">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLight ? "bg-[#C96F55]" : "bg-indigo-400"}`}></span>
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isLight ? "bg-[#C96F55]" : "bg-indigo-400"}`}></span>
+                  </span>
+                  <span className={`text-xs font-mono font-medium ${isLight ? "text-[#1D1D1B]" : "text-slate-200"}`}>
+                    Thinking...
+                  </span>
                 </div>
               </div>
             )}
@@ -1786,7 +1740,7 @@ export default function AiScholarTab({
               onClick={() => handleSend("🎯 Please grade this answer strictly against the official IGCSE mark scheme, allocate [M]/[A]/[B] marks, and detail where any marks were lost.")}
               disabled={isAiLoading}
               className={`px-2.5 py-1 ${
-                isLight ? "bg-[#F7F6F2] hover:bg-[#FFF1EC] border border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-indigo-600/25 border border-indigo-500/20 text-indigo-300"
+                isLight ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-indigo-600/25 border border-indigo-500/20 text-indigo-300"
               } rounded-lg text-[10px] font-mono font-bold whitespace-nowrap transition cursor-pointer disabled:opacity-50`}
             >
               🎯 Grade vs Mark Scheme
@@ -1796,7 +1750,7 @@ export default function AiScholarTab({
               onClick={() => handleSend("❌ Find and pinpoint every mistake or omitted keyword in this solution and explain why the examiner deducted marks.")}
               disabled={isAiLoading}
               className={`px-2.5 py-1 ${
-                isLight ? "bg-[#F7F6F2] hover:bg-[#FFF1EC] border border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-rose-600/25 border border-rose-500/20 text-rose-300"
+                isLight ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-rose-600/25 border border-rose-500/20 text-rose-300"
               } rounded-lg text-[10px] font-mono font-bold whitespace-nowrap transition cursor-pointer disabled:opacity-50`}
             >
               ❌ Pinpoint Lost Marks
@@ -1806,7 +1760,7 @@ export default function AiScholarTab({
               onClick={() => handleSend("✨ Provide the 100% full-mark model answer with complete step-by-step mathematical working and syllabus keywords.")}
               disabled={isAiLoading}
               className={`px-2.5 py-1 ${
-                isLight ? "bg-[#F7F6F2] hover:bg-[#FFF1EC] border border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-amber-600/25 border border-amber-500/20 text-amber-300"
+                isLight ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-amber-600/25 border border-amber-500/20 text-amber-300"
               } rounded-lg text-[10px] font-mono font-bold whitespace-nowrap transition cursor-pointer disabled:opacity-50`}
             >
               ✨ 100% Model Answer
@@ -1817,7 +1771,7 @@ export default function AiScholarTab({
           {attachedImages.length > 0 && (
             <div className="pt-2 flex items-center gap-2 overflow-x-auto select-none">
               {attachedImages.map((img, idx) => (
-                <div key={idx} className="relative group w-12 h-12 rounded-xl border border-[#E3E0D8] overflow-hidden shrink-0 shadow-2xs">
+                <div key={idx} className="relative group w-12 h-12 rounded-xl border border-[#E8D7C9] overflow-hidden shrink-0 shadow-2xs">
                   <img
                     src={img}
                     alt={`Attachment ${idx + 1}`}
@@ -1887,7 +1841,7 @@ export default function AiScholarTab({
                 <div
                   key={f.id || idx}
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-mono transition shrink-0 ${
-                    isLight ? "bg-[#F7F6F2] border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#12192B] border-white/10 text-white"
+                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#12192B] border-white/10 text-white"
                   }`}
                 >
                   <span
@@ -1938,7 +1892,7 @@ export default function AiScholarTab({
               type="button"
               onClick={() => imageInputRef.current?.click()}
               className={`p-3 ${
-                isLight ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B]" : "bg-[#12192B] border border-white/10 text-slate-400 hover:text-white"
+                isLight ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]" : "bg-[#12192B] border border-white/10 text-slate-400 hover:text-white"
               } rounded-2xl transition flex flex-col items-center justify-center shrink-0 w-14 h-14 cursor-pointer relative`}
               title="Attach study photos"
               disabled={isAiLoading}
@@ -1959,7 +1913,7 @@ export default function AiScholarTab({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className={`p-3 ${
-                isLight ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#77736B] hover:text-[#1D1D1B]" : "bg-[#12192B] border border-white/10 text-slate-400 hover:text-white"
+                isLight ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]" : "bg-[#12192B] border border-white/10 text-slate-400 hover:text-white"
               } rounded-2xl transition flex flex-col items-center justify-center shrink-0 w-14 h-14 cursor-pointer relative`}
               title="Attach past papers, mark schemes & notes (PDF/Text/Docs)"
               disabled={isAiLoading}
@@ -1984,7 +1938,7 @@ export default function AiScholarTab({
               placeholder="Paste IGCSE question & answer, attach photos or notes..."
               className={`flex-1 w-full px-4 py-3 ${
                 isLight 
-                  ? "bg-[#F7F6F2] border border-[#E3E0D8] text-[#1D1D1B] placeholder-[#9B9890] focus:border-[#C96F55]" 
+                  ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] placeholder-[#9B9890] focus:border-[#C96F55]" 
                   : "bg-[#12192B] border border-white/10 text-white placeholder-slate-600 focus:border-indigo-500"
               } rounded-2xl text-xs transition resize-none h-14 focus:outline-none`}
               disabled={isAiLoading}
@@ -2020,9 +1974,9 @@ export default function AiScholarTab({
       {showAiModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-5 ${
-            isLight ? "bg-white border-[#E3E0D8] text-[#1D1D1B]" : "bg-[#0d1222] border-white/10 text-white"
+            isLight ? "bg-white border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0d1222] border-white/10 text-white"
           }`}>
-            <div className="flex items-center justify-between pb-3 border-b border-[#E3E0D8] dark:border-white/10">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8D7C9] dark:border-white/10">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-[#C96F55]/10 text-[#C96F55]">
                   <Globe size={18} />
@@ -2043,7 +1997,7 @@ export default function AiScholarTab({
 
             {/* DNS Health Diagnostics */}
             <div className={`p-4 rounded-2xl border space-y-3 ${
-              isLight ? "bg-[#F7F6F2] border-[#E3E0D8]" : "bg-black/30 border-white/10"
+              isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-black/30 border-white/10"
             }`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#77736B]">Custom DNS & Backend Connectivity</span>
@@ -2107,7 +2061,7 @@ export default function AiScholarTab({
 
             {/* Gemini Academic Engine Status */}
             <div className={`p-4 rounded-2xl border space-y-2 ${
-              isLight ? "bg-white border-[#E3E0D8]" : "bg-white/5 border-white/10"
+              isLight ? "bg-white border-[#E8D7C9]" : "bg-white/5 border-white/10"
             }`}>
               <div className="flex items-center gap-2">
                 <Sparkles size={16} className="text-[#C96F55]" />
