@@ -58,7 +58,6 @@ import {
 import Sidebar from "./components/Sidebar";
 import Celebration from "./components/Celebration";
 import DashboardTab from "./components/DashboardTab";
-import TaskMatrixTab from "./components/TaskMatrixTab";
 import HabitTrackerTab from "./components/HabitTrackerTab";
 import AiScholarTab from "./components/AiScholarTab";
 import StudyAppsTab from "./components/StudyAppsTab";
@@ -1673,33 +1672,6 @@ export default function App() {
                   setInviteCode={setInviteCode}
                   totalFocusMinutes={Math.floor((50 * 60 - focusSecondsRemaining) / 60) + pomodoroCompletedCount * 25}
                   userStreak={streak}
-                  themeMode={settings.themeMode}
-                />
-              </motion.div>
-            )}
-
-            {currentTab === "matrix" && (
-              <motion.div
-                key="matrix"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="w-full flex-1 flex flex-col"
-              >
-                <TaskMatrixTab
-                  tasks={tasks}
-                  onAddTask={handleAddTask}
-                  onToggleTask={handleToggleTask}
-                  onDeleteTask={handleDeleteTask}
-                  onDeleteAllTasks={handleDeleteAllTasks}
-                  onRefreshTaskAi={handleRefreshTaskAi}
-                  subjects={subjects}
-                  onAddSubject={handleAddSubject}
-                  onDeleteSubject={handleDeleteSubject}
-                  timeSystem={settings.timeSystem}
-                  currentUser={currentUser}
-                  onLogin={handleOpenAuthModal}
                   themeMode={settings.themeMode}
                 />
               </motion.div>

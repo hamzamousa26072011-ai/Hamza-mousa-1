@@ -1,7 +1,6 @@
 import React from "react";
 import { 
   LayoutGrid, 
-  CheckSquare, 
   GraduationCap, 
   Timer, 
   Compass, 
@@ -15,26 +14,33 @@ import {
 interface MobileBottomNavProps {
   currentTab: string;
   onTabChange: (tab: string) => void;
-  pendingTasksCount: number;
+  pendingTasksCount?: number;
   focusModeActive: boolean;
   focusTimeRemaining: string;
   themeMode?: "light" | "dark";
 }
 
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  isFocus?: boolean;
+  badge?: number;
+}
+
 export default function MobileBottomNav({
   currentTab,
   onTabChange,
-  pendingTasksCount,
+  pendingTasksCount = 0,
   focusModeActive,
   focusTimeRemaining,
   themeMode = "dark"
 }: MobileBottomNavProps) {
   const isLight = themeMode === "light";
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { id: "dashboard", label: "Home", icon: LayoutGrid },
     { id: "countdown", label: "Exams", icon: CalendarClock },
-    { id: "matrix", label: "Tasks", icon: CheckSquare, badge: pendingTasksCount > 0 ? pendingTasksCount : undefined },
     { id: "habits", label: "Habits", icon: CalendarCheck },
     { id: "scholar", label: "Tutor", icon: GraduationCap },
     { id: "focus", label: "Focus", icon: Timer, isFocus: true },

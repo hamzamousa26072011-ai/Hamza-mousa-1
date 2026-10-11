@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { 
   LayoutGrid, 
-  CheckSquare, 
   FolderLock, 
   GraduationCap, 
   CalendarClock, 
@@ -50,7 +49,6 @@ export default function Sidebar({
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
     { id: "countdown", label: "Exam Countdown", icon: CalendarClock },
-    { id: "matrix", label: "Your Tasks", icon: CheckSquare },
     { id: "habits", label: "Habit Tracker", icon: CalendarCheck },
     { id: "scholar", label: "Ai tutor", icon: Sparkles },
     { id: "focus", label: "Focus Time", icon: Timer },

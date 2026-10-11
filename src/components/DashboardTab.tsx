@@ -20,7 +20,8 @@ import {
   Zap,
   CheckSquare,
   TrendingUp,
-  CalendarClock
+  CalendarClock,
+  CalendarCheck
 } from "lucide-react";
 import { Task } from "../types";
 import { FlipClockTimer } from "./FlipClockTimer";
@@ -186,15 +187,15 @@ export default function DashboardTab({
                 <p className={`text-[10px] font-mono ${isLight ? "text-[#C96F55]" : "text-[#C084FC]"} uppercase tracking-wider font-semibold`}>Priority Action Queue</p>
               </div>
               <button 
-                onClick={() => onNavigateTab("matrix")}
-                id="dashboard-go-matrix-btn"
+                onClick={() => onNavigateTab("habits")}
+                id="dashboard-go-habits-btn"
                 className={`p-1.5 rounded-lg ${
                   isLight 
                     ? "hover:bg-[#F0EEE8] text-[#77736B] hover:text-[#1D1D1B]" 
                     : "hover:bg-[#1A1432] text-[#C4B5FD] hover:text-white"
                 } transition-all cursor-pointer flex items-center gap-1.5 text-xs font-mono font-bold`}
               >
-                <span>View all</span>
+                <span>View habits</span>
                 <ArrowRight size={14} />
               </button>
             </div>
@@ -254,15 +255,15 @@ export default function DashboardTab({
           </div>
 
           <button
-            onClick={() => onNavigateTab("matrix")}
-            id="dashboard-create-task-matrix-btn"
+            onClick={() => onNavigateTab("habits")}
+            id="dashboard-open-habits-btn"
             className={`w-full py-2.5 mt-4 ${
               isLight 
                 ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E8D7C9]" 
                 : "bg-[#120E22] hover:bg-[#1A1432] text-white border border-white/10"
             } rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-2`}
           >
-            <span>Open Task Matrix</span>
+            <span>Open Habit Tracker</span>
             <ArrowRight size={14} strokeWidth={2.5} />
           </button>
         </div>
@@ -555,7 +556,7 @@ export default function DashboardTab({
               </button>
 
               <button
-                onClick={() => onNavigateTab("matrix")}
+                onClick={() => onNavigateTab("habits")}
                 className={`p-4 ${
                   isLight 
                     ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border border-[#E8D7C9] hover:border-[#C96F55]/30" 
@@ -563,14 +564,14 @@ export default function DashboardTab({
                 } rounded-2xl text-left transition group cursor-pointer flex items-start gap-3.5`}
               >
                 <div className={`w-10 h-10 rounded-xl ${isLight ? "bg-[#C96F55]/20 border border-[#C96F55]/30 text-[#C96F55]" : "bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[#C084FC]"} flex items-center justify-center shrink-0 group-hover:scale-105 transition`}>
-                  <CheckSquare size={18} />
+                  <CalendarCheck size={18} />
                 </div>
                 <div>
                   <h4 className={`text-xs font-bold ${
                     isLight ? "text-[#1D1D1B] group-hover:text-[#C96F55]" : "text-white group-hover:text-[#C084FC]"
-                  } transition`}>Syllabus Breakdown</h4>
+                  } transition`}>Habit Tracker</h4>
                   <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} mt-1 leading-snug`}>
-                    Add exam targets, calculate study time with AI & track assignment deadlines.
+                    Build daily study discipline, track streaks & maintain consistent revision momentum.
                   </p>
                 </div>
               </button>
