@@ -134,7 +134,7 @@ export async function callGeminiApi(
   const ai = getGeminiClient();
   if (!ai) return null;
 
-  const candidateModels = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+  const candidateModels = ["gemini-3.1-flash-lite", "gemini-3.8-flash"];
 
   const contents: any[] = messages.map(m => {
     const isModel = m.role === "assistant" || m.role === "model";
@@ -178,7 +178,11 @@ export async function callGeminiApi(
 
   for (const model of candidateModels) {
     try {
-      const res = await ai.models.generateContent({
+      // Enforce strict 3.5s timeout per candidate to keep total time under 5s
+      const timeoutPromise = new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout for ${model}`)), 3500)
+      );
+      const callPromise = ai.models.generateContent({
         model,
         contents,
         config: {
@@ -186,6 +190,7 @@ export async function callGeminiApi(
           temperature: 0.2
         }
       });
+      const res: any = await Promise.race([callPromise, timeoutPromise]);
       if (res && res.text) {
         return { text: res.text.trim(), model };
       }
@@ -232,7 +237,7 @@ export async function callDeepSeekApi(
           temperature: 0.1,
           max_tokens: 3000
         }),
-        signal: AbortSignal.timeout(25000) // 25 second timeout for thorough reasoning
+        signal: AbortSignal.timeout(6500) // 6.5s timeout safe for Vercel
       });
 
       if (response.ok) {
@@ -268,29 +273,103 @@ export function generateTrainedIgcseAssessment(
   const text = studentInput.toLowerCase();
   const rawText = studentInput.trim();
 
+  // If student is asking for a definition, concept explanation, or exam question
+  const isQuestionOrDefinition = 
+    text.includes("define") || 
+    text.includes("what is") || 
+    text.includes("explain") || 
+    text.includes("meaning") || 
+    text.includes("give me a question") || 
+    text.includes("question for") ||
+    text.includes("past paper question") ||
+    text.includes("practice question") ||
+    text.startsWith("how") ||
+    text.startsWith("why");
+
+  if (isQuestionOrDefinition) {
+    if (text.includes("emf") || text.includes("electromotive")) {
+      return `### ⚡ Electromotive Force (e.m.f.) — Cambridge IGCSE & Pearson Edexcel Mark Scheme Definition
+
+**Official Mark Scheme Definition [2 Marks]:**
+> **"The electrical energy provided / work done by a source per unit charge in driving charge round a complete circuit."**
+
+#### Official Mark Scheme Breakdown:
+* **[B1]**: Energy transferred / converted from other forms (chemical, mechanical) to electrical energy **OR** work done by the source / power supply.
+* **[B1]**: **Per unit charge** (per coulomb / $\\text{J/C}$) in driving charge round a complete circuit.
+
+#### Governing Equation:
+$$\\mathcal{E} = \\frac{W}{Q}$$
+Where:
+- $\\mathcal{E}$ = Electromotive Force (measured in Volts, $\\text{V}$ or $\\text{J/C}$)
+- $W$ = Work done / Energy transferred (Joules, $\\text{J}$)
+- $Q$ = Electric charge (Coulombs, $\\text{C}$)
+
+---
+
+#### ❌ Common Candidate Pitfalls & Examiner Warnings:
+- ❌ **"It is the voltage of the battery / cell"**: Scores **0 / 2**. Voltage is the quantity name, not an official definition.
+- ❌ **"It is the force that pushes electrons"**: Scores **0 / 2**. Despite the historical name containing the word *"force"*, e.m.f. is **not a force** (it is measured in Volts or Joules per Coulomb, not Newtons).
+- ❌ **Missing "per unit charge"**: Awarded **[1 mark max]** for energy transfer, losing the vital charge reference.
+
+---
+
+#### 💡 Examiner "Need-to-Know" Distinction (e.m.f. vs. p.d.):
+• **e.m.f.**: Non-electrical energy $\\rightarrow$ **Electrical energy** across the source/power supply.  
+• **Potential Difference (p.d.)**: **Electrical energy** $\\rightarrow$ other forms (thermal, light) across components.`;
+    }
+
+    if (text.includes("electricity") || text.includes("circuit") || text.includes("physics")) {
+      return `### ⚡ Cambridge IGCSE Physics (0625) — Electricity Exam Practice Question
+
+**Question [4 Marks]:**
+A battery of electromotive force (e.m.f.) $12\\text{ V}$ is connected in series with a resistor $R_1 = 4.0\\,\\Omega$ and a component $R_2 = 8.0\\,\\Omega$.
+1. **(a)** Calculate the total resistance of the series circuit. **[1 Mark]**
+2. **(b)** Calculate the current flowing from the battery. **[2 Marks]**
+3. **(c)** State the energy transformation that occurs inside the battery. **[1 Mark]**
+
+---
+
+### ✨ Official Mark Scheme & Model Solution
+
+#### Part (a) [1 Mark]:
+* Total series resistance formula:
+  $$R_T = R_1 + R_2 = 4.0 + 8.0 = 12.0\\,\\Omega \\quad [\\text{A1}]$$
+
+#### Part (b) [2 Marks]:
+* State Ohm's law / circuit relationship:
+  $$I = \\frac{V}{R_T} \\quad [\\text{M1}]$$
+* Substitution & final accurate current:
+  $$I = \\frac{12\\text{ V}}{12.0\\,\\Omega} = 1.0\\text{ A} \\quad [\\text{A1}]$$
+
+#### Part (c) [1 Mark]:
+* **[B1]**: **Chemical energy** is converted into **electrical energy**.
+
+---
+
+### 💡 Examiner Action Points:
+• Always write out the formula before substituting numbers to secure the **[M1] Method mark**.  
+• Units are mandatory on all calculated answers: $\\Omega$ for resistance, $\\text{A}$ for current, $\\text{V}$ for potential difference.`;
+    }
+  }
+
   // Detect subject domain
   let subject = "General IGCSE";
   let examBoard = "Cambridge CIE & Pearson Edexcel";
   let maxMarks = 4;
   let awardedMarks = 3;
-  let subjectRules = "";
 
   if (text.includes("solve") || text.includes("find x") || text.includes("equation") || text.includes("math") || text.includes("triangle") || text.includes("algebra") || text.includes("angle") || text.includes("circle") || text.includes("quadratic")) {
     subject = "Mathematics (0580 / 4MA1)";
     maxMarks = 4;
-    subjectRules = "• **[M1] Method Mark**: Valid initial algebraic or geometric formulation.\n• **[M1] Method Mark**: Proper step reduction or rearrangement.\n• **[A1] Accuracy Mark**: Accurate numerical solution, given to 3 significant figures.\n• **[B1] Independent Mark**: Clear notation and units.";
   } else if (text.includes("force") || text.includes("energy") || text.includes("speed") || text.includes("velocity") || text.includes("acceleration") || text.includes("physics") || text.includes("current") || text.includes("voltage") || text.includes("resistance")) {
     subject = "Physics (0625 / 4PH1)";
     maxMarks = 3;
-    subjectRules = "• **[M1] Formula Mark**: Identification and application of core physics formula.\n• **[A1] Accuracy Mark**: Accurate calculated numerical value.\n• **[B1] Unit Mark**: Stated correct standard SI unit.";
   } else if (text.includes("react") || text.includes("acid") || text.includes("base") || text.includes("mole") || text.includes("chemistry") || text.includes("element") || text.includes("compound") || text.includes("gas") || text.includes("precipitate")) {
     subject = "Chemistry (0620 / 4CH1)";
     maxMarks = 3;
-    subjectRules = "• **[M1] Ratio Mark**: Stoichiometric molar deduction.\n• **[B1] Equation Mark**: Correct chemical formula and balanced reagents.\n• **[A1] Observation Mark**: Accurate state symbol or color change observation.";
   } else if (text.includes("cell") || text.includes("enzyme") || text.includes("plant") || text.includes("photosynthesis") || text.includes("biology") || text.includes("heart") || text.includes("blood") || text.includes("gene")) {
     subject = "Biology (0610 / 4BI1)";
     maxMarks = 3;
-    subjectRules = "• **[B1] Key Term Mark**: Correct biological terminology (e.g. denatured, concentration gradient).\n• **[C1] Explanation Mark**: Logical step-by-step biological cause and effect.\n• **[A1] Synthesis Mark**: Link to organism physiology.";
   }
 
   // Check if answer contains working
@@ -359,6 +438,7 @@ export async function processScholarGrading(
   const apiKey = sanitizeText(rawApiKey);
   
   const isOwner = (userEmail || "").trim().toLowerCase() === "hamzamousa26072011@gmail.com";
+  const preferredEngine = (payload as any)?.preferredEngine || (payload as any)?.engine || (apiKey ? "deepseek" : "deepseek");
 
   // Build the clean text and image prompt history
   const historyTurns: Array<{ role: string; content: string; imageUrl?: string; imageUrls?: string[] }> = [];
@@ -384,7 +464,36 @@ export async function processScholarGrading(
 Current loaded examination document / mark scheme: "${paperTitle}".
 ${contextSnippet ? `=== ATTACHED MARK SCHEME / PAST PAPER REFERENCE ===\n${contextSnippet.slice(0, 15000)}\n=== END ATTACHED REFERENCE ===` : "No external document attached. Evaluate against official standard IGCSE mark scheme rubrics."}`;
 
-  // 1. Primary Engine: Google Gemini API (gemini-3.8-flash)
+  // 1. Primary Engine: DeepSeek API
+  if (preferredEngine === "deepseek") {
+    if (apiKey) {
+      try {
+        const dsResult = await callDeepSeekApi(historyTurns, apiKey, enrichedSystemPrompt);
+        if (dsResult && dsResult.text) {
+          return {
+            content: dsResult.text,
+            engine: "deepseek",
+            model: dsResult.model,
+            provider: "DeepSeek AI (Active on engeznafsak.com)",
+            accountOwner: isOwner ? "Hamza Mousa" : undefined
+          };
+        }
+      } catch (e: any) {
+        console.warn("[DEEPSEEK ENGINE] DeepSeek API attempt failed:", e?.message || e);
+      }
+    } else {
+      // DeepSeek is selected but no key configured yet
+      return {
+        content: `### 💡 DeepSeek Academic Engine Active\n\nTo begin chatting, asking questions, and getting your exam papers marked with **DeepSeek-V3 / DeepSeek-R1**, please configure your DeepSeek API key:\n\n1. Click **⚙️ AI Settings** in the top-right toolbar of this room.\n2. Paste your DeepSeek API key (starts with \`sk-\`).\n3. Click **Save Key**.\n\n*If you do not have a DeepSeek key yet, create one in seconds at [platform.deepseek.com](https://platform.deepseek.com).* Once saved, all questions, past paper evaluations, and mark schemes will run smoothly through \`engeznafsak.com\` without regional interruptions!`,
+        engine: "deepseek",
+        model: "deepseek-chat",
+        provider: "DeepSeek AI (Key Configuration Needed)",
+        accountOwner: isOwner ? "Hamza Mousa" : undefined
+      };
+    }
+  }
+
+  // 2. Secondary Engine: Google Gemini API (gemini-3.8-flash)
   try {
     const geminiResult = await callGeminiApi(historyTurns, enrichedSystemPrompt);
     if (geminiResult && geminiResult.text) {
@@ -400,24 +509,6 @@ ${contextSnippet ? `=== ATTACHED MARK SCHEME / PAST PAPER REFERENCE ===\n${conte
     console.warn("[GEMINI EXAMINER] Gemini execution error:", gemErr?.message || gemErr);
   }
 
-  // 2. Secondary fallback if DeepSeek key provided
-  if (apiKey) {
-    try {
-      const dsResult = await callDeepSeekApi(historyTurns, apiKey, enrichedSystemPrompt);
-      if (dsResult && dsResult.text) {
-        return {
-          content: dsResult.text,
-          engine: "deepseek",
-          model: dsResult.model,
-          provider: "DeepSeek AI (Active)",
-          accountOwner: isOwner ? "Hamza Mousa" : undefined
-        };
-      }
-    } catch (e: any) {
-      console.warn("[DEEPSEEK ENGINE] DeepSeek API attempt failed:", e?.message || e);
-    }
-  }
-
   // 3. Trained IGCSE Examiner Engine (Zero downtime rubric fallback)
   const lastUserMsg = historyTurns.filter(t => t.role === "user").pop();
   const studentQuery = lastUserMsg ? lastUserMsg.content : "Please evaluate my IGCSE past paper answer against the official mark scheme.";
@@ -428,7 +519,7 @@ ${contextSnippet ? `=== ATTACHED MARK SCHEME / PAST PAPER REFERENCE ===\n${conte
     content: trainedResult,
     engine: "gemini",
     model: "gemini-3.8-flash",
-    provider: "Engez IGCSE Senior Examiner (Gemini Calibrated Rubric)",
+    provider: "Engez IGCSE Senior Examiner (Calibrated Rubric)",
     isTrainedFallback: true,
     accountOwner: isOwner ? "Hamza Mousa" : undefined
   };

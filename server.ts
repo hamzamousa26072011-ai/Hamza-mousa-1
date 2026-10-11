@@ -767,8 +767,8 @@ const getGeminiClient = (customKey?: string | null) => {
 
 // Candidate models ordered for maximum multimodal vision precision, OCR quality, and zero-timeout stability
 const CANDIDATE_MODELS = [
-  "gemini-3.8-flash",
   "gemini-3.1-flash-lite",
+  "gemini-3.8-flash",
   "gemini-flash-latest"
 ];
 
