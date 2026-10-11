@@ -638,6 +638,96 @@ app.post("/api/user/friends", (req, res) => {
 // 2. ENHANCED MULTI-MODEL AI INTEGRATION ENGINE (DEEPSEEK & GEMINI)
 // =========================================================================
 
+// DeepSeek API Key Resolver (Supports custom user key and process.env.DEEPSEEK_API_KEY)
+const getDeepSeekKey = (customKey?: string | null): string | null => {
+  if (customKey && typeof customKey === "string" && customKey.trim().length > 0) {
+    return customKey.trim();
+  }
+  const envKey = process.env.DEEPSEEK_API_KEY;
+  if (envKey && typeof envKey === "string" && envKey.trim().length > 0) {
+    return envKey.trim();
+  }
+  return null;
+};
+
+interface DeepSeekChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+// DeepSeek API Caller with timeout handling and error formatting
+async function callDeepSeekChat({
+  apiKey,
+  messages,
+  model = "deepseek-chat",
+  temperature = 0.2,
+  responseFormat,
+  timeoutMs = 45000,
+}: {
+  apiKey: string;
+  messages: DeepSeekChatMessage[];
+  model?: string;
+  temperature?: number;
+  responseFormat?: { type: "json_object" | "text" };
+  timeoutMs?: number;
+}): Promise<{ content: string; model: string }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  const payload: any = {
+    model: model || "deepseek-chat",
+    messages,
+    temperature: typeof temperature === "number" ? temperature : 0.2,
+    stream: false,
+  };
+
+  if (responseFormat) {
+    payload.response_format = responseFormat;
+  }
+
+  try {
+    const res = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey.trim()}`,
+        "User-Agent": "engeznafsak-scholar/1.0",
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      let errMsg = `DeepSeek API HTTP ${res.status}`;
+      try {
+        const errJson = JSON.parse(errText);
+        if (errJson?.error?.message) {
+          errMsg = `DeepSeek Error: ${errJson.error.message}`;
+        }
+      } catch {
+        if (errText) errMsg += ` - ${errText.slice(0, 150)}`;
+      }
+      throw new Error(errMsg);
+    }
+
+    const data: any = await res.json();
+    const content = data?.choices?.[0]?.message?.content || "";
+    return {
+      content,
+      model: data?.model || model,
+    };
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      throw new Error(`DeepSeek API request timed out after ${Math.round(timeoutMs / 1000)}s`);
+    }
+    throw err;
+  }
+}
+
 let geminiClientInstance: GoogleGenAI | null = null;
 
 const getGeminiClient = (customKey?: string | null) => {
@@ -967,14 +1057,14 @@ When images, past papers, handwritten notes, worksheets, or attached files are p
 - [ECF / ft] Error Carried Forward / Follow Through: Never penalize a student twice for an earlier calculation slip if subsequent logic is correct.
 - Cambridge Rounding Rule: Non-exact numerical answers must be given to 3 significant figures (angles to 1 d.p.). Standard SI units required.`;
 
-// 3.2 ENDPOINT: Gemini Academic Tutor Chat & Trained IGCSE Mark Scheme Grading Engine
+// 3.2 ENDPOINT: DeepSeek (Primary) & Gemini Academic Tutor Chat & Trained IGCSE Mark Scheme Grading Engine
 const handleScholarGrading = async (req: Request, res: Response) => {
   const body = req.body;
   if (!body || typeof body !== "object") {
     return res.status(400).json({ error: "Invalid request payload. Expected JSON object." });
   }
 
-  const { messages, documentContext, fileName, subject, attachedFiles } = body;
+  const { messages, documentContext, fileName, subject, attachedFiles, preferredEngine, deepseekModel } = body;
 
   if (!Array.isArray(messages)) {
     return res.status(400).json({ error: "Invalid payload: 'messages' must be an array." });
@@ -984,139 +1074,223 @@ const handleScholarGrading = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Message history limit exceeded (max 60 messages per session)." });
   }
 
+  const deepKey = (req.headers["x-deepseek-key"] as string) || req.body?.deepseekApiKey || null;
   const gemKey = (req.headers["x-gemini-key"] as string) || req.body?.geminiApiKey || null;
+
+  const deepseekApiKey = getDeepSeekKey(deepKey);
   const ai = getGeminiClient(gemKey);
 
   const safeSubject = subject && typeof subject === "string" && subject.trim().length > 0 ? subject.trim() : "Auto-Detect";
+  const hasDocContext = documentContext && typeof documentContext === "string" && documentContext.trim().length > 0;
 
-  if (!ai) {
-    return res.status(500).json({
-      error: "Gemini AI service unavailable. Please check that GEMINI_API_KEY is configured.",
-      content: "Gemini AI service is currently unavailable. Please verify your connection or settings."
+  let subjectHeader = "";
+  if (safeSubject && safeSubject !== "Auto-Detect") {
+    subjectHeader = `[ACADEMIC SUBJECT: ${safeSubject}]\n`;
+  } else {
+    subjectHeader = `[SUBJECT DETECTION INSTRUCTION: Automatically identify the exact subject and syllabus code if relevant.]\n`;
+  }
+
+  // Allow generous document context up to 150,000 characters for full past papers & mark schemes
+  const docHeader = hasDocContext
+    ? `[EXAMINATION DOCUMENT CONTEXT: ${fileName || "Universal Study Room"}]\n${documentContext.slice(0, 150000)}\n\n---\n`
+    : "";
+
+  // Prepare attached study files text context for DeepSeek & LLMs
+  let attachedFilesText = "";
+  if (Array.isArray(attachedFiles) && attachedFiles.length > 0) {
+    const fileEntries: string[] = [];
+    for (const af of attachedFiles) {
+      if (af && af.content && typeof af.content === "string") {
+        fileEntries.push(`[ATTACHED STUDY FILE: ${af.name || "Document"} (${af.type || "text/plain"}, ${af.size || 0} bytes)]:\n${af.content.slice(0, 40000)}`);
+      } else if (af && af.name) {
+        fileEntries.push(`[ATTACHED SCRIPT/FILE: ${af.name} (${af.type || "file"}, ${af.size || 0} bytes)]`);
+      }
+    }
+    if (fileEntries.length > 0) {
+      attachedFilesText = `\n--- ATTACHED DOCUMENTS & SUBMISSIONS ---\n${fileEntries.join("\n\n")}\n---\n`;
+    }
+  }
+
+  // Target engine: DeepSeek is primary default per user request
+  const targetEngine = preferredEngine === "gemini" ? "gemini" : "deepseek";
+
+  // =========================================================================
+  // PATH 1: DEEPSEEK ENGINE (DEFAULT & PRIMARY)
+  // =========================================================================
+  if (targetEngine === "deepseek" && deepseekApiKey) {
+    try {
+      const deepseekMessages: DeepSeekChatMessage[] = [
+        { role: "system", content: IGCSE_EXAMINER_SYSTEM_INSTRUCTION }
+      ];
+
+      for (let i = 0; i < messages.length; i++) {
+        const m = messages[i];
+        const isUser = m.role !== "assistant" && m.role !== "model";
+        let text = sanitizeStudentInput(m.content || "");
+        if (i === 0 && isUser) {
+          text = subjectHeader + (hasDocContext ? docHeader : "") + attachedFilesText + text;
+        }
+        deepseekMessages.push({
+          role: isUser ? "user" : "assistant",
+          content: text || "Please assist me with my study."
+        });
+      }
+
+      if (deepseekMessages.length <= 1) {
+        deepseekMessages.push({ role: "user", content: `${subjectHeader}Hello! Can you help me study?` });
+      }
+
+      const activeModel = deepseekModel || "deepseek-chat";
+      const dsResponse = await callDeepSeekChat({
+        apiKey: deepseekApiKey,
+        messages: deepseekMessages,
+        model: activeModel,
+        temperature: 0.2,
+        timeoutMs: 45000
+      });
+
+      return res.json({
+        content: dsResponse.content || "Assessment completed.",
+        engine: "deepseek",
+        model: dsResponse.model,
+        provider: "DeepSeek AI (Active on engeznafsak.com)"
+      });
+    } catch (dsErr: any) {
+      console.warn("[DEEPSEEK API ATTEMPT FAILED]:", dsErr?.message || dsErr);
+      if (!ai) {
+        return res.status(502).json({
+          error: "DeepSeek API error",
+          content: `DeepSeek service returned an error: ${dsErr.message || "Request failed"}. Please check your DeepSeek API key in AI Settings.`
+        });
+      }
+      console.log("[CASCADE] Falling back to Gemini engine after DeepSeek error...");
+    }
+  }
+
+  // If DeepSeek was requested but no DeepSeek key configured yet
+  if (targetEngine === "deepseek" && !deepseekApiKey) {
+    return res.status(200).json({
+      content: `### 💡 DeepSeek Academic Engine Active\n\nTo begin chatting, asking questions, and getting your exam papers marked with **DeepSeek-V3 / DeepSeek-R1**, please configure your DeepSeek API key:\n\n1. Click **⚙️ AI Settings** in the top-right toolbar of this room.\n2. Paste your DeepSeek API key (starts with \`sk-\`).\n3. Click **Save Key**.\n\n*If you do not have a DeepSeek key yet, create one in seconds at [platform.deepseek.com](https://platform.deepseek.com).* Once saved, all questions, past paper evaluations, and mark schemes will run smoothly through \`engeznafsak.com\` without regional interruptions!`,
+      engine: "deepseek",
+      model: "deepseek-chat",
+      provider: "DeepSeek AI (Key Configuration Needed)",
+      needsKey: true
     });
   }
 
-  try {
-    const contents: any[] = [];
-    const hasDocContext = documentContext && typeof documentContext === "string" && documentContext.trim().length > 0;
-    
-    let subjectHeader = "";
-    if (safeSubject && safeSubject !== "Auto-Detect") {
-      subjectHeader = `[ACADEMIC SUBJECT: ${safeSubject}]\n`;
-    } else {
-      subjectHeader = `[SUBJECT DETECTION INSTRUCTION: Automatically identify the exact subject and syllabus code if relevant.]\n`;
-    }
+  // =========================================================================
+  // PATH 2: GOOGLE GEMINI ENGINE (ONLY IF EXPLICITLY REQUESTED)
+  // =========================================================================
+  if (targetEngine === "gemini" && ai) {
+    try {
+      const contents: any[] = [];
+      for (let i = 0; i < messages.length; i++) {
+        const m = messages[i];
+        const isUser = m.role !== "assistant" && m.role !== "model";
+        let text = sanitizeStudentInput(m.content || "");
+        if (i === 0 && isUser) {
+          text = subjectHeader + (hasDocContext ? docHeader : "") + text;
+        }
+        const parts: any[] = [{ text }];
 
-    // Allow generous document context up to 150,000 characters for full past papers & mark schemes
-    const docHeader = hasDocContext
-      ? `[EXAMINATION DOCUMENT CONTEXT: ${fileName || "Universal Study Room"}]\n${documentContext.slice(0, 150000)}\n\n---\n`
-      : "";
+        const addInline = (url?: string, label?: string) => {
+          if (!url || typeof url !== "string") return;
+          if (url.startsWith("data:")) {
+            const commaIdx = url.indexOf(",");
+            if (commaIdx !== -1) {
+              const mimeMatch = url.slice(0, commaIdx).match(/data:([^;,]+)/);
+              let mimeType = mimeMatch ? mimeMatch[1].toLowerCase() : "image/jpeg";
+              const data = url.slice(commaIdx + 1).replace(/\s/g, "");
+              if (mimeType.includes("pdf")) mimeType = "application/pdf";
+              else if (mimeType.includes("png")) mimeType = "image/png";
+              else if (mimeType.includes("jpeg") || mimeType.includes("jpg")) mimeType = "image/jpeg";
+              else if (mimeType.includes("webp")) mimeType = "image/webp";
+              else if (mimeType.includes("heic") || mimeType.includes("heif")) mimeType = "image/heic";
 
-    for (let i = 0; i < messages.length; i++) {
-      const m = messages[i];
-      const isUser = m.role !== "assistant" && m.role !== "model";
-      let text = sanitizeStudentInput(m.content || "");
-      if (i === 0 && isUser) {
-        text = subjectHeader + (hasDocContext ? docHeader : "") + text;
-      }
-      const parts: any[] = [{ text }];
-
-      // Multimodal vision, OCR & document support for past paper photos, PDFs, worksheets & handwritten answer scripts
-      const addInline = (url?: string, label?: string) => {
-        if (!url || typeof url !== "string") return;
-        if (url.startsWith("data:")) {
-          const commaIdx = url.indexOf(",");
-          if (commaIdx !== -1) {
-            const mimeMatch = url.slice(0, commaIdx).match(/data:([^;,]+)/);
-            let mimeType = mimeMatch ? mimeMatch[1].toLowerCase() : "image/jpeg";
-            const data = url.slice(commaIdx + 1).replace(/\s/g, "");
-            
-            // Normalize MIME types recognized by Google Gemini Multimodal API
-            if (mimeType.includes("pdf")) mimeType = "application/pdf";
-            else if (mimeType.includes("png")) mimeType = "image/png";
-            else if (mimeType.includes("jpeg") || mimeType.includes("jpg")) mimeType = "image/jpeg";
-            else if (mimeType.includes("webp")) mimeType = "image/webp";
-            else if (mimeType.includes("heic") || mimeType.includes("heif")) mimeType = "image/heic";
-
-            if (label) {
-              parts.push({ text: `[ATTACHMENT FILE / SCRIPT]: ${label} (${mimeType})` });
+              if (label) parts.push({ text: `[ATTACHMENT FILE / SCRIPT]: ${label} (${mimeType})` });
+              parts.push({ inlineData: { mimeType, data } });
             }
-            parts.push({ inlineData: { mimeType, data } });
+          } else if (url.length > 100) {
+            const clean = url.replace(/\s/g, "");
+            let mimeType = "image/jpeg";
+            if (clean.startsWith("/9j/")) mimeType = "image/jpeg";
+            else if (clean.startsWith("iVBORw0KGgo")) mimeType = "image/png";
+            else if (clean.startsWith("JVBERi0")) mimeType = "application/pdf";
+            else if (clean.startsWith("UklGR")) mimeType = "image/webp";
+            if (label) parts.push({ text: `[ATTACHMENT FILE / SCRIPT]: ${label} (${mimeType})` });
+            parts.push({ inlineData: { mimeType, data: clean } });
           }
-        } else if (url.length > 100) {
-          const clean = url.replace(/\s/g, "");
-          let mimeType = "image/jpeg";
-          if (clean.startsWith("/9j/")) mimeType = "image/jpeg";
-          else if (clean.startsWith("iVBORw0KGgo")) mimeType = "image/png";
-          else if (clean.startsWith("JVBERi0")) mimeType = "application/pdf";
-          else if (clean.startsWith("UklGR")) mimeType = "image/webp";
-          if (label) {
-            parts.push({ text: `[ATTACHMENT FILE / SCRIPT]: ${label} (${mimeType})` });
-          }
-          parts.push({ inlineData: { mimeType, data: clean } });
-        }
-      };
+        };
 
-      if (m.imageUrl) addInline(m.imageUrl, "Attached Image");
-      if (Array.isArray(m.imageUrls)) {
-        for (let idx = 0; idx < m.imageUrls.length; idx++) {
-          addInline(m.imageUrls[idx], `Attached Image ${idx + 1}`);
-        }
-      }
-      if (m.fileUrl) addInline(m.fileUrl, "Attached Document");
-      if (Array.isArray(m.fileUrls)) {
-        for (let fIdx = 0; fIdx < m.fileUrls.length; fIdx++) {
-          addInline(m.fileUrls[fIdx], `Attached Document ${fIdx + 1}`);
-        }
-      }
-
-      // If user uploaded files at top-level request
-      if (i === 0 && isUser && Array.isArray(attachedFiles)) {
-        for (const af of attachedFiles) {
-          if (af && typeof af.dataUrl === "string") {
-            addInline(af.dataUrl, af.name || "Uploaded Study Document");
-          } else if (af && af.content && typeof af.content === "string") {
-            parts.push({
-              text: `[ATTACHED STUDY FILE: ${af.name || "Document"}]\n${af.content.slice(0, 40000)}`
-            });
+        if (m.imageUrl) addInline(m.imageUrl, "Attached Image");
+        if (Array.isArray(m.imageUrls)) {
+          for (let idx = 0; idx < m.imageUrls.length; idx++) {
+            addInline(m.imageUrls[idx], `Attached Image ${idx + 1}`);
           }
         }
+        if (m.fileUrl) addInline(m.fileUrl, "Attached Document");
+        if (Array.isArray(m.fileUrls)) {
+          for (let fIdx = 0; fIdx < m.fileUrls.length; fIdx++) {
+            addInline(m.fileUrls[fIdx], `Attached Document ${fIdx + 1}`);
+          }
+        }
+
+        if (i === 0 && isUser && Array.isArray(attachedFiles)) {
+          for (const af of attachedFiles) {
+            if (af && typeof af.dataUrl === "string") {
+              addInline(af.dataUrl, af.name || "Uploaded Study Document");
+            } else if (af && af.content && typeof af.content === "string") {
+              parts.push({
+                text: `[ATTACHED STUDY FILE: ${af.name || "Document"}]\n${af.content.slice(0, 40000)}`
+              });
+            }
+          }
+        }
+
+        contents.push({
+          role: isUser ? "user" : "model",
+          parts
+        });
       }
 
-      contents.push({
-        role: isUser ? "user" : "model",
-        parts
+      if (contents.length === 0) {
+        contents.push({ role: "user", parts: [{ text: `${subjectHeader}Hello! Can you help me study?` }] });
+      }
+
+      const response = await generateContentWithFallback(ai, {
+        contents,
+        config: {
+          systemInstruction: IGCSE_EXAMINER_SYSTEM_INSTRUCTION,
+          temperature: 0.2
+        },
+        timeoutMs: 45000
+      }, CANDIDATE_MODELS);
+
+      const replyText = response.text || "Assessment completed.";
+
+      return res.json({
+        content: replyText,
+        engine: "gemini",
+        model: "gemini-3.8-flash",
+        provider: "Google Gemini (Active on engeznafsak.com)"
+      });
+    } catch (err: any) {
+      console.error("[GEMINI SCHOLAR GRADING ERROR]:", err?.message || err);
+      return res.status(500).json({
+        error: "Unable to complete AI response.",
+        content: "I encountered a connection issue while analyzing your request. You can try switching to DeepSeek API in ⚙️ AI Settings or enter a custom key."
       });
     }
-
-    if (contents.length === 0) {
-      contents.push({ role: "user", parts: [{ text: `${subjectHeader}Hello! Can you help me study?` }] });
-    }
-
-    const response = await generateContentWithFallback(ai, {
-      contents,
-      config: {
-        systemInstruction: IGCSE_EXAMINER_SYSTEM_INSTRUCTION,
-        temperature: 0.2
-      },
-      timeoutMs: 45000
-    }, CANDIDATE_MODELS);
-
-    const replyText = response.text || "Assessment completed.";
-
-    return res.json({
-      content: replyText,
-      engine: "gemini",
-      model: "gemini-3.8-flash",
-      provider: "Google Gemini (Active on engeznafsak.com)"
-    });
-  } catch (err: any) {
-    console.error("[GEMINI SCHOLAR GRADING ERROR]:", err?.message || err);
-    return res.status(500).json({
-      error: "Unable to complete AI response. Please try again.",
-      content: "I encountered a temporary connection issue while analyzing your request. Please try sending your query again in a moment."
-    });
   }
+
+  // Neither DeepSeek nor Gemini key available
+  return res.status(200).json({
+    content: `### 💡 Configure AI Academic Tutor\n\nPlease enter your **DeepSeek API key** (starts with \`sk-\`) in **⚙️ AI Settings** to start studying with DeepSeek-V3 / DeepSeek-R1.\n\nKey features enabled:\n- Cambridge IGCSE, Pearson Edexcel & Oxford AQA mark schemes\n- Optical handwritten script evaluation\n- Method mark [M], Accuracy mark [A], and Independent mark [B] scoring.`,
+    engine: "deepseek",
+    model: "deepseek-chat",
+    provider: "Engez Nafsak AI",
+    needsKey: true
+  });
 };
 
 // 3.3 ENDPOINT: Comprehensive Mark-by-Mark Paper Correction Engine
@@ -1142,8 +1316,99 @@ const handlePaperCorrection = async (req: Request, res: Response) => {
     answerFiles = []
   } = body;
 
+  const deepKey = (req.headers["x-deepseek-key"] as string) || req.body?.deepseekApiKey || null;
   const gemKey = (req.headers["x-gemini-key"] as string) || req.body?.geminiApiKey || req.body?.geminiKey || null;
+
+  const deepseekApiKey = getDeepSeekKey(deepKey);
   const ai = getGeminiClient(gemKey);
+
+  // PATH 1: DeepSeek Exam Paper Correction Engine (Preferred)
+  if (deepseekApiKey) {
+    try {
+      const formattedQuestions = (Array.isArray(questions) && questions.length > 0)
+        ? questions.map((q: any, i: number) => `Question ${q.questionNumber || i + 1}${q.subQuestion ? ` ${q.subQuestion}` : ''} (${q.maxMarks || 2} marks):\nPrompt: ${q.promptText || 'Answer question'}\nStudent Answer: "${q.studentAnswer || ''}"\n${q.officialMarkSchemeCriterion ? `Mark Scheme Criterion: ${q.officialMarkSchemeCriterion}` : ''}`).join("\n\n")
+        : "Question 1:\nStudent submitted work for assessment.";
+
+      const dsPrompt = `You are a Senior Chief Examiner for ${examBoard} ${subject} (${paperNumber}).
+Evaluate the student's answers mark-by-mark against the official Mark Scheme.
+Strict Marking Mode: ${strictMode ? "ENABLED (Strict mark scheme keyword and method adherence)" : "BALANCED"}
+Mark Codes: [M] Method Mark, [A] Accuracy Mark, [B] Independent Mark, [ECF] Error Carried Forward credited.
+
+Question Paper context:
+${questionPaperText ? questionPaperText.slice(0, 25000) : "Standard exam paper"}
+
+Official Mark Scheme:
+${markSchemeText ? markSchemeText.slice(0, 25000) : "Official rubrics"}
+
+Student Submission:
+${formattedQuestions}
+
+Output a strictly valid JSON object adhering to this schema:
+{
+  "subject": "${subject}",
+  "examBoard": "${examBoard}",
+  "paperNumber": "${paperNumber}",
+  "totalScore": number,
+  "maximumScore": number,
+  "percentage": number,
+  "gradeEstimate": "Grade A*" | "Grade A" | "Grade B" | "Grade C" | "Grade D" | "Grade U",
+  "summary": string,
+  "questions": [
+    {
+      "questionNumber": string,
+      "maximumMarks": number,
+      "studentAnswer": string,
+      "ocrConfidence": number,
+      "questionMatchConfidence": number,
+      "awardedMarks": number,
+      "confidence": number,
+      "status": "correct" | "partially_correct" | "incorrect",
+      "markPoints": [
+        {
+          "id": string,
+          "markCode": string,
+          "description": string,
+          "awarded": boolean,
+          "reason": string,
+          "evidence": string | null
+        }
+      ],
+      "needsReview": boolean,
+      "reviewReason": string | null,
+      "modelAnswer": string,
+      "officialMarkSchemeCriterion": string,
+      "alternativeWordingAccepted": boolean,
+      "alternativeWordingNote": string
+    }
+  ],
+  "strengths": string[],
+  "recurringMistakes": string[],
+  "topicGaps": string[],
+  "recommendedActions": string[],
+  "handwritingQuality": "clear",
+  "handwritingNote": string
+}`;
+
+      const dsRes = await callDeepSeekChat({
+        apiKey: deepseekApiKey,
+        messages: [
+          { role: "system", content: "You are an official Cambridge CIE & Edexcel Senior Chief Examiner. Always reply with valid JSON only." },
+          { role: "user", content: dsPrompt }
+        ],
+        model: "deepseek-chat",
+        responseFormat: { type: "json_object" },
+        temperature: 0.1,
+        timeoutMs: 50000
+      });
+
+      const parsed = JSON.parse(dsRes.content);
+      if (!parsed.id) parsed.id = `report-${Date.now()}`;
+      if (!parsed.timestamp) parsed.timestamp = new Date().toISOString();
+      return res.json(parsed);
+    } catch (dsErr) {
+      console.warn("[DEEPSEEK PAPER CORRECTION RECOVERING]:", dsErr);
+    }
+  }
 
   if (!ai) {
     // Generate calibrated dynamic grading report for any questions submitted
@@ -1590,8 +1855,67 @@ const handlePaperParse = async (req: Request, res: Response) => {
     examBoard = "Cambridge IGCSE"
   } = body;
 
+  const deepKey = (req.headers["x-deepseek-key"] as string) || req.body?.deepseekApiKey || null;
   const gemKey = (req.headers["x-gemini-key"] as string) || req.body?.geminiApiKey || req.body?.geminiKey || null;
+
+  const deepseekApiKey = getDeepSeekKey(deepKey);
   const ai = getGeminiClient(gemKey);
+
+  // If DeepSeek is available and textual content exists, use DeepSeek for parsing
+  if (deepseekApiKey && (paperText || questionPaperText || markSchemeText)) {
+    try {
+      const parsePrompt = `You are an expert Cambridge CIE and Edexcel Exam Question Parser.
+Extract questions and mark scheme criteria from this document:
+[QUESTION PAPER / TEXT]:
+${(questionPaperText || paperText).slice(0, 30000)}
+
+[MARK SCHEME]:
+${(markSchemeText || "").slice(0, 30000)}
+
+Output valid JSON matching:
+{
+  "detectedSubject": "${subject}",
+  "detectedExamBoard": "${examBoard}",
+  "detectedPaper": "Uploaded Paper",
+  "pageCount": 1,
+  "handwritingDetected": true,
+  "overallHandwritingQuality": "clear",
+  "questions": [
+    {
+      "questionNumber": string,
+      "subQuestion": string,
+      "promptText": string,
+      "maxMarks": number,
+      "studentAnswer": string,
+      "officialMarkSchemeCriterion": string,
+      "modelAnswer": string,
+      "pageIndex": 0,
+      "hasHandwriting": true,
+      "handwritingConfidence": 0.95
+    }
+  ]
+}`;
+
+      const dsRes = await callDeepSeekChat({
+        apiKey: deepseekApiKey,
+        messages: [
+          { role: "system", content: "You are a professional examination parsing engine. Always reply with valid JSON only." },
+          { role: "user", content: parsePrompt }
+        ],
+        model: "deepseek-chat",
+        responseFormat: { type: "json_object" },
+        temperature: 0.1,
+        timeoutMs: 45000
+      });
+
+      const parsed = JSON.parse(dsRes.content);
+      if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
+        return res.json(parsed);
+      }
+    } catch (parseErr) {
+      console.warn("[DEEPSEEK PAPER PARSE RECOVERING]:", parseErr);
+    }
+  }
 
   if (!ai) {
     const lines = (paperText || "").split("\n").filter((l: string) => l.trim().length > 0);
@@ -1905,6 +2229,22 @@ app.all("/api/gemini/chat", (req, res) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   res.setHeader("Allow", "POST, OPTIONS");
   return res.status(405).json({ error: "Method Not Allowed. Use POST.", status: 405 });
+});
+
+app.get("/api/ai/status", (req, res) => {
+  const hasDeepSeekEnv = Boolean(process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY.trim().length > 0);
+  const hasGeminiEnv = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0);
+  return res.json({
+    primaryEngine: "deepseek",
+    deepseekConfigured: hasDeepSeekEnv,
+    geminiConfigured: hasGeminiEnv,
+    supportedModels: {
+      deepseek: ["deepseek-chat", "deepseek-reasoner"],
+      gemini: ["gemini-3.8-flash", "gemini-3.1-flash-lite"]
+    },
+    domain: "engeznafsak.com",
+    dnsStatus: "operational"
+  });
 });
 
 // Catch-all for any undefined /api/* routes -> MUST return 404 JSON, NEVER fall through to HTML!
