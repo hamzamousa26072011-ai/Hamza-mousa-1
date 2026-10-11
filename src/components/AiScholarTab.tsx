@@ -322,6 +322,38 @@ export default function AiScholarTab({
   const [localDeepSeekKey, setLocalDeepSeekKey] = useState(() => localStorage.getItem("ENGEZ_DEEPSEEK_KEY") || "");
   const [keySaveMessage, setKeySaveMessage] = useState<string | null>(null);
   const [dnsTestState, setDnsTestState] = useState<{ loading: boolean; ok?: boolean; data?: any; error?: string } | null>(null);
+  const [deepseekTestStatus, setDeepseekTestStatus] = useState<{ loading: boolean; ok?: boolean; error?: string; message?: string } | null>(null);
+
+  const testDeepSeekConnection = async () => {
+    if (!localDeepSeekKey.trim()) {
+      setDeepseekTestStatus({ loading: false, ok: false, error: "Please enter your DeepSeek API key above first (starts with sk-)." });
+      return;
+    }
+    setDeepseekTestStatus({ loading: true });
+    try {
+      const res = await fetch("/api/ai/test-deepseek", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: localDeepSeekKey.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setDeepseekTestStatus({ loading: false, ok: true, message: `✅ Key is valid! Model: ${data.model || "deepseek-chat"}` });
+      } else {
+        setDeepseekTestStatus({ loading: false, ok: false, error: data.error || "Authentication failed. Please verify your key at platform.deepseek.com." });
+      }
+    } catch (err: any) {
+      setDeepseekTestStatus({ loading: false, ok: false, error: err.message || "Failed to reach test endpoint" });
+    }
+  };
+
+  const handleClearDeepSeekKey = () => {
+    setLocalDeepSeekKey("");
+    localStorage.removeItem("ENGEZ_DEEPSEEK_KEY");
+    setDeepseekTestStatus(null);
+    setKeySaveMessage("DeepSeek key cleared! Google Gemini 3.8 Flash will serve as your active tutor.");
+    setTimeout(() => setKeySaveMessage(null), 3500);
+  };
 
   const testDnsAiHealth = async () => {
     setDnsTestState({ loading: true });
@@ -2191,25 +2223,82 @@ export default function AiScholarTab({
                 </select>
               </div>
 
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={localDeepSeekKey}
-                  onChange={(e) => setLocalDeepSeekKey(e.target.value)}
-                  placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-                  className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
-                    isLight 
-                      ? "bg-white border-[#E8D7C9] text-[#1D1D1B] focus:border-cyan-500" 
-                      : "bg-black/30 border-white/10 text-white focus:border-cyan-400"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={handleSaveAiKeys}
-                  className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-600 hover:bg-cyan-700 text-white transition cursor-pointer shrink-0"
-                >
-                  Save Key
-                </button>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={localDeepSeekKey}
+                    onChange={(e) => {
+                      setLocalDeepSeekKey(e.target.value);
+                      if (deepseekTestStatus) setDeepseekTestStatus(null);
+                    }}
+                    placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
+                      isLight 
+                        ? "bg-white border-[#E8D7C9] text-[#1D1D1B] focus:border-cyan-500" 
+                        : "bg-black/30 border-white/10 text-white focus:border-cyan-400"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveAiKeys}
+                    className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-600 hover:bg-cyan-700 text-white transition cursor-pointer shrink-0 shadow-xs"
+                  >
+                    Save Key
+                  </button>
+                  <button
+                    type="button"
+                    onClick={testDeepSeekConnection}
+                    disabled={deepseekTestStatus?.loading}
+                    className="px-3 py-2 rounded-xl text-xs font-mono font-bold bg-slate-800 hover:bg-slate-700 dark:bg-white/10 dark:hover:bg-white/20 text-white transition cursor-pointer shrink-0 flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {deepseekTestStatus?.loading ? (
+                      <>
+                        <RefreshCw size={12} className="animate-spin" />
+                        <span>Testing...</span>
+                      </>
+                    ) : (
+                      <span>Test Connection</span>
+                    )}
+                  </button>
+                  {localDeepSeekKey && (
+                    <button
+                      type="button"
+                      onClick={handleClearDeepSeekKey}
+                      title="Clear key and use Google Gemini"
+                      className="px-2.5 py-2 rounded-xl text-xs font-mono text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-300 dark:border-rose-900 transition cursor-pointer shrink-0"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Key Format Warning if not starting with sk- */}
+                {localDeepSeekKey.trim().length > 0 && !localDeepSeekKey.trim().startsWith("sk-") && (
+                  <p className="text-[11px] font-mono text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <span>⚠️ Note: Official DeepSeek keys start with <code className="font-bold underline">sk-</code>. If invalid, click Clear to use Gemini.</span>
+                  </p>
+                )}
+
+                {/* Test Result Message */}
+                {deepseekTestStatus && !deepseekTestStatus.loading && (
+                  <div className={`p-2.5 rounded-xl text-xs font-mono border transition ${
+                    deepseekTestStatus.ok
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                      : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400"
+                  }`}>
+                    {deepseekTestStatus.ok ? (
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <span>{deepseekTestStatus.message || "✅ DeepSeek connected successfully!"}</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="font-bold">❌ Connection Failed:</div>
+                        <div className="text-[11px] mt-0.5 opacity-90">{deepseekTestStatus.error}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

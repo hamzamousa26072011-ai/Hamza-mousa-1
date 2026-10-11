@@ -1112,70 +1112,86 @@ const handleScholarGrading = async (req: Request, res: Response) => {
   }
 
   // Target engine: DeepSeek is primary default per user request
-  const targetEngine = preferredEngine === "gemini" ? "gemini" : "deepseek";
+  let targetEngine = preferredEngine === "gemini" ? "gemini" : "deepseek";
+  let fallbackNotice: string | null = null;
+  let fallbackProvider: string | null = null;
 
   // =========================================================================
   // PATH 1: DEEPSEEK ENGINE (DEFAULT & PRIMARY)
   // =========================================================================
-  if (targetEngine === "deepseek" && deepseekApiKey) {
-    try {
-      const deepseekMessages: DeepSeekChatMessage[] = [
-        { role: "system", content: IGCSE_EXAMINER_SYSTEM_INSTRUCTION }
-      ];
+  if (targetEngine === "deepseek") {
+    if (deepseekApiKey) {
+      try {
+        const deepseekMessages: DeepSeekChatMessage[] = [
+          { role: "system", content: IGCSE_EXAMINER_SYSTEM_INSTRUCTION }
+        ];
 
-      for (let i = 0; i < messages.length; i++) {
-        const m = messages[i];
-        const isUser = m.role !== "assistant" && m.role !== "model";
-        let text = sanitizeStudentInput(m.content || "");
-        if (i === 0 && isUser) {
-          text = subjectHeader + (hasDocContext ? docHeader : "") + attachedFilesText + text;
+        for (let i = 0; i < messages.length; i++) {
+          const m = messages[i];
+          const isUser = m.role !== "assistant" && m.role !== "model";
+          let text = sanitizeStudentInput(m.content || "");
+          if (i === 0 && isUser) {
+            text = subjectHeader + (hasDocContext ? docHeader : "") + attachedFilesText + text;
+          }
+          deepseekMessages.push({
+            role: isUser ? "user" : "assistant",
+            content: text || "Please assist me with my study."
+          });
         }
-        deepseekMessages.push({
-          role: isUser ? "user" : "assistant",
-          content: text || "Please assist me with my study."
+
+        if (deepseekMessages.length <= 1) {
+          deepseekMessages.push({ role: "user", content: `${subjectHeader}Hello! Can you help me study?` });
+        }
+
+        const activeModel = deepseekModel || "deepseek-chat";
+        const dsResponse = await callDeepSeekChat({
+          apiKey: deepseekApiKey,
+          messages: deepseekMessages,
+          model: activeModel,
+          temperature: 0.2,
+          timeoutMs: 45000
+        });
+
+        return res.json({
+          content: dsResponse.content || "Assessment completed.",
+          engine: "deepseek",
+          model: dsResponse.model,
+          provider: "DeepSeek AI (Active on engeznafsak.com)"
+        });
+      } catch (dsErr: any) {
+        console.warn("[DEEPSEEK API ATTEMPT FAILED]:", dsErr?.message || dsErr);
+        if (!ai) {
+          return res.status(200).json({
+            content: `### ⚠️ DeepSeek API Notice\n\nDeepSeek returned: **${dsErr.message || "Authentication error"}**.\n\nPlease check your DeepSeek API key in **⚙️ AI Settings**:\n1. Ensure your key is valid at [platform.deepseek.com](https://platform.deepseek.com) (starts with \`sk-\`).\n2. Update or clear the key in AI Settings.\n3. Or select Google Gemini in AI Settings to continue immediately.`,
+            error: "DeepSeek API error",
+            engine: "deepseek",
+            needsKey: true
+          });
+        }
+        console.log("[CASCADE] Falling back to Gemini engine after DeepSeek error...");
+        targetEngine = "gemini";
+        const isAuthError = dsErr?.message?.toLowerCase().includes("authentication") || dsErr?.message?.toLowerCase().includes("invalid");
+        fallbackNotice = isAuthError
+          ? `> ⚠️ **Notice**: DeepSeek API authentication failed (${dsErr.message || "Invalid API key"}). Please update your DeepSeek key in **⚙️ AI Settings**.\n> \n> ✅ **Question answered using Google Gemini 3.8 Flash** so your study session continues without interruption:\n\n---\n\n`
+          : `> ℹ️ **Notice**: DeepSeek service was momentarily unavailable. Answered using **Google Gemini 3.8 Flash**:\n\n---\n\n`;
+        fallbackProvider = "Google Gemini 3.8 Flash (DeepSeek Fallback)";
+      }
+    } else {
+      // No DeepSeek key provided
+      if (ai) {
+        targetEngine = "gemini";
+        fallbackNotice = `> 💡 **Notice**: DeepSeek key is not yet configured. Answered using **Google Gemini 3.8 Flash**.\n> *(To activate DeepSeek-V3 or DeepSeek-R1, enter your key in **⚙️ AI Settings** anytime.)*\n\n---\n\n`;
+        fallbackProvider = "Google Gemini 3.8 Flash (Active)";
+      } else {
+        return res.status(200).json({
+          content: `### 💡 DeepSeek Academic Engine Active\n\nTo begin chatting, asking questions, and getting your exam papers marked with **DeepSeek-V3 / DeepSeek-R1**, please configure your DeepSeek API key:\n\n1. Click **⚙️ AI Settings** in the top-right toolbar of this room.\n2. Paste your DeepSeek API key (starts with \`sk-\`).\n3. Click **Save Key**.\n\n*If you do not have a DeepSeek key yet, create one in seconds at [platform.deepseek.com](https://platform.deepseek.com).* Once saved, all questions, past paper evaluations, and mark schemes will run smoothly through \`engeznafsak.com\` without regional interruptions!`,
+          engine: "deepseek",
+          model: "deepseek-chat",
+          provider: "DeepSeek AI (Key Configuration Needed)",
+          needsKey: true
         });
       }
-
-      if (deepseekMessages.length <= 1) {
-        deepseekMessages.push({ role: "user", content: `${subjectHeader}Hello! Can you help me study?` });
-      }
-
-      const activeModel = deepseekModel || "deepseek-chat";
-      const dsResponse = await callDeepSeekChat({
-        apiKey: deepseekApiKey,
-        messages: deepseekMessages,
-        model: activeModel,
-        temperature: 0.2,
-        timeoutMs: 45000
-      });
-
-      return res.json({
-        content: dsResponse.content || "Assessment completed.",
-        engine: "deepseek",
-        model: dsResponse.model,
-        provider: "DeepSeek AI (Active on engeznafsak.com)"
-      });
-    } catch (dsErr: any) {
-      console.warn("[DEEPSEEK API ATTEMPT FAILED]:", dsErr?.message || dsErr);
-      if (!ai) {
-        return res.status(502).json({
-          error: "DeepSeek API error",
-          content: `DeepSeek service returned an error: ${dsErr.message || "Request failed"}. Please check your DeepSeek API key in AI Settings.`
-        });
-      }
-      console.log("[CASCADE] Falling back to Gemini engine after DeepSeek error...");
     }
-  }
-
-  // If DeepSeek was requested but no DeepSeek key configured yet
-  if (targetEngine === "deepseek" && !deepseekApiKey) {
-    return res.status(200).json({
-      content: `### 💡 DeepSeek Academic Engine Active\n\nTo begin chatting, asking questions, and getting your exam papers marked with **DeepSeek-V3 / DeepSeek-R1**, please configure your DeepSeek API key:\n\n1. Click **⚙️ AI Settings** in the top-right toolbar of this room.\n2. Paste your DeepSeek API key (starts with \`sk-\`).\n3. Click **Save Key**.\n\n*If you do not have a DeepSeek key yet, create one in seconds at [platform.deepseek.com](https://platform.deepseek.com).* Once saved, all questions, past paper evaluations, and mark schemes will run smoothly through \`engeznafsak.com\` without regional interruptions!`,
-      engine: "deepseek",
-      model: "deepseek-chat",
-      provider: "DeepSeek AI (Key Configuration Needed)",
-      needsKey: true
-    });
   }
 
   // =========================================================================
@@ -1266,13 +1282,14 @@ const handleScholarGrading = async (req: Request, res: Response) => {
         timeoutMs: 45000
       }, CANDIDATE_MODELS);
 
-      const replyText = response.text || "Assessment completed.";
+      const rawText = response.text || "Assessment completed.";
+      const replyText = fallbackNotice ? `${fallbackNotice}${rawText}` : rawText;
 
       return res.json({
         content: replyText,
         engine: "gemini",
         model: "gemini-3.8-flash",
-        provider: "Google Gemini (Active on engeznafsak.com)"
+        provider: fallbackProvider || "Google Gemini (Active on engeznafsak.com)"
       });
     } catch (err: any) {
       console.error("[GEMINI SCHOLAR GRADING ERROR]:", err?.message || err);
@@ -2229,6 +2246,49 @@ app.all("/api/gemini/chat", (req, res) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   res.setHeader("Allow", "POST, OPTIONS");
   return res.status(405).json({ error: "Method Not Allowed. Use POST.", status: 405 });
+});
+
+// Test endpoint for verifying DeepSeek API key validity
+app.post("/api/ai/test-deepseek", async (req: Request, res: Response) => {
+  const { apiKey } = req.body || {};
+  const testKey = (typeof apiKey === "string" && apiKey.trim().length > 0)
+    ? apiKey.trim()
+    : (process.env.DEEPSEEK_API_KEY || "");
+
+  if (!testKey) {
+    return res.status(400).json({
+      ok: false,
+      error: "No DeepSeek API key provided. Please enter a key starting with 'sk-'."
+    });
+  }
+
+  if (!testKey.startsWith("sk-")) {
+    return res.status(400).json({
+      ok: false,
+      error: "Invalid key format: DeepSeek API keys must start with 'sk-'. Check your key at platform.deepseek.com."
+    });
+  }
+
+  try {
+    const dsRes = await callDeepSeekChat({
+      apiKey: testKey,
+      messages: [{ role: "user", content: "Ping connection test" }],
+      model: "deepseek-chat",
+      temperature: 0.1,
+      timeoutMs: 12000
+    });
+
+    return res.json({
+      ok: true,
+      message: "DeepSeek API key is valid and connected successfully!",
+      model: dsRes.model
+    });
+  } catch (err: any) {
+    return res.status(400).json({
+      ok: false,
+      error: err.message || "Failed to authenticate with DeepSeek API."
+    });
+  }
 });
 
 app.get("/api/ai/status", (req, res) => {
