@@ -965,12 +965,16 @@ export default function App() {
   // ---------------------------------------------------------------------------
   // HABIT TRACKER STATE & PERSISTENCE
   // ---------------------------------------------------------------------------
-  const DEFAULT_HABITS: HabitItem[] = [
-    { id: "habit_1", name: "Workout", emoji: "💪", color: "#C96F55", createdAt: new Date().toISOString() },
-    { id: "habit_2", name: "Solve Chemistry", emoji: "📖", color: "#587B8C", createdAt: new Date().toISOString() },
-    { id: "habit_3", name: "Solve Math", emoji: "🗓️", color: "#66856D", createdAt: new Date().toISOString() },
-    { id: "habit_4", name: "Solve CS", emoji: "🎯", color: "#4F46E5", createdAt: new Date().toISOString() },
-  ];
+  // Empty default habits list - no test subjects or placeholder habits
+  const DEFAULT_HABITS: HabitItem[] = [];
+
+  // Helper to filter out any test subjects or placeholder habits
+  const isTestSubjectHabit = (h: HabitItem) => {
+    if (!h) return false;
+    const testIds = ["habit_1", "habit_2", "habit_3", "habit_4"];
+    const testNames = ["Workout", "Solve Chemistry", "Solve Math", "Solve CS"];
+    return testIds.includes(h.id) || testNames.includes(h.name);
+  };
 
   const [habits, setHabits] = useState<HabitItem[]>(() => {
     try {
@@ -981,7 +985,9 @@ export default function App() {
           const userHabits = localStorage.getItem(`ENGEZ_USER_HABITS_${parsedUser.uid}`);
           if (userHabits) {
             const parsed = JSON.parse(userHabits);
-            if (Array.isArray(parsed?.habits) && parsed.habits.length > 0) return parsed.habits;
+            if (Array.isArray(parsed?.habits)) {
+              return parsed.habits.filter((h: HabitItem) => !isTestSubjectHabit(h));
+            }
           }
         }
       }
@@ -991,7 +997,9 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.filter((h: HabitItem) => !isTestSubjectHabit(h));
+        }
       } catch (e) {}
     }
     return DEFAULT_HABITS;
@@ -1287,26 +1295,31 @@ export default function App() {
               });
             }
 
-            // If cloud has habits, load them
-            if (Array.isArray(cloudData.habits) && cloudData.habits.length > 0) {
-              setHabits(cloudData.habits);
+            // If cloud has habits, load them (filtering out any test subjects)
+            if (Array.isArray(cloudData.habits)) {
+              const cleanedHabits = cloudData.habits.filter((h: HabitItem) => !isTestSubjectHabit(h));
+              setHabits(cleanedHabits);
               if (cloudData.habitLogs) setHabitLogs(cloudData.habitLogs);
               if (cloudData.habitStartDate) setHabitStartDate(cloudData.habitStartDate);
               localStorage.setItem(`ENGEZ_USER_HABITS_${activeUser.uid}`, JSON.stringify({
-                habits: cloudData.habits,
+                habits: cleanedHabits,
                 habitLogs: cloudData.habitLogs || {},
                 habitStartDate: cloudData.habitStartDate || habitStartDate
               }));
+              if (cleanedHabits.length !== cloudData.habits.length) {
+                await saveUserHabits(activeUser.uid, cleanedHabits, cloudData.habitLogs || {}, cloudData.habitStartDate || habitStartDate);
+              }
             } else {
               const cachedHabits = localStorage.getItem(`ENGEZ_USER_HABITS_${activeUser.uid}`);
               if (cachedHabits) {
                 try {
                   const parsedH = JSON.parse(cachedHabits);
-                  if (Array.isArray(parsedH.habits) && parsedH.habits.length > 0) {
-                    setHabits(parsedH.habits);
+                  if (Array.isArray(parsedH.habits)) {
+                    const cleanedH = parsedH.habits.filter((h: HabitItem) => !isTestSubjectHabit(h));
+                    setHabits(cleanedH);
                     if (parsedH.habitLogs) setHabitLogs(parsedH.habitLogs);
                     if (parsedH.habitStartDate) setHabitStartDate(parsedH.habitStartDate);
-                    await saveUserHabits(activeUser.uid, parsedH.habits, parsedH.habitLogs || {}, parsedH.habitStartDate || habitStartDate);
+                    await saveUserHabits(activeUser.uid, cleanedH, parsedH.habitLogs || {}, parsedH.habitStartDate || habitStartDate);
                   }
                 } catch (e) {}
               } else {

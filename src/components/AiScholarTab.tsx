@@ -950,12 +950,12 @@ export default function AiScholarTab({
       let providerName = "Google Gemini 3.8 Flash (Active on engeznafsak.com)";
 
       const payloadAttachedFiles = attachedFiles
-        .filter(af => af.dataUrl && (af.type?.includes("pdf") || af.type?.startsWith("image/")))
         .map(af => ({
           name: af.name,
           type: af.type,
           size: af.size,
-          dataUrl: af.dataUrl
+          dataUrl: af.dataUrl,
+          content: af.content
         }));
 
       try {
@@ -2077,13 +2077,59 @@ export default function AiScholarTab({
               </p>
             </div>
 
+            {/* Gemini API Key Configuration */}
+            <div className={`p-4 rounded-2xl border space-y-3 ${
+              isLight ? "bg-white border-[#E8D7C9]" : "bg-white/5 border-white/10"
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Key size={15} className="text-[#C96F55]" />
+                  <span className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
+                    Gemini API Key
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  Ready & Protected
+                </span>
+              </div>
+              <p className="text-xs text-[#77736B] leading-relaxed">
+                Uses the server-side <code className="text-[#C96F55]">GEMINI_API_KEY</code> by default. You can also supply a custom Gemini API key here to override or test directly on your custom DNS:
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={localGeminiKey}
+                  onChange={(e) => setLocalGeminiKey(e.target.value)}
+                  placeholder="AIzaSy... (optional custom key)"
+                  className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
+                    isLight 
+                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
+                      : "bg-black/30 border-white/10 text-white focus:border-indigo-500"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveAiKeys}
+                  className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-[#C96F55] hover:bg-[#B85F48] text-white transition cursor-pointer shrink-0"
+                >
+                  Save Key
+                </button>
+              </div>
+              {keySaveMessage && (
+                <div className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold">
+                  <CheckCircle2 size={12} />
+                  <span>{keySaveMessage}</span>
+                </div>
+              )}
+            </div>
+
             <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-[#77736B] dark:text-slate-300 space-y-1">
               <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1">
                 <ShieldCheck size={13} />
                 Senior IGCSE Examiner Mark Scheme Engine Active
               </span>
               <p className="leading-relaxed text-[11px]">
-                Trained specifically on Cambridge CIE (0580, 0625, 0620, 0610), Pearson Edexcel (4MA1, 4PH1, 4CH1, 4BI1), and Oxford AQA mark schemes. Operates seamlessly on <code className="text-[#C96F55]">engeznafsak.com</code>.
+                Trained specifically on Cambridge CIE (0580, 0625, 0620, 0610), Pearson Edexcel (4MA1, 4PH1, 4CH1, 4BI1), and Oxford AQA mark schemes. Operates seamlessly on <code className="text-[#C96F55]">engeznafsak.com</code> with multimodal OCR for images, handwritten exam scripts, PDFs, and worksheets.
               </p>
             </div>
 

@@ -675,10 +675,10 @@ const getGeminiClient = (customKey?: string | null) => {
   return geminiClientInstance;
 };
 
-// Candidate models ordered for maximum responsiveness, precision, and zero-timeout stability per Gemini API skill
+// Candidate models ordered for maximum multimodal vision precision, OCR quality, and zero-timeout stability
 const CANDIDATE_MODELS = [
-  "gemini-3.1-flash-lite",
   "gemini-3.8-flash",
+  "gemini-3.1-flash-lite",
   "gemini-flash-latest"
 ];
 
@@ -950,6 +950,16 @@ Show the concise, 100% score solution directly matching the official mark scheme
 ### 💡 Examiner Action Points to Secure Full Marks
 • **Examiner Tip**: 1-2 rapid, high-yield bullet points on common student traps from past examiner reports and how to guarantee full marks in the official exam.
 
+=== MULTIMODAL VISION, OPTICAL DOCUMENT RECOGNITION (OCR) & HANDWRITING EXPERTISE ===
+When images, past papers, handwritten notes, worksheets, or attached files are provided:
+1. OPTICAL CHARACTER RECOGNITION (OCR):
+   - Decipher student handwriting with extreme optical precision across all styles: cursive, block printing, fast scrawls, faint pencil graphite, blue/black ink, and notes in margins or answer lines.
+   - Read and transcribe printed question paper prompts, mathematical expressions ($x^2$, $\\sqrt{}$, fractions), chemical formulas ($H_2SO_4$, ions), physics vectors, circuit diagrams, and biological labels.
+   - Decipher faint, smudged, or ambiguous characters (e.g. distinguishing 0 vs O, 1 vs l, 2 vs Z, 5 vs S) by grounding with academic syllabus context and mark schemes.
+2. ATTACHED FILES & EXAM PAPERS:
+   - When a student attaches a file or photo without a lengthy text prompt, immediately read the attachment, detect the subject, evaluate the student's solution or answer against the mark scheme, and provide a comprehensive assessment.
+   - If an attachment contains a past paper question without student working, provide the complete, step-by-step model solution with full marks and examiner tips.
+
 === OFFICIAL MARKING CODES ===
 - [M] Method Mark: Given for applying a correct formula, method, or valid algebraic step.
 - [A] Accuracy Mark: Awarded for obtaining the correct numerical/algebraic result following the method mark.
@@ -1011,15 +1021,26 @@ const handleScholarGrading = async (req: Request, res: Response) => {
       }
       const parts: any[] = [{ text }];
 
-      // Multimodal vision & document support for past paper photos, PDFs & handwritten answer scripts
-      const addInline = (url?: string) => {
+      // Multimodal vision, OCR & document support for past paper photos, PDFs, worksheets & handwritten answer scripts
+      const addInline = (url?: string, label?: string) => {
         if (!url || typeof url !== "string") return;
         if (url.startsWith("data:")) {
           const commaIdx = url.indexOf(",");
           if (commaIdx !== -1) {
             const mimeMatch = url.slice(0, commaIdx).match(/data:([^;,]+)/);
-            const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+            let mimeType = mimeMatch ? mimeMatch[1].toLowerCase() : "image/jpeg";
             const data = url.slice(commaIdx + 1).replace(/\s/g, "");
+            
+            // Normalize MIME types recognized by Google Gemini Multimodal API
+            if (mimeType.includes("pdf")) mimeType = "application/pdf";
+            else if (mimeType.includes("png")) mimeType = "image/png";
+            else if (mimeType.includes("jpeg") || mimeType.includes("jpg")) mimeType = "image/jpeg";
+            else if (mimeType.includes("webp")) mimeType = "image/webp";
+            else if (mimeType.includes("heic") || mimeType.includes("heif")) mimeType = "image/heic";
+
+            if (label) {
+              parts.push({ text: `[ATTACHMENT FILE / SCRIPT]: ${label} (${mimeType})` });
+            }
             parts.push({ inlineData: { mimeType, data } });
           }
         } else if (url.length > 100) {
@@ -1029,24 +1050,35 @@ const handleScholarGrading = async (req: Request, res: Response) => {
           else if (clean.startsWith("iVBORw0KGgo")) mimeType = "image/png";
           else if (clean.startsWith("JVBERi0")) mimeType = "application/pdf";
           else if (clean.startsWith("UklGR")) mimeType = "image/webp";
+          if (label) {
+            parts.push({ text: `[ATTACHMENT FILE / SCRIPT]: ${label} (${mimeType})` });
+          }
           parts.push({ inlineData: { mimeType, data: clean } });
         }
       };
 
-      if (m.imageUrl) addInline(m.imageUrl);
+      if (m.imageUrl) addInline(m.imageUrl, "Attached Image");
       if (Array.isArray(m.imageUrls)) {
-        for (const img of m.imageUrls) addInline(img);
+        for (let idx = 0; idx < m.imageUrls.length; idx++) {
+          addInline(m.imageUrls[idx], `Attached Image ${idx + 1}`);
+        }
       }
-      if (m.fileUrl) addInline(m.fileUrl);
+      if (m.fileUrl) addInline(m.fileUrl, "Attached Document");
       if (Array.isArray(m.fileUrls)) {
-        for (const f of m.fileUrls) addInline(f);
+        for (let fIdx = 0; fIdx < m.fileUrls.length; fIdx++) {
+          addInline(m.fileUrls[fIdx], `Attached Document ${fIdx + 1}`);
+        }
       }
 
       // If user uploaded files at top-level request
       if (i === 0 && isUser && Array.isArray(attachedFiles)) {
         for (const af of attachedFiles) {
           if (af && typeof af.dataUrl === "string") {
-            addInline(af.dataUrl);
+            addInline(af.dataUrl, af.name || "Uploaded Study Document");
+          } else if (af && af.content && typeof af.content === "string") {
+            parts.push({
+              text: `[ATTACHED STUDY FILE: ${af.name || "Document"}]\n${af.content.slice(0, 40000)}`
+            });
           }
         }
       }
