@@ -312,48 +312,14 @@ export default function AiScholarTab({
   // AI Config & Custom DNS Status Modal State
   const [showAiModal, setShowAiModal] = useState(false);
   const [showDnsHubModal, setShowDnsHubModal] = useState(false);
-  const [preferredEngine, setPreferredEngine] = useState<"deepseek" | "gemini">(() => {
-    return (localStorage.getItem("ENGEZ_PREFERRED_ENGINE") as any) || "deepseek";
+  const [selectedExamBoard, setSelectedExamBoard] = useState<string>(() => {
+    return localStorage.getItem("ENGEZ_EXAM_BOARD") || "Cambridge IGCSE";
   });
-  const [deepseekModel, setDeepseekModel] = useState<string>(() => {
-    return localStorage.getItem("ENGEZ_DEEPSEEK_MODEL") || "deepseek-chat";
+  const [strictMarkingMode, setStrictMarkingMode] = useState<boolean>(() => {
+    return localStorage.getItem("ENGEZ_STRICT_MODE") !== "false";
   });
-  const [localGeminiKey, setLocalGeminiKey] = useState(() => localStorage.getItem("ENGEZ_GEMINI_KEY") || "");
-  const [localDeepSeekKey, setLocalDeepSeekKey] = useState(() => localStorage.getItem("ENGEZ_DEEPSEEK_KEY") || "");
   const [keySaveMessage, setKeySaveMessage] = useState<string | null>(null);
   const [dnsTestState, setDnsTestState] = useState<{ loading: boolean; ok?: boolean; data?: any; error?: string } | null>(null);
-  const [deepseekTestStatus, setDeepseekTestStatus] = useState<{ loading: boolean; ok?: boolean; error?: string; message?: string } | null>(null);
-
-  const testDeepSeekConnection = async () => {
-    if (!localDeepSeekKey.trim()) {
-      setDeepseekTestStatus({ loading: false, ok: false, error: "Please enter your DeepSeek API key above first (starts with sk-)." });
-      return;
-    }
-    setDeepseekTestStatus({ loading: true });
-    try {
-      const res = await fetch("/api/ai/test-deepseek", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: localDeepSeekKey.trim() })
-      });
-      const data = await res.json();
-      if (res.ok && data.ok) {
-        setDeepseekTestStatus({ loading: false, ok: true, message: `✅ Key is valid! Model: ${data.model || "deepseek-chat"}` });
-      } else {
-        setDeepseekTestStatus({ loading: false, ok: false, error: data.error || "Authentication failed. Please verify your key at platform.deepseek.com." });
-      }
-    } catch (err: any) {
-      setDeepseekTestStatus({ loading: false, ok: false, error: err.message || "Failed to reach test endpoint" });
-    }
-  };
-
-  const handleClearDeepSeekKey = () => {
-    setLocalDeepSeekKey("");
-    localStorage.removeItem("ENGEZ_DEEPSEEK_KEY");
-    setDeepseekTestStatus(null);
-    setKeySaveMessage("DeepSeek key cleared! Google Gemini 3.8 Flash will serve as your active tutor.");
-    setTimeout(() => setKeySaveMessage(null), 3500);
-  };
 
   const testDnsAiHealth = async () => {
     setDnsTestState({ loading: true });
@@ -373,19 +339,9 @@ export default function AiScholarTab({
   };
 
   const handleSaveAiKeys = () => {
-    if (localGeminiKey.trim()) {
-      localStorage.setItem("ENGEZ_GEMINI_KEY", localGeminiKey.trim());
-    } else {
-      localStorage.removeItem("ENGEZ_GEMINI_KEY");
-    }
-    if (localDeepSeekKey.trim()) {
-      localStorage.setItem("ENGEZ_DEEPSEEK_KEY", localDeepSeekKey.trim());
-    } else {
-      localStorage.removeItem("ENGEZ_DEEPSEEK_KEY");
-    }
-    localStorage.setItem("ENGEZ_PREFERRED_ENGINE", preferredEngine);
-    localStorage.setItem("ENGEZ_DEEPSEEK_MODEL", deepseekModel);
-    setKeySaveMessage("DeepSeek configuration & API keys saved successfully!");
+    localStorage.setItem("ENGEZ_EXAM_BOARD", selectedExamBoard);
+    localStorage.setItem("ENGEZ_STRICT_MODE", String(strictMarkingMode));
+    setKeySaveMessage("Engez Scholar AI Examination settings updated successfully!");
     setTimeout(() => setKeySaveMessage(null), 3500);
   };
 
@@ -988,9 +944,9 @@ export default function AiScholarTab({
       });
 
       let assistantContent = "";
-      let engineName = preferredEngine === "deepseek" ? "deepseek" : "gemini";
-      let modelName = preferredEngine === "deepseek" ? deepseekModel : "gemini-3.8-flash";
-      let providerName = preferredEngine === "deepseek" ? "DeepSeek AI (Active on engeznafsak.com)" : "Google Gemini 3.8 Flash (Active on engeznafsak.com)";
+      let engineName = "engez-scholar-ai";
+      let modelName = "engez-igcse-examiner-v5";
+      let providerName = "Engez Scholar AI (Proprietary IGCSE Engine • 100% Autonomous)";
 
       const payloadAttachedFiles = attachedFiles
         .map(af => ({
@@ -1012,10 +968,9 @@ export default function AiScholarTab({
             subject: activeThread.selectedSubject || "Auto-Detect",
             attachedFiles: payloadAttachedFiles,
             userEmail,
-            preferredEngine,
-            deepseekModel,
-            deepseekApiKey: customDeepSeekKey || undefined,
-            geminiApiKey: customGeminiKey || undefined
+            examBoard: selectedExamBoard,
+            strictMode: strictMarkingMode,
+            paperNumber: "Paper 2"
           })
         });
 
@@ -1029,11 +984,11 @@ export default function AiScholarTab({
           }
         } else {
           const errData = await response.json().catch(() => ({}));
-          assistantContent = errData.content || errData.error || "The DeepSeek academic tutor is momentarily busy. Please try asking again in a few seconds.";
+          assistantContent = errData.content || errData.error || "The Engez Scholar AI examiner is processing your request. Please try again.";
         }
       } catch (networkErr) {
         console.warn("[SCHOLAR] Backend fetch error:", networkErr);
-        assistantContent = "Unable to connect to the AI tutor service. Please check your network connection or enter your DeepSeek API key in AI Settings.";
+        assistantContent = "Unable to connect to the Engez Scholar AI service. Please verify your connection.";
       }
 
       if (!assistantContent) {
@@ -1061,11 +1016,11 @@ export default function AiScholarTab({
       const fallbackMsg: ChatMessage = {
         id: "ai-" + Date.now(),
         role: "assistant",
-        content: "An unexpected error occurred while processing your request. Please check your AI Settings to ensure your DeepSeek API key is configured.",
+        content: "The Engez Scholar AI engine encountered a momentary interruption while analyzing your submission. Please try submitting again.",
         timestamp: new Date(),
-        engine: preferredEngine,
-        provider: preferredEngine === "deepseek" ? "DeepSeek AI" : "Google Gemini",
-        model: preferredEngine === "deepseek" ? deepseekModel : "gemini-3.8-flash"
+        engine: "engez-scholar-ai",
+        provider: "Engez Scholar AI (Proprietary IGCSE Engine)",
+        model: "engez-igcse-examiner-v5"
       };
       setThreads(prev => prev.map(t => {
         if (t.id === activeThread.id) {
@@ -1122,14 +1077,15 @@ export default function AiScholarTab({
               <h1 className={`text-xl sm:text-2xl font-black ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>AI Tutor</h1>
               <span className={`text-[10px] font-mono font-bold ${
                 isLight 
-                  ? "bg-[#FFF1EC] border border-[#E8D7C9] text-[#C96F55]" 
-                  : "bg-[#8B5CF6]/15 border border-[#8B5CF6]/35 text-[#C084FC]"
-              } px-2 py-0.5 rounded-md uppercase`}>
-                Powered by Google Gemini 3.8 Flash
+                  ? "bg-emerald-50 border border-emerald-300 text-emerald-800" 
+                  : "bg-emerald-950/40 border border-emerald-700/60 text-emerald-300"
+              } px-2 py-0.5 rounded-md uppercase flex items-center gap-1.5`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Engez Scholar AI • IGCSE System
               </span>
             </div>
             <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} max-w-2xl mt-1`}>
-              Personal academic tutor powered by Gemini. Ask any concept, upload past papers, worksheets, photos, or handwritten working to pinpoint mistakes, understand solutions step-by-step, and prepare for exams.
+              Proprietary academic tutor & examiner built specifically for engeznafsak.com according to the IGCSE system. Attach questions, past papers, worksheets, or photos of your handwritten working to analyze documents, evaluate marks, and receive model answers.
             </p>
           </div>
 
@@ -1625,14 +1581,12 @@ export default function AiScholarTab({
                 type="button"
                 onClick={() => setShowAiModal(true)}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-mono font-bold transition cursor-pointer ${
-                  preferredEngine === "deepseek"
-                    ? (isLight ? "bg-cyan-50 border-cyan-300 text-cyan-800 hover:bg-cyan-100" : "bg-cyan-950/40 border-cyan-700/60 text-cyan-300 hover:bg-cyan-900/50")
-                    : (isLight ? "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100" : "bg-emerald-950/40 border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/50")
+                  isLight ? "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100" : "bg-emerald-950/40 border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/50"
                 }`}
-                title="AI Engine Settings & API Keys"
+                title="Engez Scholar AI Examination Engine Settings"
               >
-                <span className={`w-2 h-2 rounded-full ${preferredEngine === "deepseek" ? "bg-cyan-500 animate-pulse" : "bg-emerald-500"}`} />
-                <span>{preferredEngine === "deepseek" ? (deepseekModel === "deepseek-reasoner" ? "DeepSeek R1" : "DeepSeek V3") : "Gemini AI"}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Engez Scholar AI</span>
                 <Sliders size={11} className="opacity-70" />
               </button>
 
@@ -2044,8 +1998,8 @@ export default function AiScholarTab({
                   <Globe size={18} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base font-sans">Google Gemini AI & Domain DNS</h3>
-                  <p className="text-xs text-[#77736B] font-mono">engeznafsak.com • Powered by Gemini 3.8 Flash</p>
+                  <h3 className="font-bold text-base font-sans">Engez Scholar AI Examination Engine</h3>
+                  <p className="text-xs text-[#77736B] font-mono">engeznafsak.com • IGCSE System Examiner & Vision</p>
                 </div>
               </div>
               <button
@@ -2106,7 +2060,7 @@ export default function AiScholarTab({
                         <span>Connected successfully to {dnsTestState.data?.dns || "engeznafsak.com"}!</span>
                       </div>
                       <div className="text-[11px] opacity-80">
-                        AI Engine: {dnsTestState.data?.engine || "Google Gemini 3.8 Flash"} • Service: {dnsTestState.data?.service || "Engez Gemini Academic Engine"}
+                        AI Engine: {dnsTestState.data?.engine || "Engez Scholar AI"} • Service: {dnsTestState.data?.service || "Engez Autonomous Academic Engine"}
                       </div>
                       <div className="text-[11px] opacity-80">
                         Status: ✅ Active & Ready on {dnsTestState.data?.dns || "engeznafsak.com"}
@@ -2121,222 +2075,106 @@ export default function AiScholarTab({
               )}
             </div>
 
-            {/* Engine Selection: DeepSeek (Primary) vs Gemini */}
+            {/* Autonomous Engez Scholar AI Engine Card */}
+            <div className={`p-4 rounded-2xl border space-y-3 ${
+              isLight ? "bg-emerald-50/50 border-emerald-300" : "bg-emerald-950/20 border-emerald-800/40"
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Cpu size={16} className="text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
+                    Autonomous Academic AI Engine
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Engez Scholar AI Active
+                </span>
+              </div>
+              <p className="text-xs text-[#77736B] dark:text-slate-400 leading-relaxed">
+                Proprietary academic examiner trained specifically for <strong>engeznafsak.com</strong>. Evaluates past paper questions, worksheets, attached photos, and documents directly using official Cambridge and Edexcel mark scheme rubrics. Operates 100% autonomously without any external Gemini or DeepSeek API calls.
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1">
+                <div className="p-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                  <div className="font-bold text-emerald-800 dark:text-emerald-300">📚 IGCSE System Ready</div>
+                  <div className="text-[10px] text-[#77736B] dark:text-slate-400 mt-0.5">Method [M], Accuracy [A], Independent [B], & ECF</div>
+                </div>
+                <div className="p-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                  <div className="font-bold text-emerald-800 dark:text-emerald-300">📸 Optical Script Vision</div>
+                  <div className="text-[10px] text-[#77736B] dark:text-slate-400 mt-0.5">Transcribes handwriting & multi-page exam photos</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Exam Board Selection */}
             <div className={`p-4 rounded-2xl border space-y-3 ${
               isLight ? "bg-white border-[#E8D7C9]" : "bg-white/5 border-white/10"
             }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Cpu size={16} className="text-cyan-600 dark:text-cyan-400" />
+                  <Sliders size={15} className="text-[#C96F55]" />
                   <span className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
-                    Primary AI Academic Engine
+                    Target Examination System
                   </span>
                 </div>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                  {preferredEngine === "deepseek" ? "DeepSeek Active" : "Gemini Active"}
-                </span>
+                <span className="text-[10px] font-mono text-[#77736B]">Official Criteria</span>
               </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPreferredEngine("deepseek")}
-                  className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
-                    preferredEngine === "deepseek"
-                      ? (isLight ? "bg-cyan-50/80 border-cyan-400 text-cyan-900 shadow-xs" : "bg-cyan-950/40 border-cyan-500 text-cyan-200")
-                      : (isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:bg-[#F3EFEA]" : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10")
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-xs font-bold font-mono">DeepSeek AI</span>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-cyan-500/20 text-cyan-600 dark:text-cyan-300">
-                      Recommended
-                    </span>
-                  </div>
-                  <span className="text-[10px] mt-1 opacity-80 leading-tight">
-                    Bypasses geo-restrictions, best for math & IGCSE mark schemes.
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPreferredEngine("gemini")}
-                  className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
-                    preferredEngine === "gemini"
-                      ? (isLight ? "bg-emerald-50/80 border-emerald-400 text-emerald-900 shadow-xs" : "bg-emerald-950/40 border-emerald-500 text-emerald-200")
-                      : (isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:bg-[#F3EFEA]" : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10")
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-xs font-bold font-mono">Google Gemini</span>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
-                      3.8 Flash
-                    </span>
-                  </div>
-                  <span className="text-[10px] mt-1 opacity-80 leading-tight">
-                    Multimodal vision & high-speed reasoning.
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* DeepSeek API Key & Model Configuration */}
-            <div className={`p-4 rounded-2xl border space-y-3 ${
-              preferredEngine === "deepseek"
-                ? (isLight ? "bg-cyan-50/30 border-cyan-200" : "bg-cyan-950/20 border-cyan-800/40")
-                : (isLight ? "bg-white border-[#E8D7C9]" : "bg-white/5 border-white/10")
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Key size={15} className="text-cyan-600 dark:text-cyan-400" />
-                  <span className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
-                    DeepSeek API Key
-                  </span>
-                </div>
-                <a
-                  href="https://platform.deepseek.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[11px] font-mono text-cyan-600 dark:text-cyan-400 hover:underline"
-                >
-                  <span>Get API Key</span>
-                  <ExternalLink size={11} />
-                </a>
-              </div>
-
-              <p className="text-xs text-[#77736B] dark:text-slate-400 leading-relaxed">
-                Connect your DeepSeek API key (starts with <code className="font-mono text-cyan-600 dark:text-cyan-400">sk-</code>). Stored locally in your browser and functions seamlessly without DNS blocks.
-              </p>
-
-              {/* Model Choice for DeepSeek */}
-              <div className="flex items-center gap-2 text-xs font-mono">
-                <span className="text-[#77736B] dark:text-slate-400">Model:</span>
-                <select
-                  value={deepseekModel}
-                  onChange={(e) => setDeepseekModel(e.target.value)}
-                  className={`px-2 py-1 rounded-lg text-xs font-mono border focus:outline-none cursor-pointer ${
-                    isLight ? "bg-white border-[#E8D7C9] text-slate-900" : "bg-black/30 border-white/10 text-white"
-                  }`}
-                >
-                  <option value="deepseek-chat">deepseek-chat (DeepSeek-V3 • Fast & Reliable)</option>
-                  <option value="deepseek-reasoner">deepseek-reasoner (DeepSeek-R1 • Deep Math Reasoning)</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={localDeepSeekKey}
-                    onChange={(e) => {
-                      setLocalDeepSeekKey(e.target.value);
-                      if (deepseekTestStatus) setDeepseekTestStatus(null);
-                    }}
-                    placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
-                      isLight 
-                        ? "bg-white border-[#E8D7C9] text-[#1D1D1B] focus:border-cyan-500" 
-                        : "bg-black/30 border-white/10 text-white focus:border-cyan-400"
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "Cambridge IGCSE", label: "Cambridge IGCSE", code: "CIE 0580/0625" },
+                  { id: "Pearson Edexcel", label: "Pearson Edexcel", code: "4MA1 / 4PH1" },
+                  { id: "Oxford AQA", label: "Oxford AQA", code: "Intl GCSE" }
+                ].map((board) => (
+                  <button
+                    key={board.id}
+                    type="button"
+                    onClick={() => setSelectedExamBoard(board.id)}
+                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                      selectedExamBoard === board.id
+                        ? (isLight ? "bg-emerald-50 border-emerald-400 text-emerald-900 shadow-xs" : "bg-emerald-950/40 border-emerald-500 text-emerald-200")
+                        : (isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:bg-[#F3EFEA]" : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10")
                     }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSaveAiKeys}
-                    className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-600 hover:bg-cyan-700 text-white transition cursor-pointer shrink-0 shadow-xs"
                   >
-                    Save Key
+                    <div className="text-xs font-bold font-mono">{board.label}</div>
+                    <div className="text-[9px] opacity-70 mt-0.5">{board.code}</div>
                   </button>
-                  <button
-                    type="button"
-                    onClick={testDeepSeekConnection}
-                    disabled={deepseekTestStatus?.loading}
-                    className="px-3 py-2 rounded-xl text-xs font-mono font-bold bg-slate-800 hover:bg-slate-700 dark:bg-white/10 dark:hover:bg-white/20 text-white transition cursor-pointer shrink-0 flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {deepseekTestStatus?.loading ? (
-                      <>
-                        <RefreshCw size={12} className="animate-spin" />
-                        <span>Testing...</span>
-                      </>
-                    ) : (
-                      <span>Test Connection</span>
-                    )}
-                  </button>
-                  {localDeepSeekKey && (
-                    <button
-                      type="button"
-                      onClick={handleClearDeepSeekKey}
-                      title="Clear key and use Google Gemini"
-                      className="px-2.5 py-2 rounded-xl text-xs font-mono text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-300 dark:border-rose-900 transition cursor-pointer shrink-0"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-
-                {/* Key Format Warning if not starting with sk- */}
-                {localDeepSeekKey.trim().length > 0 && !localDeepSeekKey.trim().startsWith("sk-") && (
-                  <p className="text-[11px] font-mono text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <span>⚠️ Note: Official DeepSeek keys start with <code className="font-bold underline">sk-</code>. If invalid, click Clear to use Gemini.</span>
-                  </p>
-                )}
-
-                {/* Test Result Message */}
-                {deepseekTestStatus && !deepseekTestStatus.loading && (
-                  <div className={`p-2.5 rounded-xl text-xs font-mono border transition ${
-                    deepseekTestStatus.ok
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-                      : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400"
-                  }`}>
-                    {deepseekTestStatus.ok ? (
-                      <div className="flex items-center gap-1.5 font-bold">
-                        <span>{deepseekTestStatus.message || "✅ DeepSeek connected successfully!"}</span>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="font-bold">❌ Connection Failed:</div>
-                        <div className="text-[11px] mt-0.5 opacity-90">{deepseekTestStatus.error}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                ))}
               </div>
             </div>
 
-            {/* Optional Gemini API Key */}
+            {/* Strict Marking & Cambridge Rules */}
             <div className={`p-4 rounded-2xl border space-y-3 ${
-              preferredEngine === "gemini"
-                ? (isLight ? "bg-emerald-50/30 border-emerald-200" : "bg-emerald-950/20 border-emerald-800/40")
-                : (isLight ? "bg-white border-[#E8D7C9]" : "bg-white/5 border-white/10")
+              isLight ? "bg-white border-[#E8D7C9]" : "bg-white/5 border-white/10"
             }`}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Key size={15} className="text-[#C96F55]" />
-                  <span className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
-                    Google Gemini Key (Optional Fallback)
-                  </span>
+                <div>
+                  <div className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
+                    Strict Mark Scheme Adherence
+                  </div>
+                  <div className="text-[11px] text-[#77736B] dark:text-slate-400 mt-0.5">
+                    Strict keyword matching, Error Carried Forward [ECF], and Cambridge 3 s.f. rounding rule.
+                  </div>
                 </div>
-                <span className="text-[10px] font-mono text-[#77736B]">
-                  Optional
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={localGeminiKey}
-                  onChange={(e) => setLocalGeminiKey(e.target.value)}
-                  placeholder="AIzaSy... (optional fallback key)"
-                  className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
-                    isLight 
-                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
-                      : "bg-black/30 border-white/10 text-white focus:border-indigo-500"
+                <button
+                  type="button"
+                  onClick={() => setStrictMarkingMode(!strictMarkingMode)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition cursor-pointer ${
+                    strictMarkingMode
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : (isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-white/5 border-white/10 text-slate-400")
                   }`}
-                />
+                >
+                  {strictMarkingMode ? "Enabled" : "Balanced"}
+                </button>
+              </div>
+
+              <div className="pt-2 flex justify-end">
                 <button
                   type="button"
                   onClick={handleSaveAiKeys}
-                  className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-[#C96F55] hover:bg-[#B85F48] text-white transition cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition cursor-pointer shadow-xs"
                 >
-                  Save
+                  Save Examination Preferences
                 </button>
               </div>
             </div>

@@ -550,7 +550,7 @@ export default function DashboardTab({
                     isLight ? "text-[#1D1D1B] group-hover:text-[#C96F55]" : "text-white group-hover:text-[#C084FC]"
                   } transition`}>AI Tutor</h4>
                   <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} mt-1 leading-snug`}>
-                    Instant step-by-step tutoring powered by Google Gemini, syllabus mastery & model answers.
+                    Instant step-by-step tutoring powered by Engez Scholar AI, IGCSE mark schemes & model answers.
                   </p>
                 </div>
               </button>

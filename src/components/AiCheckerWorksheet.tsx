@@ -358,7 +358,7 @@ export default function AiCheckerWorksheet({
     ms: UploadedFile | null
   ) => {
     setIsParsingOcr(true);
-    setOcrStatusText("Scanning uploaded pages with Gemini Multimodal Vision...");
+    setOcrStatusText("Scanning uploaded pages with Engez Optical Document Intelligence...");
 
     const answerFiles = pages
       .map(p => ({
@@ -2379,7 +2379,7 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
           </div>
           <div>
             <span className="font-bold text-[#1D1D1B] dark:text-white">Zero-Retention Student Privacy Guarantee:</span>{" "}
-            <span>Your uploaded examination scripts are processed in-flight via Gemini Vision API and never stored for model training.</span>
+            <span>Your uploaded examination scripts and photos are processed strictly in-memory by Engez Scholar AI and never stored for model training.</span>
           </div>
         </div>
         {onOpenPrivacyPolicy && (
