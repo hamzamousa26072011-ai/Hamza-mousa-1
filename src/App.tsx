@@ -611,6 +611,12 @@ export default function App() {
       root.classList.add("theme-dark");
       root.setAttribute("data-theme", "engez-dark");
     }
+
+    // Dynamically update favicon to match the active theme
+    const favicon = document.querySelector<HTMLLinkElement>("link[rel*='icon']");
+    if (favicon) {
+      favicon.href = settings.themeMode === "light" ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg";
+    }
   }, [settings]);
 
   const handleUpdateSettings = (newSettingsFields: Partial<typeof settings>) => {
@@ -1533,8 +1539,16 @@ export default function App() {
             : "bg-[#0A0714]/85 border-white/10 text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)]"
         } border rounded-2xl p-3 sm:p-4 md:px-6 backdrop-blur-2xl transition-all duration-300`}>
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#FAF8F5] border border-[#E8D7C9] p-0.5 flex items-center justify-center shrink-0 overflow-hidden shadow-xs hover:scale-105 transition-transform">
-              <img src="/engez_brand_emblem.svg" alt="Engez Nafsak" className="w-full h-full object-contain" />
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${
+              settings.themeMode === "light" 
+                ? "bg-[#FAF8F5] border-[#E8D7C9] shadow-xs" 
+                : "bg-[#141210] border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+            } border p-0.5 flex items-center justify-center shrink-0 overflow-hidden hover:scale-105 transition-transform`}>
+              <img 
+                src={settings.themeMode === "light" ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg"} 
+                alt="Engez Nafsak" 
+                className="w-full h-full object-contain" 
+              />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -1871,13 +1885,21 @@ export default function App() {
 
               {/* Logo & Header */}
               <div className="flex flex-col items-center gap-3.5 relative z-10">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#FAF8F5] border border-[#E8D7C9] p-1.5 flex items-center justify-center shadow-lg overflow-hidden shrink-0 transform hover:scale-105 transition-transform">
-                  <img src="/engez_brand_emblem.svg" alt="Engez Nafsak Logo" className="w-full h-full object-contain" />
+                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl ${
+                  settings.themeMode === "light" 
+                    ? "bg-[#FAF8F5] border-[#E8D7C9] shadow-lg" 
+                    : "bg-[#141210] border-white/20 shadow-[0_8px_30px_rgba(0,0,0,0.8)]"
+                } border p-1.5 flex items-center justify-center overflow-hidden shrink-0 transform hover:scale-105 transition-transform`}>
+                  <img 
+                    src={settings.themeMode === "light" ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg"} 
+                    alt="Engez Nafsak Logo" 
+                    className="w-full h-full object-contain" 
+                  />
                 </div>
                 
                 <div className="space-y-1">
                   <h2 className={`text-2xl font-black ${settings.themeMode === "light" ? "text-[#1D1D1B]" : "text-white"} font-sans tracking-tight`}>
-                    Engez Nafsak • <span className="text-[#C96F55]">إنجز نفسك</span>
+                    Engez Nafsak • <span className={settings.themeMode === "light" ? "text-[#C96F55]" : "text-[#8B5CF6]"}>إنجز نفسك</span>
                   </h2>
                   <p className={`text-xs ${settings.themeMode === "light" ? "text-[#77736B]" : "text-slate-400"} font-sans font-medium`}>
                     Your Dedicated Exam Planner & Academic Suite

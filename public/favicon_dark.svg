@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <!-- Minimalist dark favicon emblem with subtle purple border -->
+  <rect width="512" height="512" rx="112" fill="#0A0714" stroke="#8B5CF6" stroke-opacity="0.3" stroke-width="4" />
+
+  <g id="favicon-dark-mark" transform="scale(0.96) translate(10, 10)">
+    <!-- Summit Beacon (Website Purple #8B5CF6) -->
+    <circle cx="256" cy="116" r="18" fill="#8B5CF6" />
+
+    <!-- Accomplishment Arrow (Website Purple #8B5CF6) -->
+    <path 
+      d="M 256 156 
+         L 326 238 
+         H 284 
+         V 296 
+         H 228 
+         V 238 
+         H 186 
+         Z" 
+      fill="#8B5CF6" 
+    />
+
+    <!-- Academic Open Book Pages (Website Purple #8B5CF6) -->
+    <path 
+      d="M 120 338 
+         C 164 314, 212 316, 244 340 
+         L 244 378 
+         C 208 350, 160 348, 120 370 
+         Z" 
+      fill="#8B5CF6" 
+    />
+
+    <path 
+      d="M 392 338 
+         C 348 314, 300 316, 268 340 
+         L 268 378 
+         C 304 350, 352 348, 392 370 
+         Z" 
+      fill="#8B5CF6" 
+    />
+
+    <!-- Minimal Foundation Spine (Website Purple #8B5CF6) -->
+    <path 
+      d="M 144 398 
+         C 190 384, 230 388, 256 402 
+         C 282 388, 322 384, 368 398" 
+      stroke="#8B5CF6" 
+      stroke-width="12" 
+      stroke-linecap="round" 
+      fill="none" 
+    />
+  </g>
+</svg>

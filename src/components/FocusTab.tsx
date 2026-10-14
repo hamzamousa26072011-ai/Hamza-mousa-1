@@ -318,23 +318,11 @@ export default function FocusTab({
       setShowCompletionModal(true);
       
       if (currentMode === "work") {
-        if (currentCycleStep >= 2) {
-          setCurrentMode("long");
-          onModeChange?.("long");
-          onDurationChange(longBreakDuration);
-          setCurrentCycleStep(1);
-        } else {
-          setCurrentMode("break");
-          onModeChange?.("break");
-          onDurationChange(shortBreakDuration);
-        }
-      } else if (currentMode === "break") {
-        setCurrentCycleStep((prev) => Math.min(2, prev + 1));
-        setCurrentMode("work");
-        onModeChange?.("work");
-        onDurationChange(workDuration);
+        setCurrentMode("break");
+        onModeChange?.("break");
+        onDurationChange(shortBreakDuration);
       } else {
-        setCurrentCycleStep(1);
+        setCurrentCycleStep((prev) => (prev >= 2 ? 1 : prev + 1));
         setCurrentMode("work");
         onModeChange?.("work");
         onDurationChange(workDuration);
@@ -495,9 +483,13 @@ export default function FocusTab({
               <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
                 <div className="flex items-center gap-2.5">
                   <img
-                    src="/engez_brand_emblem.svg"
+                    src={isLight ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg"}
                     alt="Engez"
-                    className="w-8 h-8 rounded-xl object-contain bg-[#FAF8F5] border border-[#E8D7C9] p-0.5 shadow-xs"
+                    className={`w-8 h-8 rounded-xl object-contain ${
+                      isLight 
+                        ? "bg-[#FAF8F5] border-[#E8D7C9]" 
+                        : "bg-[#141210] border-white/20 shadow-xs"
+                    } border p-0.5 shadow-xs`}
                   />
                   <div className="text-left">
                     <div className="flex items-center gap-1.5">
@@ -552,18 +544,6 @@ export default function FocusTab({
                 >
                   <Coffee size={12} />
                   <span>Break ({shortBreakDuration}m)</span>
-                </button>
-
-                <button
-                  onClick={() => handleModeSwitch("long")}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer ${
-                    currentMode === "long"
-                      ? isLight ? "bg-[#587B8C] text-white shadow-xs font-extrabold" : "bg-cyan-600 text-white shadow-md font-extrabold"
-                      : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <Trees size={12} />
-                  <span>Long Break ({longBreakDuration}m)</span>
                 </button>
               </div>
 
@@ -953,7 +933,7 @@ export default function FocusTab({
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleEnterFullscreen}
-            className="py-2.5 px-4 bg-[#C96F55] hover:bg-[#B85F48] text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wide transition flex items-center gap-2 cursor-pointer select-none shadow-md"
+            className="py-2.5 px-4 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wide transition flex items-center gap-2 cursor-pointer select-none shadow-md shadow-[#8B5CF6]/25"
             title="Enter distraction-free Full Screen Focus Mode (F)"
           >
             <Maximize2 size={13} />
@@ -1014,8 +994,8 @@ export default function FocusTab({
 
             <div className="flex items-center gap-3">
               <div className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} hidden sm:flex items-center gap-1.5`}>
-                <span>Next reward:</span>
-                <span className={`${isLight ? "text-[#587B8C]" : "text-cyan-400"} font-bold`}>{longBreakDuration}m Long Break</span>
+                <span>Break:</span>
+                <span className={`${isLight ? "text-[#66856D]" : "text-emerald-400"} font-bold`}>{shortBreakDuration}m Interval</span>
               </div>
 
               <button
@@ -1027,7 +1007,7 @@ export default function FocusTab({
                 }`}
                 title="Enter Full Screen Focus View (F)"
               >
-                <Maximize2 size={11} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
+                <Maximize2 size={11} className="text-[#8B5CF6]" />
                 <span>Full Screen</span>
               </button>
             </div>
@@ -1058,19 +1038,7 @@ export default function FocusTab({
               }`}
             >
               <Coffee size={13} />
-              <span>Short Break ({shortBreakDuration}m)</span>
-            </button>
-
-            <button
-              onClick={() => handleModeSwitch("long")}
-              className={`px-5 py-2 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-2 cursor-pointer ${
-                currentMode === "long"
-                  ? isLight ? "bg-[#587B8C] text-white shadow-xs font-extrabold" : "bg-cyan-600 text-white shadow-lg shadow-cyan-600/30 font-extrabold"
-                  : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Trees size={13} />
-              <span>Long Break ({longBreakDuration}m)</span>
+              <span>Break ({shortBreakDuration}m)</span>
             </button>
           </div>
 
@@ -1322,51 +1290,6 @@ export default function FocusTab({
                 </div>
               </div>
 
-              {/* Slider 3: LONG BREAK */}
-              <div className={`space-y-2 ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#12192B]/60 border-white/5"} border p-3.5 rounded-2xl`}>
-                <div className="flex justify-between items-center text-xs font-mono">
-                  <span className={`${isLight ? "text-[#1D1D1B]" : "text-slate-300"} uppercase font-black text-[10px] tracking-wider flex items-center gap-1.5`}>
-                    <span className="w-2 h-2 rounded-full bg-[#587B8C]" />
-                    <span>Long Break</span>
-                  </span>
-                  <span className={`font-extrabold uppercase text-[11px] ${
-                    isLight ? "bg-[#E8F1F5] border-[#CADEE8] text-[#587B8C]" : "bg-cyan-950/60 border-cyan-800/40 text-white"
-                  } border px-2 py-0.5 rounded-md`}>
-                    {longBreakDuration} min
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleSlideChange("long", Math.max(5, longBreakDuration - 5))}
-                    className={`w-8 h-8 rounded-lg ${
-                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
-                    } border flex items-center justify-center transition cursor-pointer`}
-                  >
-                    <Minus size={12} />
-                  </button>
-                  
-                  <input
-                    type="range"
-                    min="5"
-                    max="60"
-                    step="5"
-                    value={longBreakDuration}
-                    onChange={(e) => handleSlideChange("long", Number(e.target.value))}
-                    className="flex-1 h-1.5 bg-[#E8D7C9] rounded-lg appearance-none cursor-pointer accent-[#587B8C]"
-                  />
-                  
-                  <button
-                    onClick={() => handleSlideChange("long", Math.min(60, longBreakDuration + 5))}
-                    className={`w-8 h-8 rounded-lg ${
-                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] border-white/10 text-slate-400"
-                    } border flex items-center justify-center transition cursor-pointer`}
-                  >
-                    <Plus size={12} />
-                  </button>
-                </div>
-              </div>
-
             </div>
           </div>
 
@@ -1393,7 +1316,7 @@ export default function FocusTab({
                 } border rounded-xl text-[10px] font-mono font-bold transition flex items-center justify-between cursor-pointer`}
               >
                 <span>🍅 Classic · 25/5</span>
-                <span className={`text-[8px] ${isLight ? "bg-[#FFFFFF] text-[#77736B]" : "bg-white/5 text-slate-400"} py-0.5 px-1 rounded font-mono`}>15m Long</span>
+                <span className={`text-[8px] ${isLight ? "bg-[#FFFFFF] text-[#77736B]" : "bg-white/5 text-slate-400"} py-0.5 px-1 rounded font-mono`}>Sprint</span>
               </button>
 
               <button

@@ -5,6 +5,7 @@ import https from "https";
 import dns from "dns";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
+import { GoogleGenAI } from "@google/genai";
 import firebaseDefaultConfig from "./firebase-applet-config.json";
 import {
   evaluateStudentSubmission,
@@ -13,6 +14,22 @@ import {
 } from "./src/lib/engezScholarAiEngine";
 
 dotenv.config();
+
+// Initialize server-side Google Gemini API client
+const getGenAI = (customKey?: string): GoogleGenAI | null => {
+  const apiKey = (typeof customKey === "string" && customKey.trim().length > 10) 
+    ? customKey.trim() 
+    : process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
+};
 
 const app = express();
 const PORT = 3000;
@@ -675,6 +692,42 @@ app.post(["/api/gemini/prioritize", "/api/ai/prioritize"], async (req, res) => {
     return res.json(cached.data);
   }
 
+  const ai = getGenAI();
+  if (ai) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: `Given this student study task:
+Title: "${safeTitle}"
+Subject: "${safeSubject}"
+Priority: "${safePriority}"
+Details: "${safeDetails}"
+
+Estimate the study duration and difficulty for an IGCSE student.
+Return JSON:
+{
+  "estimatedMinutes": number,
+  "difficulty": "Easy" | "Medium" | "Hard",
+  "studyTip": string,
+  "breakdown": string
+}`,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      if (response.text) {
+        const result = JSON.parse(response.text);
+        if (result && typeof result.estimatedMinutes === "number") {
+          prioritizeCache.set(cacheKey, { data: result, expiresAt: Date.now() + 2 * 60 * 60 * 1000 });
+          return res.json(result);
+        }
+      }
+    } catch (prioritizeErr) {
+      console.warn("[GEMINI PRIORITIZE] Falling back to syllabus table:", prioritizeErr);
+    }
+  }
+
   const combined = (safeTitle + " " + safeSubject + " " + safeDetails).toLowerCase();
   let estimatedMinutes = 45;
   let difficulty = "Medium";
@@ -710,34 +763,40 @@ app.all(["/api/gemini/prioritize", "/api/ai/prioritize"], (req, res) => {
   return res.status(405).json({ error: "Method Not Allowed. Use POST.", status: 405 });
 });
 
-// Diagnostic Endpoints for Engez Scholar AI & Custom Domain (engeznafsak.com)
-app.get(["/api/gemini/status", "/api/deepseek/status"], (req, res) => {
+// Diagnostic Endpoints for Gemini API & Custom Domain (engeznafsak.com)
+app.get(["/api/gemini/status", "/api/deepseek/status", "/api/ai/status"], (req, res) => {
   const host = req.headers.host || "";
   const isCustomDns = host.includes("engeznafsak.com");
+  const hasGeminiKey = !!process.env.GEMINI_API_KEY;
   res.json({
     status: "ready",
-    primaryEngine: "engez-scholar-ai",
-    model: "engez-igcse-examiner-v5",
-    provider: "Engez Scholar AI (Proprietary IGCSE Engine • 100% Autonomous)",
+    primaryEngine: "gemini-3.8-flash",
+    model: "gemini-3.8-flash",
+    provider: "Google Gemini 3.8 Flash (Server-Side) • IGCSE Examiner & Multimodal Vision",
+    geminiActive: hasGeminiKey,
     dns: isCustomDns ? "engeznafsak.com" : host,
     features: [
+      "Gemini 3.8 Flash Multimodal Document & Photo OCR",
       "Cambridge IGCSE, Pearson Edexcel & Oxford AQA System Mastery",
-      "Optical Document & Photo Handwriting Analysis",
       "Official Mark Scheme Rubric Scoring ([M], [A], [B], [ECF])",
       "Cambridge 3 Significant Figures Rule Verification",
-      "Zero External API Dependencies (No Gemini, No DeepSeek)"
+      "Optical Student Handwriting Transcription & Step-by-Step Marking"
     ],
     timestamp: new Date().toISOString()
   });
 });
 
 app.post("/api/ai/test-key", async (req, res) => {
+  const hasGeminiKey = !!process.env.GEMINI_API_KEY;
   res.json({
     ok: true,
     status: 200,
-    engine: "Engez Scholar AI",
+    engine: "Google Gemini 3.8 Flash",
     provider: "engeznafsak.com",
-    message: "Engez Scholar AI is built directly into engeznafsak.com and fully operational without external API keys!"
+    geminiConfigured: hasGeminiKey,
+    message: hasGeminiKey 
+      ? "Google Gemini 3.8 Flash API is securely connected on the server with active multimodal vision!"
+      : "Gemini API client ready on server (fallback to Engez Scholar engine active if key is not yet set)."
   });
 });
 
@@ -798,7 +857,7 @@ When images, past papers, handwritten notes, worksheets, or attached files are p
 - [ECF / ft] Error Carried Forward / Follow Through: Never penalize a student twice for an earlier calculation slip if subsequent logic is correct.
 - Cambridge Rounding Rule: Non-exact numerical answers must be given to 3 significant figures (angles to 1 d.p.). Standard SI units required.`;
 
-// 3.2 ENDPOINT: Autonomous Academic Tutor & Trained IGCSE Mark Scheme Examiner Engine (100% In-House, Zero Gemini/DeepSeek)
+// 3.2 ENDPOINT: Academic Tutor & Trained IGCSE Mark Scheme Examiner Engine (Google Gemini 3.8 Flash + Multi-Model Fallback)
 const handleScholarGrading = async (req: Request, res: Response) => {
   const body = req.body;
   if (!body || typeof body !== "object") {
@@ -820,7 +879,136 @@ const handleScholarGrading = async (req: Request, res: Response) => {
   const latestMessage = userMessages[userMessages.length - 1] || messages[messages.length - 1] || { content: "" };
   const rawInput = sanitizeStudentInput(latestMessage.content || "");
 
-  // Execute in-house Engez Scholar AI Engine (100% Autonomous, Zero External APIs)
+  // Custom key from request headers if student specified their own in settings
+  const customKeyHeader = req.headers["x-gemini-key"] || req.headers["x-api-key"];
+  const customKey = typeof customKeyHeader === "string" ? customKeyHeader : undefined;
+
+  // Execute Gemini API with seamless multi-model fallback
+  const ai = getGenAI(customKey);
+  if (ai) {
+    try {
+      const parts: any[] = [];
+
+      // 1. Process attached files / photos (multimodal images & documents)
+      if (Array.isArray(attachedFiles) && attachedFiles.length > 0) {
+        for (const file of attachedFiles) {
+          const mimeType = file.type || "image/png";
+          const dataUrl = file.dataUrl || file.data || "";
+          
+          if (typeof dataUrl === "string" && dataUrl.includes("base64,")) {
+            const base64Data = dataUrl.split("base64,")[1];
+            if (base64Data) {
+              parts.push({
+                inlineData: {
+                  mimeType: mimeType.startsWith("image/") || mimeType === "application/pdf" ? mimeType : "image/png",
+                  data: base64Data
+                }
+              });
+            }
+          } else if (file.content && typeof file.content === "string") {
+            parts.push({
+              text: `[Attached Document: ${file.name || "Academic File"}]\n${file.content.slice(0, 15000)}`
+            });
+          }
+        }
+      }
+
+      // 2. Also attach images from recent messages if present
+      for (const m of messages.slice(-4)) {
+        if (m.imageUrl && typeof m.imageUrl === "string" && m.imageUrl.includes("base64,")) {
+          const base64Data = m.imageUrl.split("base64,")[1];
+          if (base64Data) {
+            parts.push({
+              inlineData: {
+                mimeType: "image/png",
+                data: base64Data
+              }
+            });
+          }
+        }
+      }
+
+      // 3. Assemble academic prompt context
+      let promptBuilder = ``;
+      if (subject && subject !== "Auto-Detect") {
+        promptBuilder += `Subject: ${subject}\n`;
+      }
+      if (examBoard) {
+        promptBuilder += `Exam Board Standard: ${examBoard}\n`;
+      }
+      if (paperNumber) {
+        promptBuilder += `Target Paper: ${paperNumber}\n`;
+      }
+      promptBuilder += `Marking Mode: ${strictMode !== false ? "Strict Official Mark Scheme Rubric ([M], [A], [B], [ECF], 3 Sig Figs)" : "Friendly Step-by-Step Learning Tutor"}\n`;
+
+      if (documentContext && typeof documentContext === "string" && documentContext.trim().length > 0) {
+        promptBuilder += `\n[Reference Document Context (${fileName || "Active Paper"})]:\n${documentContext.slice(0, 10000)}\n\n`;
+      }
+
+      if (messages.length > 1) {
+        promptBuilder += `[Recent Dialogue History]:\n`;
+        const recentHistory = messages.slice(-6);
+        for (const msg of recentHistory) {
+          promptBuilder += `${msg.role === "assistant" ? "Examiner" : "Student"}: ${sanitizeStudentInput(msg.content || "")}\n`;
+        }
+        promptBuilder += `\n`;
+      }
+
+      promptBuilder += `[Student Question / Submission / Attached Image Instruction]:\n${rawInput || "Please analyze the attached document / question / photo and provide the complete solution or official mark scheme assessment according to the IGCSE system."}`;
+
+      parts.push({ text: promptBuilder });
+
+      // Intelligent model cascade: try gemini-3.8-flash first, gracefully fallback to gemini-3.1-flash-lite if 429 quota or 503 spike occurs
+      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
+      let generatedText: string | null = null;
+      let usedModel: string = "gemini-3.8-flash";
+
+      for (const modelToTry of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelToTry,
+            contents: [
+              {
+                role: "user",
+                parts
+              }
+            ],
+            config: {
+              systemInstruction: IGCSE_EXAMINER_SYSTEM_INSTRUCTION,
+            }
+          });
+
+          if (response.text && response.text.trim().length > 0) {
+            generatedText = response.text;
+            usedModel = modelToTry;
+            break;
+          }
+        } catch (modelErr: any) {
+          console.warn(`[GEMINI API] Model ${modelToTry} failed (${modelErr?.status || "error"}):`, modelErr?.message?.slice(0, 80));
+          // Continue to next candidate model
+        }
+      }
+
+      if (generatedText && generatedText.trim().length > 0) {
+        return res.json({
+          content: generatedText,
+          engine: usedModel,
+          model: usedModel,
+          provider: `Google Gemini (${usedModel}) • Accurate Academic Tutor & Examiner`,
+          metadata: {
+            subject: subject || "IGCSE Academic",
+            examBoard: examBoard || "Cambridge IGCSE",
+            strictMode: strictMode !== false,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    } catch (geminiErr: any) {
+      console.warn("[GEMINI API ERROR] Falling back to Engez local scholar engine:", geminiErr?.message || geminiErr);
+    }
+  }
+
+  // Graceful fallback to Engez Scholar local engine
   const evaluation = evaluateStudentSubmission({
     userInput: rawInput,
     subjectOverride: subject && subject !== "Auto-Detect" ? subject : undefined,
@@ -867,6 +1055,91 @@ const handlePaperCorrection = async (req: Request, res: Response) => {
   const totalFiles = (Array.isArray(answerImages) ? answerImages.length : 0) + 
                      (Array.isArray(answerFiles) ? answerFiles.length : 0);
 
+  const ai = getGenAI();
+  if (ai && Array.isArray(questions) && questions.length > 0) {
+    try {
+      const parts: any[] = [];
+      if (Array.isArray(answerImages)) {
+        for (const img of answerImages) {
+          if (typeof img === "string" && img.includes("base64,")) {
+            const mimeMatch = img.match(/^data:([^;]+);base64,/);
+            const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
+            const b64 = img.split("base64,")[1];
+            if (b64) parts.push({ inlineData: { mimeType: mime, data: b64 } });
+          }
+        }
+      }
+
+      const prompt = `You are a Senior Chief Examiner for ${examBoard} ${subject} (${paperNumber}).
+Evaluate the student's submission question-by-question against official mark schemes.
+Enforce method marks [M], accuracy marks [A], independent marks [B], and error carried forward [ECF].
+Apply Cambridge 3 significant figures and standard SI unit rules.
+
+Questions:
+${JSON.stringify(questions, null, 2)}
+
+Mark Scheme Context:
+${markSchemeText ? markSchemeText.slice(0, 8000) : "Official IGCSE mark scheme standard."}
+
+Output JSON adhering to:
+{
+  "totalMarks": number,
+  "maxMarks": number,
+  "percentage": number,
+  "grade": string,
+  "questions": [
+    {
+      "questionNumber": string,
+      "earnedMarks": number,
+      "maxMarks": number,
+      "awardedCodes": string[],
+      "earnedBreakdown": string,
+      "missedBreakdown": string,
+      "modelAnswer": string,
+      "examinerTip": string
+    }
+  ],
+  "summaryFeedback": string
+}`;
+
+      parts.push({ text: prompt });
+
+      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
+      let reportJson: any = null;
+      let usedModel = "gemini-3.8-flash";
+
+      for (const m of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: m,
+            contents: [{ role: "user", parts }],
+            config: {
+              responseMimeType: "application/json"
+            }
+          });
+
+          if (response.text) {
+            reportJson = JSON.parse(response.text);
+            usedModel = m;
+            break;
+          }
+        } catch (mErr: any) {
+          console.warn(`[GEMINI CORRECTION] Model ${m} failed:`, mErr?.message?.slice(0, 80));
+        }
+      }
+
+      if (reportJson && reportJson.questions && typeof reportJson.totalMarks === "number") {
+        return res.json({
+          ...reportJson,
+          engine: usedModel,
+          provider: `Google Gemini (${usedModel}) • Official Mark Scheme Examiner`
+        });
+      }
+    } catch (corrErr) {
+      console.warn("[GEMINI CORRECTION ERROR] Falling back to local report generator:", corrErr);
+    }
+  }
+
   const report = generatePaperCorrectionReportLocally({
     subject,
     examBoard,
@@ -897,6 +1170,90 @@ const handlePaperParse = async (req: Request, res: Response) => {
     subject = "General",
     examBoard = "Cambridge IGCSE"
   } = body;
+
+  const customKeyHeader = req.headers["x-gemini-key"] || req.headers["x-api-key"];
+  const customKey = typeof customKeyHeader === "string" ? customKeyHeader : undefined;
+  const ai = getGenAI(customKey);
+  if (ai) {
+    try {
+      const parts: any[] = [];
+      const allImages = [...(Array.isArray(images) ? images : [])];
+      if (questionPaperFile?.data && typeof questionPaperFile.data === "string") {
+        allImages.push(questionPaperFile.data);
+      }
+      for (const img of allImages) {
+        if (typeof img === "string" && img.includes("base64,")) {
+          const mimeMatch = img.match(/^data:([^;]+);base64,/);
+          const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+          const b64 = img.split("base64,")[1];
+          if (b64) {
+            parts.push({
+              inlineData: {
+                mimeType,
+                data: b64
+              }
+            });
+          }
+        }
+      }
+
+      const prompt = `You are an expert Cambridge and Edexcel past paper parser.
+Read and analyze the attached examination paper image(s) or text.
+Extract every question into a structured JSON array.
+Subject: ${subject}, Exam Board: ${examBoard}.
+${questionPaperText ? `Question Paper Text Reference: ${questionPaperText.slice(0, 5000)}` : ""}
+
+Respond in JSON with schema:
+{
+  "questions": [
+    {
+      "questionNumber": string,
+      "promptText": string,
+      "maxMarks": number,
+      "topic": string,
+      "studentAnswer": string
+    }
+  ],
+  "detectedSubject": string,
+  "detectedPaper": string
+}`;
+
+      parts.push({ text: prompt });
+
+      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
+      let parsedJson: any = null;
+
+      for (const m of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: m,
+            contents: [{ role: "user", parts }],
+            config: {
+              responseMimeType: "application/json"
+            }
+          });
+
+          if (response.text) {
+            parsedJson = JSON.parse(response.text);
+            break;
+          }
+        } catch (mErr: any) {
+          console.warn(`[GEMINI PARSE] Model ${m} failed:`, mErr?.message?.slice(0, 80));
+        }
+      }
+
+      if (parsedJson && Array.isArray(parsedJson.questions) && parsedJson.questions.length > 0) {
+        return res.json({
+          questions: parsedJson.questions,
+          paperTitle: parsedJson.detectedPaper || `${subject} (${examBoard})`,
+          subject: parsedJson.detectedSubject || subject,
+          totalMarks: parsedJson.questions.reduce((acc: number, q: any) => acc + (q.maxMarks || 0), 0)
+        });
+      }
+    } catch (parseErr) {
+      console.warn("[GEMINI PARSE ERROR] Falling back to local parser:", parseErr);
+    }
+  }
 
   const parsed = parseExaminationPaperLocally({
     images,

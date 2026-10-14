@@ -420,26 +420,102 @@ export function evaluateStudentSubmission({
     }
   }
 
+  // Check if input is a greeting or general tutor question rather than an exam submission
+  const isGreeting = /^(hi|hello|hey|good\s*(morning|afternoon|evening)|salaam|assalamu|what's up|how are you|who are you)\b/i.test(lowerText);
+  const isGeneralQuestion = /^(explain|what is|how do|how to|why is|define|tell me about|summarize|help me with|can you help)\b/i.test(lowerText) && !lowerText.includes("grade my") && !lowerText.includes("check my");
+
+  if (isGreeting && attachedFiles.length === 0) {
+    return {
+      content: `Hello! I am your **Engez Academic AI Tutor & Examiner**. 🎓
+
+I'm here to help you conquer your Cambridge IGCSE, Pearson Edexcel, Oxford AQA, and school subjects with maximum marks!
+
+Here is how we can study together:
+- **Ask Any Concept:** Type any question or topic (e.g., *“Explain Newton's second law”*, *“How does photosynthesis work?”*, or *“How do I solve quadratic equations?”*).
+- **Step-by-Step Problem Solving:** Send any past paper question or equation to receive the 100% full-mark model solution.
+- **Check Your Work:** Upload photos of your handwritten working, worksheets, or past paper scripts for line-by-line mark scheme assessment and feedback!
+
+What topic or question would you like to explore right now?`,
+      engine: "engez-scholar-ai",
+      model: "engez-igcse-examiner-v5",
+      provider: "Engez Academic Tutor",
+      metadata: {
+        subject: activeSubject,
+        examBoard: examBoardOverride,
+        topic: "Academic Tutoring & Guidance",
+        maxMarks: 0,
+        awardedMarks: 0,
+        percentage: 100,
+        gradeEstimate: "Ready",
+        documentsAnalyzed: 0,
+        photosAnalyzed: 0
+      }
+    };
+  }
+
   if (!matchedTopic) {
-    // Fallback topic heuristic
-    if (lowerText.includes("math") || lowerText.includes("solve") || lowerText.includes("x =") || lowerText.includes("triangle")) {
+    // Dynamic topic identification based on student text
+    if (lowerText.includes("math") || lowerText.includes("solve") || lowerText.includes("x =") || lowerText.includes("triangle") || lowerText.includes("quadratic")) {
       matchedTopic = IGCSE_KNOWLEDGE_BASE[0]; // Quadratic / Math
       activeSubject = "Mathematics (0580 / 4MA1)";
-    } else if (lowerText.includes("physics") || lowerText.includes("force") || lowerText.includes("energy") || lowerText.includes("speed")) {
+    } else if (lowerText.includes("physics") || lowerText.includes("force") || lowerText.includes("energy") || lowerText.includes("speed") || lowerText.includes("newton") || lowerText.includes("velocity")) {
       matchedTopic = IGCSE_KNOWLEDGE_BASE[6]; // Kinematics / Physics
       activeSubject = "Physics (0625 / 4PH1)";
-    } else if (lowerText.includes("chemistry") || lowerText.includes("acid") || lowerText.includes("mole") || lowerText.includes("reaction")) {
+    } else if (lowerText.includes("chemistry") || lowerText.includes("acid") || lowerText.includes("mole") || lowerText.includes("reaction") || lowerText.includes("periodic")) {
       matchedTopic = IGCSE_KNOWLEDGE_BASE[11]; // Stoichiometry / Chem
       activeSubject = "Chemistry (0620 / 4CH1)";
-    } else if (lowerText.includes("biology") || lowerText.includes("cell") || lowerText.includes("enzyme") || lowerText.includes("plant")) {
+    } else if (lowerText.includes("biology") || lowerText.includes("cell") || lowerText.includes("enzyme") || lowerText.includes("plant") || lowerText.includes("photosynthesis")) {
       matchedTopic = IGCSE_KNOWLEDGE_BASE[15]; // Enzymes / Bio
       activeSubject = "Biology (0610 / 4BI1)";
     } else {
-      matchedTopic = IGCSE_KNOWLEDGE_BASE[0];
+      matchedTopic = {
+        subject: subjectOverride && subjectOverride !== "Auto-Detect" ? subjectOverride : "IGCSE Academic Studies",
+        code: "General",
+        topic: rawText ? `Topic Analysis: "${rawText.slice(0, 45)}..."` : "Syllabus Mastery",
+        keywords: [],
+        examinerTip: "State complete reasoning, show step-by-step working, and express non-exact numerical values to 3 significant figures."
+      };
       if (!subjectOverride || subjectOverride === "Auto-Detect") {
         activeSubject = "Cambridge IGCSE & Pearson Edexcel";
       }
     }
+  }
+
+  // If student is asking an exploratory conceptual question rather than submitting an exam answer to be graded
+  if (isGeneralQuestion && attachedFiles.length === 0) {
+    const topicHeading = matchedTopic.topic;
+    return {
+      content: `### 📖 Academic Tutor Guide: ${topicHeading}
+**Subject:** ${activeSubject} • **Exam Board Standard:** ${examBoardOverride}
+
+Here is a clear, step-by-step breakdown of **${rawText}**:
+
+1. **Core Syllabus Principle**:
+   ${matchedTopic.formula ? `Governing Formula: $$${matchedTopic.formula}$$` : `Understand the underlying mechanism and definition required by examiners.`}
+
+2. **Step-by-Step Conceptual Breakdown**:
+   - Understand the given parameters and identify what is being determined.
+   - Apply the governing syllabus relationship without skipping intermediate steps.
+   - Verify units and ensure numerical precision matches Cambridge standards (3 significant figures, angles to 1 decimal place).
+
+3. **💡 Chief Examiner Tip**:
+   - ${matchedTopic.examinerTip}
+   - In official examinations, method marks [M] are awarded for showing your substitution steps even if an arithmetic slip occurs later. Always show full working!`,
+      engine: "engez-scholar-ai",
+      model: "engez-igcse-examiner-v5",
+      provider: "Engez Academic Tutor",
+      metadata: {
+        subject: activeSubject,
+        examBoard: examBoardOverride,
+        topic: matchedTopic.topic,
+        maxMarks: 0,
+        awardedMarks: 0,
+        percentage: 100,
+        gradeEstimate: "Tutor Mode",
+        documentsAnalyzed: 0,
+        photosAnalyzed: 0
+      }
+    };
   }
 
   // 4. Mark Allocation Detection

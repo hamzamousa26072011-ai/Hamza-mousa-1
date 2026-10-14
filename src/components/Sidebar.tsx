@@ -75,19 +75,35 @@ export default function Sidebar({
           title="Engez Nafsak"
         >
           {isCollapsed ? (
-            <div className="w-11 h-11 rounded-2xl bg-[#FAF8F5] border border-[#E8D7C9] p-1 flex items-center justify-center shadow-md transform hover:scale-105 duration-300 overflow-hidden">
-              <img src="/engez_brand_emblem.svg" alt="Engez Nafsak" className="w-full h-full object-contain" />
+            <div className={`w-11 h-11 rounded-2xl ${
+              isLight 
+                ? "bg-[#FAF8F5] border-[#E8D7C9]" 
+                : "bg-[#141210] border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
+            } border p-1 flex items-center justify-center shadow-md transform hover:scale-105 duration-300 overflow-hidden`}>
+              <img 
+                src={isLight ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg"} 
+                alt="Engez Nafsak" 
+                className="w-full h-full object-contain" 
+              />
             </div>
           ) : (
             <div className="h-12 px-1 flex items-center justify-start gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#E8D7C9] p-1 flex items-center justify-center shrink-0 shadow-xs overflow-hidden transform hover:scale-105 transition-transform">
-                <img src="/engez_brand_emblem.svg" alt="Emblem" className="w-full h-full object-contain" />
+              <div className={`w-10 h-10 rounded-xl ${
+                isLight 
+                  ? "bg-[#FAF8F5] border-[#E8D7C9] shadow-xs" 
+                  : "bg-[#141210] border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
+              } border p-1 flex items-center justify-center shrink-0 overflow-hidden transform hover:scale-105 transition-transform`}>
+                <img 
+                  src={isLight ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg"} 
+                  alt="Emblem" 
+                  className="w-full h-full object-contain" 
+                />
               </div>
               <div className="flex flex-col">
                 <span className={`text-base font-black tracking-tight leading-tight ${isLight ? "text-[#1D1D1B]" : "text-[#FAF8F5]"} font-sans`}>
                   Engez Nafsak
                 </span>
-                <span className={`text-[11px] font-bold ${isLight ? "text-[#C96F55]" : "text-[#8B5CF6] dark:text-[#A855F7]"} leading-tight font-sans`}>
+                <span className={`text-[11px] font-bold ${isLight ? "text-[#C96F55]" : "text-[#8B5CF6] dark:text-[#C084FC]"} leading-tight font-sans`}>
                   إنجز نفسك
                 </span>
               </div>

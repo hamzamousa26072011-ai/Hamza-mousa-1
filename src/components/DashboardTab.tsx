@@ -370,8 +370,8 @@ export default function DashboardTab({
                     ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" 
                     : "text-[#C084FC] bg-[#8B5CF6]/15 border border-[#8B5CF6]/35"
                 } px-2 py-0.5 rounded-md flex items-center gap-1`}>
-                  {pomodoroMode === "work" ? <Brain size={10} /> : pomodoroMode === "break" ? <Coffee size={10} /> : <Trees size={10} />}
-                  <span>{pomodoroMode === "work" ? "Study Mode" : pomodoroMode === "break" ? "Short Break" : "Long Break"}</span>
+                  {pomodoroMode === "work" ? <Brain size={10} /> : <Coffee size={10} />}
+                  <span>{pomodoroMode === "work" ? "Study Mode" : "Break Mode"}</span>
                 </span>
                 {pomodoroCount > 0 && (
                   <span className={`text-[8px] font-mono ${
@@ -550,7 +550,7 @@ export default function DashboardTab({
                     isLight ? "text-[#1D1D1B] group-hover:text-[#C96F55]" : "text-white group-hover:text-[#C084FC]"
                   } transition`}>AI Tutor</h4>
                   <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} mt-1 leading-snug`}>
-                    Instant step-by-step tutoring powered by Engez Scholar AI, IGCSE mark schemes & model answers.
+                    Instant step-by-step tutoring powered by Gemini 3.8 Flash, IGCSE mark schemes & model answers.
                   </p>
                 </div>
               </button>

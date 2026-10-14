@@ -1077,15 +1077,15 @@ export default function AiScholarTab({
               <h1 className={`text-xl sm:text-2xl font-black ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>AI Tutor</h1>
               <span className={`text-[10px] font-mono font-bold ${
                 isLight 
-                  ? "bg-emerald-50 border border-emerald-300 text-emerald-800" 
-                  : "bg-emerald-950/40 border border-emerald-700/60 text-emerald-300"
+                  ? "bg-purple-50 border border-purple-300 text-purple-900" 
+                  : "bg-purple-950/40 border border-purple-700/60 text-purple-300"
               } px-2 py-0.5 rounded-md uppercase flex items-center gap-1.5`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Engez Scholar AI • IGCSE System
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                Gemini 3.8 Flash • IGCSE Examiner
               </span>
             </div>
             <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} max-w-2xl mt-1`}>
-              Proprietary academic tutor & examiner built specifically for engeznafsak.com according to the IGCSE system. Attach questions, past papers, worksheets, or photos of your handwritten working to analyze documents, evaluate marks, and receive model answers.
+              Academic examiner and tutor powered by Google Gemini API according to the IGCSE system. Attach exam questions, past papers, worksheets, or photos of your handwritten working to analyze documents, evaluate marks, and receive step-by-step model answers.
             </p>
           </div>
 
@@ -1581,12 +1581,12 @@ export default function AiScholarTab({
                 type="button"
                 onClick={() => setShowAiModal(true)}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-mono font-bold transition cursor-pointer ${
-                  isLight ? "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100" : "bg-emerald-950/40 border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/50"
+                  isLight ? "bg-purple-50 border-purple-300 text-purple-900 hover:bg-purple-100" : "bg-purple-950/40 border-purple-700/60 text-purple-300 hover:bg-purple-900/50"
                 }`}
-                title="Engez Scholar AI Examination Engine Settings"
+                title="Google Gemini 3.8 Flash Examination Engine Settings"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Engez Scholar AI</span>
+                <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                <span>Gemini 3.8 Flash</span>
                 <Sliders size={11} className="opacity-70" />
               </button>
 
@@ -1640,14 +1640,14 @@ export default function AiScholarTab({
               activeThread.messages.map((msg) => {
                 const isAi = msg.role === "assistant";
                 return (
-                  <div key={msg.id} className={`flex gap-3 max-w-[92%] ${isAi ? "mr-auto w-full" : "ml-auto flex-row-reverse"}`}>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      isAi 
-                        ? isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-[#1B233D] text-indigo-400 border border-indigo-500/20"
-                        : isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E8D7C9]" : "bg-white/5 text-slate-300 border border-white/10"
-                    }`}>
-                      {isAi ? <Bot size={14} /> : <User size={14} />}
-                    </div>
+                  <div key={msg.id} className={`flex gap-3 max-w-[92%] ${isAi ? "mr-auto w-full" : "ml-auto"}`}>
+                    {isAi && (
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                        isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-[#1B233D] text-indigo-400 border border-indigo-500/20"
+                      }`}>
+                        <Bot size={14} />
+                      </div>
+                    )}
 
                     <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-xs ${
                       isAi 
@@ -2075,32 +2075,32 @@ export default function AiScholarTab({
               )}
             </div>
 
-            {/* Autonomous Engez Scholar AI Engine Card */}
+            {/* Google Gemini 3.8 Flash Engine Card */}
             <div className={`p-4 rounded-2xl border space-y-3 ${
-              isLight ? "bg-emerald-50/50 border-emerald-300" : "bg-emerald-950/20 border-emerald-800/40"
+              isLight ? "bg-purple-50/50 border-purple-300" : "bg-purple-950/20 border-purple-800/40"
             }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Cpu size={16} className="text-emerald-600 dark:text-emerald-400" />
+                  <Cpu size={16} className="text-purple-600 dark:text-purple-400" />
                   <span className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
-                    Autonomous Academic AI Engine
+                    Google Gemini 3.8 Flash Engine
                   </span>
                 </div>
-                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Engez Scholar AI Active
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                  Gemini API Active
                 </span>
               </div>
               <p className="text-xs text-[#77736B] dark:text-slate-400 leading-relaxed">
-                Proprietary academic examiner trained specifically for <strong>engeznafsak.com</strong>. Evaluates past paper questions, worksheets, attached photos, and documents directly using official Cambridge and Edexcel mark scheme rubrics. Operates 100% autonomously without any external Gemini or DeepSeek API calls.
+                Powered by <strong>Google Gemini 3.8 Flash</strong> via server-side API integration. Tailored for <strong>engeznafsak.com</strong> according to the IGCSE system. Evaluates past paper questions, worksheets, attached photos, and documents directly using official Cambridge and Edexcel mark scheme rubrics with optical handwriting transcription.
               </p>
               <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1">
-                <div className="p-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
-                  <div className="font-bold text-emerald-800 dark:text-emerald-300">📚 IGCSE System Ready</div>
+                <div className="p-2.5 rounded-xl border border-purple-500/20 bg-purple-500/5">
+                  <div className="font-bold text-purple-800 dark:text-purple-300">📚 IGCSE System Ready</div>
                   <div className="text-[10px] text-[#77736B] dark:text-slate-400 mt-0.5">Method [M], Accuracy [A], Independent [B], & ECF</div>
                 </div>
-                <div className="p-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
-                  <div className="font-bold text-emerald-800 dark:text-emerald-300">📸 Optical Script Vision</div>
+                <div className="p-2.5 rounded-xl border border-purple-500/20 bg-purple-500/5">
+                  <div className="font-bold text-purple-800 dark:text-purple-300">📸 Multimodal OCR & Vision</div>
                   <div className="text-[10px] text-[#77736B] dark:text-slate-400 mt-0.5">Transcribes handwriting & multi-page exam photos</div>
                 </div>
               </div>
