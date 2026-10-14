@@ -310,7 +310,6 @@ export default function AiScholarTab({
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   // AI Config & Custom DNS Status Modal State
-  const [showAiModal, setShowAiModal] = useState(false);
   const [showDnsHubModal, setShowDnsHubModal] = useState(false);
   const [selectedExamBoard, setSelectedExamBoard] = useState<string>(() => {
     return localStorage.getItem("ENGEZ_EXAM_BOARD") || "Cambridge IGCSE";
@@ -1081,11 +1080,11 @@ export default function AiScholarTab({
                   : "bg-purple-950/40 border border-purple-700/60 text-purple-300"
               } px-2 py-0.5 rounded-md uppercase flex items-center gap-1.5`}>
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                Gemini 3.8 Flash • IGCSE Examiner
+                IGCSE Examiner & Tutor
               </span>
             </div>
             <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} max-w-2xl mt-1`}>
-              Academic examiner and tutor powered by Google Gemini API according to the IGCSE system. Attach exam questions, past papers, worksheets, or photos of your handwritten working to analyze documents, evaluate marks, and receive step-by-step model answers.
+              Academic examiner and tutor calibrated to official Cambridge, Edexcel, and school examination systems. Attach exam questions, past papers, worksheets, or photos of your handwritten working to analyze documents, evaluate marks, and receive step-by-step model answers.
             </p>
           </div>
 
@@ -1579,19 +1578,6 @@ export default function AiScholarTab({
 
               <button
                 type="button"
-                onClick={() => setShowAiModal(true)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-mono font-bold transition cursor-pointer ${
-                  isLight ? "bg-purple-50 border-purple-300 text-purple-900 hover:bg-purple-100" : "bg-purple-950/40 border-purple-700/60 text-purple-300 hover:bg-purple-900/50"
-                }`}
-                title="Google Gemini 3.8 Flash Examination Engine Settings"
-              >
-                <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                <span>Gemini 3.8 Flash</span>
-                <Sliders size={11} className="opacity-70" />
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setShowDnsHubModal(true)}
                 className={`p-1.5 rounded-xl border transition cursor-pointer ${
                   isLight ? "border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F7F5F0]" : "border-white/10 text-slate-400 hover:text-white"
@@ -1986,235 +1972,7 @@ export default function AiScholarTab({
         isLight={isLight}
       />
 
-      {/* AI Engine & Custom DNS Configuration Modal */}
-      {showAiModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className={`w-full max-w-lg rounded-3xl border shadow-2xl p-6 space-y-5 ${
-            isLight ? "bg-white border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0d1222] border-white/10 text-white"
-          }`}>
-            <div className="flex items-center justify-between pb-3 border-b border-[#E8D7C9] dark:border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-[#C96F55]/10 text-[#C96F55]">
-                  <Globe size={18} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base font-sans">Engez Scholar AI Examination Engine</h3>
-                  <p className="text-xs text-[#77736B] font-mono">engeznafsak.com • IGCSE System Examiner & Vision</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAiModal(false)}
-                className="p-1.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 text-[#77736B] hover:text-[#1D1D1B] dark:hover:text-white transition cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
 
-            {/* DNS Health Diagnostics */}
-            <div className={`p-4 rounded-2xl border space-y-3 ${
-              isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-black/30 border-white/10"
-            }`}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#77736B]">Custom DNS & Backend Connectivity</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowDnsHubModal(true)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition flex items-center gap-1 cursor-pointer ${
-                      isLight 
-                        ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F0EEE8]" 
-                        : "bg-[#2C2723] border-[#3D3833] text-[#F6F3EE] hover:bg-[#36302B]"
-                    }`}
-                  >
-                    <Globe size={11} className="text-[#C96F55]" />
-                    <span>DNS Hub</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={testDnsAiHealth}
-                    disabled={dnsTestState?.loading}
-                    className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-[#C96F55] text-white hover:bg-[#B85F48] transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                  >
-                    <RefreshCw size={11} className={dnsTestState?.loading ? "animate-spin" : ""} />
-                    <span>Test Connection</span>
-                  </button>
-                </div>
-              </div>
-
-              {dnsTestState && (
-                <div className={`p-3 rounded-xl text-xs font-mono border ${
-                  dnsTestState.ok 
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400" 
-                    : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400"
-                }`}>
-                  {dnsTestState.loading ? (
-                    <span className="flex items-center gap-2">
-                      <RefreshCw size={12} className="animate-spin" />
-                      Testing connectivity to engeznafsak.com/api/health...
-                    </span>
-                  ) : dnsTestState.ok ? (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold">
-                        <CheckCircle2 size={13} className="text-emerald-500" />
-                        <span>Connected successfully to {dnsTestState.data?.dns || "engeznafsak.com"}!</span>
-                      </div>
-                      <div className="text-[11px] opacity-80">
-                        AI Engine: {dnsTestState.data?.engine || "Engez Scholar AI"} • Service: {dnsTestState.data?.service || "Engez Autonomous Academic Engine"}
-                      </div>
-                      <div className="text-[11px] opacity-80">
-                        Status: ✅ Active & Ready on {dnsTestState.data?.dns || "engeznafsak.com"}
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <span className="font-bold">❌ Connection Notice:</span> {dnsTestState.error || "Using autonomous trained IGCSE examiner bridge."}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Google Gemini 3.8 Flash Engine Card */}
-            <div className={`p-4 rounded-2xl border space-y-3 ${
-              isLight ? "bg-purple-50/50 border-purple-300" : "bg-purple-950/20 border-purple-800/40"
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Cpu size={16} className="text-purple-600 dark:text-purple-400" />
-                  <span className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
-                    Google Gemini 3.8 Flash Engine
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                  Gemini API Active
-                </span>
-              </div>
-              <p className="text-xs text-[#77736B] dark:text-slate-400 leading-relaxed">
-                Powered by <strong>Google Gemini 3.8 Flash</strong> via server-side API integration. Tailored for <strong>engeznafsak.com</strong> according to the IGCSE system. Evaluates past paper questions, worksheets, attached photos, and documents directly using official Cambridge and Edexcel mark scheme rubrics with optical handwriting transcription.
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1">
-                <div className="p-2.5 rounded-xl border border-purple-500/20 bg-purple-500/5">
-                  <div className="font-bold text-purple-800 dark:text-purple-300">📚 IGCSE System Ready</div>
-                  <div className="text-[10px] text-[#77736B] dark:text-slate-400 mt-0.5">Method [M], Accuracy [A], Independent [B], & ECF</div>
-                </div>
-                <div className="p-2.5 rounded-xl border border-purple-500/20 bg-purple-500/5">
-                  <div className="font-bold text-purple-800 dark:text-purple-300">📸 Multimodal OCR & Vision</div>
-                  <div className="text-[10px] text-[#77736B] dark:text-slate-400 mt-0.5">Transcribes handwriting & multi-page exam photos</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Exam Board Selection */}
-            <div className={`p-4 rounded-2xl border space-y-3 ${
-              isLight ? "bg-white border-[#E8D7C9]" : "bg-white/5 border-white/10"
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sliders size={15} className="text-[#C96F55]" />
-                  <span className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
-                    Target Examination System
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono text-[#77736B]">Official Criteria</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: "Cambridge IGCSE", label: "Cambridge IGCSE", code: "CIE 0580/0625" },
-                  { id: "Pearson Edexcel", label: "Pearson Edexcel", code: "4MA1 / 4PH1" },
-                  { id: "Oxford AQA", label: "Oxford AQA", code: "Intl GCSE" }
-                ].map((board) => (
-                  <button
-                    key={board.id}
-                    type="button"
-                    onClick={() => setSelectedExamBoard(board.id)}
-                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
-                      selectedExamBoard === board.id
-                        ? (isLight ? "bg-emerald-50 border-emerald-400 text-emerald-900 shadow-xs" : "bg-emerald-950/40 border-emerald-500 text-emerald-200")
-                        : (isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:bg-[#F3EFEA]" : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10")
-                    }`}
-                  >
-                    <div className="text-xs font-bold font-mono">{board.label}</div>
-                    <div className="text-[9px] opacity-70 mt-0.5">{board.code}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Strict Marking & Cambridge Rules */}
-            <div className={`p-4 rounded-2xl border space-y-3 ${
-              isLight ? "bg-white border-[#E8D7C9]" : "bg-white/5 border-white/10"
-            }`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-mono font-bold text-[#1D1D1B] dark:text-white">
-                    Strict Mark Scheme Adherence
-                  </div>
-                  <div className="text-[11px] text-[#77736B] dark:text-slate-400 mt-0.5">
-                    Strict keyword matching, Error Carried Forward [ECF], and Cambridge 3 s.f. rounding rule.
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setStrictMarkingMode(!strictMarkingMode)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition cursor-pointer ${
-                    strictMarkingMode
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : (isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-white/5 border-white/10 text-slate-400")
-                  }`}
-                >
-                  {strictMarkingMode ? "Enabled" : "Balanced"}
-                </button>
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleSaveAiKeys}
-                  className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition cursor-pointer shadow-xs"
-                >
-                  Save Examination Preferences
-                </button>
-              </div>
-            </div>
-
-            {keySaveMessage && (
-              <div className="text-xs font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-bold p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <CheckCircle2 size={14} />
-                <span>{keySaveMessage}</span>
-              </div>
-            )}
-
-            <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-xs text-[#77736B] dark:text-slate-300 space-y-1">
-              <span className="font-bold text-cyan-600 dark:text-cyan-400 font-mono flex items-center gap-1">
-                <ShieldCheck size={13} />
-                IGCSE Examiner Mark Scheme Engine Active
-              </span>
-              <p className="leading-relaxed text-[11px]">
-                Configured for Cambridge CIE, Pearson Edexcel, and Oxford AQA mark schemes. Operates seamlessly on <code className="text-cyan-600 dark:text-cyan-400 font-mono">engeznafsak.com</code> with step-by-step method marks [M], accuracy marks [A], and independent marks [B].
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <button
-                type="button"
-                onClick={handleSaveAiKeys}
-                className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-[#C96F55] hover:bg-[#B85F48] text-white transition cursor-pointer"
-              >
-                Save All Changes
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAiModal(false)}
-                className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold border border-[#E8D7C9] dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition cursor-pointer shadow-xs"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* CUSTOM DNS & DOMAIN HUB MODAL */}
       <DomainDnsModal
