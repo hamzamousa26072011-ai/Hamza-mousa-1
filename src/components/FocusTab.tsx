@@ -780,7 +780,9 @@ export default function FocusTab({
                       }
                       onStartFocus();
                     }}
-                    className="py-3 px-8 bg-[#C96F55] hover:bg-[#B85F48] text-white rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-lg"
+                    className={`py-3 px-8 ${
+                      isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30"
+                    } text-white rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-lg`}
                   >
                     <Play size={14} fill="currentColor" />
                     <span>{isPaused ? "Resume Session" : "Start Session"}</span>
@@ -883,7 +885,9 @@ export default function FocusTab({
                     setShowCompletionModal(false);
                     onStartFocus();
                   }}
-                  className="flex-1 py-3 bg-[#C96F55] hover:bg-[#B85F48] text-white font-mono font-bold text-xs uppercase rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg"
+                  className={`flex-1 py-3 ${
+                    isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30"
+                  } text-white font-mono font-bold text-xs uppercase rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg`}
                 >
                   <Play size={13} fill="currentColor" />
                   <span>Start Next Block</span>
@@ -933,7 +937,11 @@ export default function FocusTab({
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleEnterFullscreen}
-            className="py-2.5 px-4 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wide transition flex items-center gap-2 cursor-pointer select-none shadow-md shadow-[#8B5CF6]/25"
+            className={`py-2.5 px-4 ${
+              isLight
+                ? "bg-[#C96F55] hover:bg-[#B85E45] shadow-md shadow-[#C96F55]/25"
+                : "bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/25"
+            } text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wide transition flex items-center gap-2 cursor-pointer select-none`}
             title="Enter distraction-free Full Screen Focus Mode (F)"
           >
             <Maximize2 size={13} />
@@ -1002,12 +1010,12 @@ export default function FocusTab({
                 onClick={handleEnterFullscreen}
                 className={`py-1 px-2.5 rounded-lg border text-[10px] font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
                   isLight
-                    ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]"
+                    ? "bg-[#FFF1EC] hover:bg-[#FFE5DC] border-[#E8D7C9] text-[#C96F55]"
                     : "bg-white/10 hover:bg-white/15 border-white/10 text-white"
                 }`}
                 title="Enter Full Screen Focus View (F)"
               >
-                <Maximize2 size={11} className="text-[#8B5CF6]" />
+                <Maximize2 size={11} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
                 <span>Full Screen</span>
               </button>
             </div>

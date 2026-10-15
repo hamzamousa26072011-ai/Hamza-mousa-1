@@ -1084,7 +1084,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   } disabled:opacity-50 text-white transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]`}
                 >
                   <span>Send</span>
-                  <ArrowRight size={13} />
+                  <ArrowRight size={13} className={isLight ? "text-[#C96F55]" : ""} />
                 </button>
               </div>
 
