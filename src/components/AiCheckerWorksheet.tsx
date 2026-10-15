@@ -1647,9 +1647,11 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       type="button"
                       onClick={() => setCurrentPageIndex(prev => Math.max(0, prev - 1))}
                       disabled={currentPageIndex === 0}
-                      className="px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 disabled:opacity-40 cursor-pointer"
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 disabled:opacity-40 cursor-pointer ${
+                        isLight ? "border-[#E8D7C9] text-[#C96F55] hover:bg-[#FAF8F5]" : ""
+                      }`}
                     >
-                      <ChevronLeft size={14} />
+                      <ChevronLeft size={14} className={isLight ? "text-[#C96F55]" : ""} />
                       <span>Previous page</span>
                     </button>
 
@@ -1674,10 +1676,12 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                       type="button"
                       onClick={() => setCurrentPageIndex(prev => Math.min(answerPages.length - 1, prev + 1))}
                       disabled={currentPageIndex === answerPages.length - 1}
-                      className="px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 disabled:opacity-40 cursor-pointer"
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 disabled:opacity-40 cursor-pointer ${
+                        isLight ? "border-[#E8D7C9] text-[#C96F55] hover:bg-[#FAF8F5]" : ""
+                      }`}
                     >
                       <span>Next page</span>
-                      <ChevronRight size={14} />
+                      <ChevronRight size={14} className={isLight ? "text-[#C96F55]" : ""} />
                     </button>
                   </div>
                 )}

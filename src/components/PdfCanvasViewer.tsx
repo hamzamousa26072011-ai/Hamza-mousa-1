@@ -98,10 +98,10 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                className="p-1 rounded hover:bg-[#EAE7DF] disabled:opacity-40 cursor-pointer"
+                className="p-1 rounded hover:bg-[#EAE7DF] disabled:opacity-40 cursor-pointer text-[#C96F55]"
                 title="Previous Page"
               >
-                <ChevronLeft size={14} />
+                <ChevronLeft size={14} className="text-[#C96F55]" />
               </button>
               <span className="font-mono text-[11px] text-[#77736B]">
                 {currentPage} / {numPages}
@@ -110,10 +110,10 @@ export const PdfCanvasViewer: React.FC<PdfCanvasViewerProps> = ({
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.min(numPages, p + 1))}
                 disabled={currentPage >= numPages}
-                className="p-1 rounded hover:bg-[#EAE7DF] disabled:opacity-40 cursor-pointer"
+                className="p-1 rounded hover:bg-[#EAE7DF] disabled:opacity-40 cursor-pointer text-[#C96F55]"
                 title="Next Page"
               >
-                <ChevronRight size={14} />
+                <ChevronRight size={14} className="text-[#C96F55]" />
               </button>
             </div>
           )}

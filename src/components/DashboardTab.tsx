@@ -191,12 +191,12 @@ export default function DashboardTab({
                 id="dashboard-go-habits-btn"
                 className={`p-1.5 rounded-lg ${
                   isLight 
-                    ? "hover:bg-[#F0EEE8] text-[#77736B] hover:text-[#1D1D1B]" 
+                    ? "hover:bg-[#F0EEE8] text-[#C96F55] hover:text-[#B85F48]" 
                     : "hover:bg-[#1A1432] text-[#C4B5FD] hover:text-white"
                 } transition-all cursor-pointer flex items-center gap-1.5 text-xs font-mono font-bold`}
               >
                 <span>View habits</span>
-                <ArrowRight size={14} />
+                <ArrowRight size={14} className={isLight ? "text-[#C96F55]" : ""} />
               </button>
             </div>
 
@@ -264,7 +264,7 @@ export default function DashboardTab({
             } rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-2`}
           >
             <span>Open Habit Tracker</span>
-            <ArrowRight size={14} strokeWidth={2.5} />
+            <ArrowRight size={14} strokeWidth={2.5} className={isLight ? "text-[#C96F55]" : ""} />
           </button>
         </div>
 
@@ -590,7 +590,7 @@ export default function DashboardTab({
               className={`${isLight ? "text-[#C96F55] hover:text-[#D98A73]" : "text-[#C084FC] hover:text-white"} font-bold transition cursor-pointer flex items-center gap-1`}
             >
               <span>Open AI Tutor</span>
-              <ArrowRight size={12} />
+              <ArrowRight size={12} className={isLight ? "text-[#C96F55]" : ""} />
             </button>
           </div>
         </div>

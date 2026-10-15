@@ -542,7 +542,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   <option value="pinned">Pinned Only</option>
                   <option value="completed">Past / Completed</option>
                 </select>
-                <ChevronDown size={12} className="absolute right-2.5 top-3 pointer-events-none opacity-60" />
+                <ChevronDown size={12} className={`absolute right-2.5 top-3 pointer-events-none ${isLight ? "text-[#C96F55]" : "opacity-60"}`} />
               </div>
 
               {/* Add a Friend Shortcut Button (Requested by User!) */}

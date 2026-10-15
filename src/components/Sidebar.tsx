@@ -116,7 +116,7 @@ export default function Sidebar({
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={`p-2 rounded-xl transition cursor-pointer border shadow-2xs ${
             isLight 
-              ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] border-[#E8D7C9]" 
+              ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#C96F55] hover:text-[#B85F48] border-[#E8D7C9]" 
               : "bg-[#161026] hover:bg-[#231B3B] text-[#C4B5FD] hover:text-[#FAF8F5] border-[#36255B]"
           }`}
           title={isCollapsed ? "Expand side menu" : "Collapse side menu"}

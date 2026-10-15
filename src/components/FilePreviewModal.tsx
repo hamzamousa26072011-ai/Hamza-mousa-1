@@ -487,9 +487,9 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                 id="preview-prev-page-btn"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                className="px-3 py-1.5 rounded-lg border border-[#E8D7C9] text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F5F3EC] cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-[#E8D7C9] text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F5F3EC] cursor-pointer text-[#C96F55]"
               >
-                <ChevronLeft size={14} />
+                <ChevronLeft size={14} className="text-[#C96F55]" />
                 <span>Previous</span>
               </button>
               <button
@@ -497,10 +497,10 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                 id="preview-next-page-btn"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages}
-                className="px-3 py-1.5 rounded-lg border border-[#E8D7C9] text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F5F3EC] cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-[#E8D7C9] text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F5F3EC] cursor-pointer text-[#C96F55]"
               >
                 <span>Next</span>
-                <ChevronRight size={14} />
+                <ChevronRight size={14} className="text-[#C96F55]" />
               </button>
             </div>
 

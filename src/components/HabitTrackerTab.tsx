@@ -638,7 +638,7 @@ export default function HabitTrackerTab({
               title="Previous starting day"
               className={`p-2 transition cursor-pointer ${
                 isLight 
-                  ? "bg-[#FAF8F5] hover:bg-[#E8D7C9] text-[#1D1D1B]" 
+                  ? "bg-[#FAF8F5] hover:bg-[#E8D7C9] text-[#C96F55] hover:text-[#B85F48]" 
                   : "bg-white/5 hover:bg-white/10 text-white"
               }`}
             >
@@ -655,7 +655,7 @@ export default function HabitTrackerTab({
               title="Next starting day"
               className={`p-2 transition cursor-pointer ${
                 isLight 
-                  ? "bg-[#FAF8F5] hover:bg-[#E8D7C9] text-[#1D1D1B]" 
+                  ? "bg-[#FAF8F5] hover:bg-[#E8D7C9] text-[#C96F55] hover:text-[#B85F48]" 
                   : "bg-white/5 hover:bg-white/10 text-white"
               }`}
             >

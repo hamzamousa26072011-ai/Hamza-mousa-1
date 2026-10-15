@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" fill="none">
+  <!-- Minimalist warm ivory squircle container matching light / white theme -->
+  <rect x="24" y="24" width="976" height="976" rx="208" fill="#FAF8F5" stroke="#E8D7C9" stroke-width="8" />
+
+  <g id="engez-light-emblem">
+    <!-- 1. Radiating burst rays above arrow (Warm Theme Orange #C96F55) -->
+    <!-- Center top vertical ray -->
+    <rect x="498" y="190" width="28" height="66" rx="14" fill="#C96F55" />
+
+    <!-- Top-left diagonal ray -->
+    <rect x="402" y="240" width="26" height="52" rx="13" transform="rotate(-38 415 266)" fill="#C96F55" />
+
+    <!-- Top-right diagonal ray -->
+    <rect x="596" y="240" width="26" height="52" rx="13" transform="rotate(38 609 266)" fill="#C96F55" />
+
+    <!-- Far-left horizontal ray -->
+    <rect x="350" y="322" width="46" height="24" rx="12" transform="rotate(-15 373 334)" fill="#C96F55" />
+
+    <!-- Far-right horizontal ray -->
+    <rect x="628" y="322" width="46" height="24" rx="12" transform="rotate(15 651 334)" fill="#C96F55" />
+
+    <!-- 2. Dynamic Upward Arrow (ALL ORANGE #C96F55 as requested) -->
+    <!-- Arrowhead -->
+    <path 
+      d="M 512 296 
+         L 570 374 
+         H 530 
+         V 428 
+         H 494 
+         V 374 
+         H 454 
+         Z" 
+      fill="#C96F55" 
+    />
+
+    <!-- 3. Central Bulb / Flame of Mastery (Orange #C96F55) -->
+    <path 
+      d="M 494 425
+         C 450 460, 408 506, 408 554
+         C 408 616, 464 656, 512 656
+         C 560 656, 678 616, 678 554
+         C 678 496, 574 460, 530 425
+         Z" 
+      fill="#C96F55" 
+    />
+
+    <!-- 4. Open Book Pages (Warm Sand #DFC0A9) -->
+    <!-- Left Page -->
+    <path 
+      d="M 232 590
+         C 280 588, 380 600, 496 648
+         C 440 660, 320 658, 222 626
+         C 214 620, 218 594, 232 590
+         Z" 
+      fill="#DFC0A9" 
+    />
+
+    <!-- Right Page -->
+    <path 
+      d="M 792 590
+         C 744 588, 644 600, 528 648
+         C 584 660, 704 658, 802 626
+         C 810 620, 806 594, 792 590
+         Z" 
+      fill="#DFC0A9" 
+    />
+
+    <!-- 5. Minimalist Foundation Line / Book Base (Charcoal Obsidian #1D1D1B) -->
+    <path 
+      d="M 206 632
+         C 300 686, 420 682, 512 654
+         C 604 682, 724 686, 818 632" 
+      stroke="#1D1D1B" 
+      stroke-width="36" 
+      stroke-linecap="round" 
+      fill="none" 
+    />
+  </g>
+</svg>
