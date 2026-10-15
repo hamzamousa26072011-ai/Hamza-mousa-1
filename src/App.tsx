@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Task, PastPaper, ChatMessage, StudyApp, HabitItem, HabitDayLog } from "./types";
+import { useScreenWakeLock } from "./hooks/useScreenWakeLock";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { 
   auth, 
@@ -436,6 +437,8 @@ export default function App() {
   const [focusMinutesSelected, setFocusMinutesSelected] = useState(50);
   const [focusSecondsRemaining, setFocusSecondsRemaining] = useState(50 * 60);
   const [focusModeActive, setFocusModeActive] = useState(false);
+  // Keep the device screen awake whenever the study timer is active
+  useScreenWakeLock(focusModeActive);
   const [isFocusFullscreen, setIsFocusFullscreen] = useState(false);
   const [pomodoroMode, setPomodoroMode] = useState<"work" | "break" | "long">("work");
   const [pomodoroCompletedCount, setPomodoroCompletedCount] = useState<number>(() => {

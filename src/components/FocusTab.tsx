@@ -25,6 +25,7 @@ import {
   Headphones,
   Wind,
   Moon,
+  Sun,
   Maximize2,
   Minimize2
 } from "lucide-react";
@@ -654,9 +655,19 @@ export default function FocusTab({
                 )}
 
                 {!isPaused && (
-                  <span className={`text-[10px] sm:text-xs font-mono tracking-widest ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase font-black mt-4`}>
-                    {focusModeActive ? `ACTIVE COUNTDOWN • SET ${currentCycleStep} OF 4` : "READY TO LAUNCH"}
-                  </span>
+                  <div className="flex flex-col sm:flex-row items-center gap-2 mt-4">
+                    <span className={`text-[10px] sm:text-xs font-mono tracking-widest ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase font-black`}>
+                      {focusModeActive ? `ACTIVE COUNTDOWN • SET ${currentCycleStep} OF 4` : "READY TO LAUNCH"}
+                    </span>
+                    {focusModeActive && (
+                      <span className={`text-[9px] font-mono uppercase font-bold flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${
+                        isLight ? "bg-black/5 text-[#77736B]" : "bg-white/10 text-slate-300"
+                      }`} title="Screen timeout prevented while timer is on">
+                        <Sun size={10} className="text-amber-400" />
+                        <span>Screen Kept On</span>
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -1010,12 +1021,12 @@ export default function FocusTab({
                 onClick={handleEnterFullscreen}
                 className={`py-1 px-2.5 rounded-lg border text-[10px] font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
                   isLight
-                    ? "bg-[#FFF1EC] hover:bg-[#FFE5DC] border-[#E8D7C9] text-[#C96F55]"
-                    : "bg-white/10 hover:bg-white/15 border-white/10 text-white"
+                    ? "bg-[#C96F55] hover:bg-[#B85E45] border-[#C96F55] text-white"
+                    : "bg-indigo-600 hover:bg-indigo-500 border-indigo-600 text-white"
                 }`}
                 title="Enter Full Screen Focus View (F)"
               >
-                <Maximize2 size={11} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
+                <Maximize2 size={11} className="text-white" />
                 <span>Full Screen</span>
               </button>
             </div>
@@ -1088,9 +1099,19 @@ export default function FocusTab({
                 ⏸ PAUSED
               </span>
             ) : (
-              <span className={`text-[10px] font-mono tracking-widest ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase font-black mt-3`}>
-                {focusModeActive ? "ACTIVE COUNTDOWN" : "READY TO LAUNCH"}
-              </span>
+              <div className="flex flex-col sm:flex-row items-center gap-2 mt-3">
+                <span className={`text-[10px] font-mono tracking-widest ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase font-black`}>
+                  {focusModeActive ? "ACTIVE COUNTDOWN" : "READY TO LAUNCH"}
+                </span>
+                {focusModeActive && (
+                  <span className={`text-[9px] font-mono uppercase font-bold flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${
+                    isLight ? "bg-black/5 text-[#77736B]" : "bg-white/10 text-slate-300"
+                  }`} title="Screen timeout prevented while timer is on">
+                    <Sun size={10} className="text-amber-400" />
+                    <span>Screen Kept On</span>
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
