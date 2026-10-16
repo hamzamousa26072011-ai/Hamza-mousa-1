@@ -85,23 +85,7 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
-  // User Guide Modal: opens automatically ONLY on 1st time visit, and can be reopened anytime
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-  useEffect(() => {
-    const hasSeenGuide = localStorage.getItem("ENGEZ_USER_GUIDE_SEEN_V1");
-    if (!hasSeenGuide) {
-      const timer = setTimeout(() => {
-        setIsGuideOpen(true);
-      }, 700);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  const handleCloseGuide = () => {
-    setIsGuideOpen(false);
-    localStorage.setItem("ENGEZ_USER_GUIDE_SEEN_V1", "true");
-  };
 
   // Security Lockdown State
   const [securityLockdown, setSecurityLockdown] = useState<{
@@ -141,6 +125,39 @@ export default function App() {
   const [isDomainCopied, setIsDomainCopied] = useState(false);
   const [offlineMode, setOfflineMode] = useState(isFirestoreOffline);
   const isFirstSyncRef = useRef(true);
+
+  // User Guide Modal: opens automatically ONLY on 1st time visit for users who ARE NOT signed in
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  useEffect(() => {
+    // Wait until auth state check has settled
+    if (isAuthLoading) return;
+
+    // Never show or keep open guide for signed-in users
+    if (currentUser) {
+      setIsGuideOpen(false);
+      return;
+    }
+
+    // Only for visitors who aren't signed in and haven't seen/skipped the guide yet
+    const hasSeenGuide = localStorage.getItem("ENGEZ_USER_GUIDE_SEEN_V1");
+    if (!hasSeenGuide) {
+      const timer = setTimeout(() => {
+        setIsGuideOpen(true);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthLoading, currentUser]);
+
+  const handleCloseGuide = () => {
+    setIsGuideOpen(false);
+    localStorage.setItem("ENGEZ_USER_GUIDE_SEEN_V1", "true");
+  };
+
+  const handleSkipGuide = () => {
+    setIsGuideOpen(false);
+    localStorage.setItem("ENGEZ_USER_GUIDE_SEEN_V1", "true");
+  };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
@@ -1850,7 +1867,7 @@ export default function App() {
                   onGoogleLogin={handleGoogleLogin}
                   onOpenPrivacyPolicy={() => setIsPrivacyModalOpen(true)}
                   onOpenDnsModal={() => setShowDnsModal(true)}
-                  onOpenUserGuide={() => setIsGuideOpen(true)}
+                  onOpenUserGuide={!currentUser ? () => setIsGuideOpen(true) : undefined}
                   isGoogleLoading={isGoogleLoading}
                   themeMode={settings.themeMode}
                 />
@@ -2416,16 +2433,19 @@ export default function App() {
         themeMode={settings.themeMode}
       />
 
-      {/* INTERACTIVE SMOOTH-ANIMATED USER GUIDE (Auto-shown on 1st visit) */}
-      <UserGuideModal
-        isOpen={isGuideOpen}
-        onClose={handleCloseGuide}
-        themeMode={settings.themeMode}
-        onNavigateTab={(tab) => {
-          setCurrentTab(tab);
-          handleCloseGuide();
-        }}
-      />
+      {/* INTERACTIVE SMOOTH-ANIMATED USER GUIDE (Only for users who aren't signed in) */}
+      {!currentUser && (
+        <UserGuideModal
+          isOpen={isGuideOpen}
+          onClose={handleCloseGuide}
+          onSkip={handleSkipGuide}
+          themeMode={settings.themeMode}
+          onNavigateTab={(tab) => {
+            setCurrentTab(tab);
+            handleCloseGuide();
+          }}
+        />
+      )}
 
     </div>
   );

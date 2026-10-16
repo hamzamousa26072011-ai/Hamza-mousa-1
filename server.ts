@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
+import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import https from "https";
@@ -520,10 +521,17 @@ app.post("/api/security/clear-quarantine", (req, res) => {
   res.json({ status: "CLEARED", message: "Quarantine released" });
 });
 
-app.all("/api/security/clear-quarantine", (req, res) => {
-  if (req.method === "OPTIONS") return res.sendStatus(204);
-  res.setHeader("Allow", "POST, OPTIONS");
-  return res.status(405).json({ error: "Method Not Allowed. Use POST.", status: 405 });
+// Serve white noise audio files directly with native byte-range support for seamless, lag-free looping
+app.get(["/user_white_noise.mp3", "/custom_calm_rain.mp3"], (req: Request, res: Response) => {
+  const targetFile = req.path.includes("custom_calm_rain") ? "custom_calm_rain.mp3" : "user_white_noise.mp3";
+  const filePath = path.join(process.cwd(), "public", targetFile);
+  if (fs.existsSync(filePath)) {
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
+    return res.sendFile(filePath);
+  }
+  return res.status(404).json({ error: "Sound file not found" });
 });
 
 // =========================================================================

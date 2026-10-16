@@ -151,7 +151,12 @@ export default function FocusTab({
     } else if (focusModeActive) {
       setSoundscape(selectedSoundscape, soundVolume);
     }
-  }, [focusModeActive, isPaused, selectedSoundscape, soundVolume]);
+  }, [focusModeActive, isPaused, selectedSoundscape]);
+
+  // Keep volume synchronized smoothly with zero playback disruption
+  useEffect(() => {
+    setSoundscapeVolume(soundVolume);
+  }, [soundVolume]);
 
   // Stop sounds on unmount
   useEffect(() => {
@@ -475,7 +480,7 @@ export default function FocusTab({
                         ? selectedSoundscape !== "silent" ? "bg-[#FFF1EC] border-[#C96F55] text-[#C96F55]" : "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" 
                         : selectedSoundscape !== "silent" ? "bg-indigo-600 hover:bg-indigo-500 border-indigo-600 text-white shadow-md shadow-indigo-600/20" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
                     } border rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer`}
-                    title={selectedSoundscape !== "silent" ? "Sound: White Noise (Gentle Rain)" : "Quiet (Click to play White Noise)"}
+                    title={selectedSoundscape !== "silent" ? "Sound: White Noise (Main Rain Loop 7:48m)" : "Quiet (Click to play White Noise)"}
                   >
                     {selectedSoundscape === "silent" ? (
                       <VolumeX size={13} className={isLight ? "text-[#77736B]" : "text-slate-400"} />
@@ -1184,7 +1189,7 @@ export default function FocusTab({
                   <div className={`text-[9px] font-mono ${
                     selectedSoundscape === "white_noise" ? "text-white/80" : isLight ? "text-[#77736B]" : "text-slate-400"
                   }`}>
-                    Gentle Rain
+                    Gentle Rain Loop
                   </div>
                 </div>
               </button>

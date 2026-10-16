@@ -22,6 +22,7 @@ import {
 interface UserGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSkip?: () => void;
   themeMode?: "light" | "dark";
   onNavigateTab?: (tab: string) => void;
 }
@@ -40,11 +41,20 @@ interface GuideStep {
 export default function UserGuideModal({
   isOpen,
   onClose,
+  onSkip,
   themeMode = "dark",
   onNavigateTab
 }: UserGuideModalProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const isLight = themeMode === "light";
+
+  const handleSkip = () => {
+    if (onSkip) {
+      onSkip();
+    } else {
+      onClose();
+    }
+  };
 
   const steps: GuideStep[] = [
     {
@@ -305,19 +315,34 @@ export default function UserGuideModal({
           {/* Top Decorative Header Accent */}
           <div className="h-1.5 w-full bg-gradient-to-r from-[#C96F55] via-indigo-500 to-emerald-500" />
 
-          {/* Close / Skip button */}
-          <button
-            type="button"
-            onClick={onClose}
-            className={`absolute top-4 right-4 p-1.5 rounded-xl border transition cursor-pointer z-10 ${
-              isLight
-                ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]"
-                : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-400 hover:text-white"
-            }`}
-            title="Close Guide"
-          >
-            <X size={15} />
-          </button>
+          {/* Top Actions: Skip Guide & Close */}
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+            <button
+              type="button"
+              onClick={handleSkip}
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition cursor-pointer flex items-center gap-1 border ${
+                isLight
+                  ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]"
+                  : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300 hover:text-white"
+              }`}
+              title="Skip guide and start using app"
+            >
+              <span>Skip Guide</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                isLight
+                  ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]"
+                  : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-400 hover:text-white"
+              }`}
+              title="Close Guide"
+            >
+              <X size={15} />
+            </button>
+          </div>
 
           {/* Slide Content with Smooth AnimatePresence */}
           <div className="p-5 sm:p-7">
@@ -409,6 +434,19 @@ export default function UserGuideModal({
 
             {/* Prev & Next / Finish buttons */}
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSkip}
+                className={`px-3 py-2 rounded-xl text-xs font-mono font-medium transition cursor-pointer ${
+                  isLight 
+                    ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F0EEE8]" 
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                }`}
+                title="Skip entire guide"
+              >
+                Skip Guide
+              </button>
+
               {!isFirstStep && (
                 <button
                   type="button"
