@@ -5,12 +5,18 @@ def generate_all_brand_assets():
     os.makedirs("public", exist_ok=True)
     os.makedirs("dist", exist_ok=True)
 
-    # 1. LIGHT THEME EMBLEM (512x512) - All arrow orange, matching image.png with white/light theme colors
-    light_emblem_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
-  <!-- Minimalist warm ivory rounded container matching light / white theme -->
+    # 1. OFFICIAL EMBLEM (512x512) - Exact match to user image.png:
+    # - Warm ivory rounded container (#FAF8F5 with #E8D7C9 border)
+    # - Solid black upward accomplishment arrow (#1D1D1B)
+    # - Terracotta orange central flame/bulb (#C96F55)
+    # - Soft sand open book pages (#DEBAA2)
+    # - Black foundation spine arc (#1D1D1B)
+    # - 5 Sunburst rays: top terracotta, diagonal sand, outer black
+    official_emblem_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <!-- Minimalist warm ivory rounded container matching user logo -->
   <rect x="16" y="16" width="480" height="480" rx="104" fill="#FAF8F5" stroke="#E8D7C9" stroke-width="4" />
 
-  <g id="engez-brand-mark-light" transform="translate(0, 10)">
+  <g id="engez-brand-mark" transform="translate(0, 10)">
     <!-- 1. Radiating Sunburst Rays -->
     <!-- Top Center Ray (Terracotta Orange #C96F55) -->
     <line x1="256" y1="88" x2="256" y2="124" stroke="#C96F55" stroke-width="12" stroke-linecap="round" />
@@ -21,13 +27,13 @@ def generate_all_brand_assets():
     <!-- Top-Right Diagonal Ray (Warm Sand #DEBAA2) -->
     <line x1="308" y1="116" x2="288" y2="134" stroke="#DEBAA2" stroke-width="11" stroke-linecap="round" />
     
-    <!-- Far-Left Horizontal Ray (Charcoal #1D1D1B) -->
+    <!-- Far-Left Horizontal Ray (Charcoal Black #1D1D1B) -->
     <line x1="182" y1="156" x2="204" y2="160" stroke="#1D1D1B" stroke-width="11" stroke-linecap="round" />
     
-    <!-- Far-Right Horizontal Ray (Charcoal #1D1D1B) -->
+    <!-- Far-Right Horizontal Ray (Charcoal Black #1D1D1B) -->
     <line x1="330" y1="156" x2="308" y2="160" stroke="#1D1D1B" stroke-width="11" stroke-linecap="round" />
 
-    <!-- 2. Dynamic Upward Accomplishment Arrow (ALL ORANGE #C96F55 in light theme) -->
+    <!-- 2. Dynamic Upward Accomplishment Arrow (SOLID BLACK #1D1D1B matching user logo) -->
     <path 
       d="M 256 142 
          L 286 182 
@@ -37,8 +43,8 @@ def generate_all_brand_assets():
          L 246 182 
          L 226 182 
          Z" 
-      fill="#C96F55" 
-      stroke="#C96F55" 
+      fill="#1D1D1B" 
+      stroke="#1D1D1B" 
       stroke-width="2" 
       stroke-linejoin="round" 
     />
@@ -95,95 +101,9 @@ def generate_all_brand_assets():
   </g>
 </svg>"""
 
-    # 2. DARK THEME EMBLEM (512x512) - Exact same design, unified with website purple and obsidian
-    dark_emblem_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
-  <!-- Minimalist dark obsidian squircle container with purple glow border -->
-  <rect x="16" y="16" width="480" height="480" rx="104" fill="#0A0714" stroke="#8B5CF6" stroke-opacity="0.3" stroke-width="4" />
-
-  <g id="engez-brand-mark-dark" transform="translate(0, 10)">
-    <!-- 1. Radiating Sunburst Rays -->
-    <!-- Top Center Ray (Website Purple #8B5CF6) -->
-    <line x1="256" y1="88" x2="256" y2="124" stroke="#8B5CF6" stroke-width="12" stroke-linecap="round" />
-    
-    <!-- Top-Left Diagonal Ray (Soft Violet #A78BFA) -->
-    <line x1="204" y1="116" x2="224" y2="134" stroke="#A78BFA" stroke-width="11" stroke-linecap="round" />
-    
-    <!-- Top-Right Diagonal Ray (Soft Violet #A78BFA) -->
-    <line x1="308" y1="116" x2="288" y2="134" stroke="#A78BFA" stroke-width="11" stroke-linecap="round" />
-    
-    <!-- Far-Left Horizontal Ray (Light Lavender #C4B5FD) -->
-    <line x1="182" y1="156" x2="204" y2="160" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
-    
-    <!-- Far-Right Horizontal Ray (Light Lavender #C4B5FD) -->
-    <line x1="330" y1="156" x2="308" y2="160" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
-
-    <!-- 2. Dynamic Upward Accomplishment Arrow (Website Purple #8B5CF6) -->
-    <path 
-      d="M 256 142 
-         L 286 182 
-         L 266 182 
-         L 266 210 
-         L 246 210 
-         L 246 182 
-         L 226 182 
-         Z" 
-      fill="#8B5CF6" 
-      stroke="#8B5CF6" 
-      stroke-width="2" 
-      stroke-linejoin="round" 
-    />
-
-    <!-- 3. Central Flame / Bulb of Mastery (Purple #8B5CF6) -->
-    <path 
-      d="M 246 208 
-         C 246 226, 204 246, 200 278 
-         C 196 308, 230 334, 256 348 
-         C 282 334, 316 308, 312 278 
-         C 308 246, 266 226, 266 208 
-         Z" 
-      fill="#8B5CF6" 
-    />
-
-    <!-- 4. Open Book Pages (Deep Purple #6D28D9) -->
-    <!-- Left Page Wing -->
-    <path 
-      d="M 112 328 
-         C 152 326, 196 338, 236 352 
-         C 236 358, 230 364, 222 366 
-         C 180 364, 138 354, 106 342 
-         C 107 334, 109 330, 112 328 
-         Z" 
-      fill="#6D28D9" 
-      stroke="#8B5CF6" 
-      stroke-width="1.5" 
-    />
-
-    <!-- Right Page Wing -->
-    <path 
-      d="M 400 328 
-         C 360 326, 316 338, 276 352 
-         C 276 358, 282 364, 290 366 
-         C 332 364, 374 354, 406 342 
-         C 405 334, 403 330, 400 328 
-         Z" 
-      fill="#6D28D9" 
-      stroke="#8B5CF6" 
-      stroke-width="1.5" 
-    />
-
-    <!-- 5. Minimalist Foundation Line / Book Base (Website Purple #8B5CF6) -->
-    <path 
-      d="M 96 350 
-         C 142 376, 202 378, 256 360 
-         C 310 378, 370 376, 416 350" 
-      fill="none" 
-      stroke="#8B5CF6" 
-      stroke-width="16" 
-      stroke-linecap="round" 
-      stroke-linejoin="round" 
-    />
-  </g>
-</svg>"""
+    # Unify light and dark theme emblem so dark theme has the EXACT same official logo
+    light_emblem_svg = official_emblem_svg
+    dark_emblem_svg = official_emblem_svg
 
     # 3. HORIZONTAL LIGHT LOGO (920x320)
     horizontal_light_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="920" height="320" fill="none">
@@ -197,7 +117,7 @@ def generate_all_brand_assets():
     <line x1="182" y1="156" x2="204" y2="160" stroke="#1D1D1B" stroke-width="11" stroke-linecap="round" />
     <line x1="330" y1="156" x2="308" y2="160" stroke="#1D1D1B" stroke-width="11" stroke-linecap="round" />
 
-    <path d="M 256 142 L 286 182 L 266 182 L 266 210 L 246 210 L 246 182 L 226 182 Z" fill="#C96F55" stroke="#C96F55" stroke-width="2" stroke-linejoin="round" />
+    <path d="M 256 142 L 286 182 L 266 182 L 266 210 L 246 210 L 246 182 L 226 182 Z" fill="#1D1D1B" stroke="#1D1D1B" stroke-width="2" stroke-linejoin="round" />
 
     <path d="M 246 208 C 246 226, 204 246, 200 278 C 196 308, 230 334, 256 348 C 282 334, 316 308, 312 278 C 308 246, 266 226, 266 208 Z" fill="#C96F55" />
 
@@ -225,25 +145,25 @@ def generate_all_brand_assets():
   </g>
 </svg>"""
 
-    # 4. HORIZONTAL DARK LOGO (920x320)
+    # 4. HORIZONTAL DARK LOGO (920x320) - Official emblem embedded
     horizontal_dark_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="920" height="320" fill="none">
-  <rect width="920" height="320" rx="36" fill="#0A0714" stroke="#8B5CF6" stroke-opacity="0.3" stroke-width="2" />
+  <rect width="920" height="320" rx="36" fill="#141210" stroke="#FAF8F5" stroke-opacity="0.15" stroke-width="2" />
 
   <g transform="translate(24, 0) scale(0.62)">
-    <line x1="256" y1="88" x2="256" y2="124" stroke="#8B5CF6" stroke-width="12" stroke-linecap="round" />
-    <line x1="204" y1="116" x2="224" y2="134" stroke="#A78BFA" stroke-width="11" stroke-linecap="round" />
-    <line x1="308" y1="116" x2="288" y2="134" stroke="#A78BFA" stroke-width="11" stroke-linecap="round" />
-    <line x1="182" y1="156" x2="204" y2="160" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
-    <line x1="330" y1="156" x2="308" y2="160" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
+    <line x1="256" y1="88" x2="256" y2="124" stroke="#C96F55" stroke-width="12" stroke-linecap="round" />
+    <line x1="204" y1="116" x2="224" y2="134" stroke="#DEBAA2" stroke-width="11" stroke-linecap="round" />
+    <line x1="308" y1="116" x2="288" y2="134" stroke="#DEBAA2" stroke-width="11" stroke-linecap="round" />
+    <line x1="182" y1="156" x2="204" y2="160" stroke="#FAF8F5" stroke-width="11" stroke-linecap="round" />
+    <line x1="330" y1="156" x2="308" y2="160" stroke="#FAF8F5" stroke-width="11" stroke-linecap="round" />
 
-    <path d="M 256 142 L 286 182 L 266 182 L 266 210 L 246 210 L 246 182 L 226 182 Z" fill="#8B5CF6" stroke="#8B5CF6" stroke-width="2" stroke-linejoin="round" />
+    <path d="M 256 142 L 286 182 L 266 182 L 266 210 L 246 210 L 246 182 L 226 182 Z" fill="#FAF8F5" stroke="#FAF8F5" stroke-width="2" stroke-linejoin="round" />
 
-    <path d="M 246 208 C 246 226, 204 246, 200 278 C 196 308, 230 334, 256 348 C 282 334, 316 308, 312 278 C 308 246, 266 226, 266 208 Z" fill="#8B5CF6" />
+    <path d="M 246 208 C 246 226, 204 246, 200 278 C 196 308, 230 334, 256 348 C 282 334, 316 308, 312 278 C 308 246, 266 226, 266 208 Z" fill="#C96F55" />
 
-    <path d="M 112 328 C 152 326, 196 338, 236 352 C 236 358, 230 364, 222 366 C 180 364, 138 354, 106 342 C 107 334, 109 330, 112 328 Z" fill="#6D28D9" stroke="#8B5CF6" stroke-width="1.5" />
-    <path d="M 400 328 C 360 326, 316 338, 276 352 C 276 358, 282 364, 290 366 C 332 364, 374 354, 406 342 C 405 334, 403 330, 400 328 Z" fill="#6D28D9" stroke="#8B5CF6" stroke-width="1.5" />
+    <path d="M 112 328 C 152 326, 196 338, 236 352 C 236 358, 230 364, 222 366 C 180 364, 138 354, 106 342 C 107 334, 109 330, 112 328 Z" fill="#DEBAA2" stroke="#CCA389" stroke-width="1.5" />
+    <path d="M 400 328 C 360 326, 316 338, 276 352 C 276 358, 282 364, 290 366 C 332 364, 374 354, 406 342 C 405 334, 403 330, 400 328 Z" fill="#DEBAA2" stroke="#CCA389" stroke-width="1.5" />
 
-    <path d="M 96 350 C 142 376, 202 378, 256 360 C 310 378, 370 376, 416 350" fill="none" stroke="#8B5CF6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 96 350 C 142 376, 202 378, 256 360 C 310 378, 370 376, 416 350" fill="none" stroke="#FAF8F5" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
   </g>
 
   <g transform="translate(360, 0)">
@@ -259,7 +179,7 @@ def generate_all_brand_assets():
           font-size="48" 
           font-weight="700" 
           letter-spacing="0.5" 
-          fill="#8B5CF6">إنجز نفسك</text>
+          fill="#C96F55">إنجز نفسك</text>
   </g>
 </svg>"""
 
@@ -362,8 +282,8 @@ gsave
 -5 -11 10 22 5 roundrect fill
 grestore
 
-% 2. UPWARD ARROW (ALL ORANGE #C96F55 as requested)
-0.788 0.435 0.333 setrgbcolor
+% 2. UPWARD ARROW (SOLID BLACK #1D1D1B matching user logo)
+0.114 0.114 0.106 setrgbcolor
 newpath
 256 370 moveto
 284 328 lineto

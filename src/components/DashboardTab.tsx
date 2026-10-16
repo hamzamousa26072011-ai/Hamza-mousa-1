@@ -21,7 +21,8 @@ import {
   CheckSquare,
   TrendingUp,
   CalendarClock,
-  CalendarCheck
+  CalendarCheck,
+  Timer
 } from "lucide-react";
 import { Task } from "../types";
 import { FlipClockTimer } from "./FlipClockTimer";
@@ -370,8 +371,8 @@ export default function DashboardTab({
                     ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" 
                     : "text-[#C084FC] bg-[#8B5CF6]/15 border border-[#8B5CF6]/35"
                 } px-2 py-0.5 rounded-md flex items-center gap-1`}>
-                  {pomodoroMode === "work" ? <Brain size={10} /> : <Coffee size={10} />}
-                  <span>{pomodoroMode === "work" ? "Study Mode" : "Break Mode"}</span>
+                  <Timer size={10} />
+                  <span>{focusModeActive ? "Timer Active" : "Timer Ready"}</span>
                 </span>
                 {pomodoroCount > 0 && (
                   <span className={`text-[8px] font-mono ${
@@ -381,7 +382,7 @@ export default function DashboardTab({
                   </span>
                 )}
               </div>
-              <h2 className={`text-md font-extrabold ${isLight ? "text-[#1D1D1B]" : "text-white"} tracking-wide mt-2 font-sans`}>Pomodoro Study</h2>
+              <h2 className={`text-md font-extrabold ${isLight ? "text-[#1D1D1B]" : "text-white"} tracking-wide mt-2 font-sans`}>Study Timer</h2>
             </div>
             
             <div className={`flex items-center gap-1.5 py-1 px-2.5 rounded-full border text-[8px] font-mono tracking-widest uppercase font-bold ${

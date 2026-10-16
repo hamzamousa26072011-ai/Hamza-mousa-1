@@ -461,18 +461,10 @@ export default function App() {
       setFocusModeActive(false);
       pauseSoundscape();
       
-      if (pomodoroMode === "work") {
-        setStreak((prev) => prev + 1);
-        setPomodoroCompletedCount((prev) => prev + 1);
-        setCelebrationVisible(true);
-        setPomodoroMode("break");
-        setFocusMinutesSelected(10);
-        setFocusSecondsRemaining(10 * 60);
-      } else {
-        setPomodoroMode("work");
-        setFocusMinutesSelected(50);
-        setFocusSecondsRemaining(50 * 60);
-      }
+      setStreak((prev) => prev + 1);
+      setPomodoroCompletedCount((prev) => prev + 1);
+      setCelebrationVisible(true);
+      setFocusSecondsRemaining(focusMinutesSelected * 60);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -1585,7 +1577,7 @@ export default function App() {
                   ? "bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#E8D7C9]"
                   : "bg-[#120E22]/90 border-white/10 text-white hover:bg-[#1A1432]"
               }`}
-              title="Focus timer"
+              title="Timer"
             >
               <Clock size={13} className={focusModeActive ? (settings.themeMode === "light" ? "text-[#C96F55]" : "text-[#8B5CF6]") : settings.themeMode === "light" ? "text-[#77736B]" : "text-[#C4B5FD]"} />
               <span className="text-[11px] sm:text-xs">{formatFocusTime()}</span>

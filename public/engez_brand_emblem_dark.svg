@@ -1,25 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
-  <!-- Minimalist dark obsidian squircle container with purple glow border -->
-  <rect x="16" y="16" width="480" height="480" rx="104" fill="#0A0714" stroke="#8B5CF6" stroke-opacity="0.3" stroke-width="4" />
+  <!-- Minimalist warm ivory rounded container matching user logo -->
+  <rect x="16" y="16" width="480" height="480" rx="104" fill="#FAF8F5" stroke="#E8D7C9" stroke-width="4" />
 
-  <g id="engez-brand-mark-dark" transform="translate(0, 10)">
+  <g id="engez-brand-mark" transform="translate(0, 10)">
     <!-- 1. Radiating Sunburst Rays -->
-    <!-- Top Center Ray (Website Purple #8B5CF6) -->
-    <line x1="256" y1="88" x2="256" y2="124" stroke="#8B5CF6" stroke-width="12" stroke-linecap="round" />
+    <!-- Top Center Ray (Terracotta Orange #C96F55) -->
+    <line x1="256" y1="88" x2="256" y2="124" stroke="#C96F55" stroke-width="12" stroke-linecap="round" />
     
-    <!-- Top-Left Diagonal Ray (Soft Violet #A78BFA) -->
-    <line x1="204" y1="116" x2="224" y2="134" stroke="#A78BFA" stroke-width="11" stroke-linecap="round" />
+    <!-- Top-Left Diagonal Ray (Warm Sand #DEBAA2) -->
+    <line x1="204" y1="116" x2="224" y2="134" stroke="#DEBAA2" stroke-width="11" stroke-linecap="round" />
     
-    <!-- Top-Right Diagonal Ray (Soft Violet #A78BFA) -->
-    <line x1="308" y1="116" x2="288" y2="134" stroke="#A78BFA" stroke-width="11" stroke-linecap="round" />
+    <!-- Top-Right Diagonal Ray (Warm Sand #DEBAA2) -->
+    <line x1="308" y1="116" x2="288" y2="134" stroke="#DEBAA2" stroke-width="11" stroke-linecap="round" />
     
-    <!-- Far-Left Horizontal Ray (Light Lavender #C4B5FD) -->
-    <line x1="182" y1="156" x2="204" y2="160" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
+    <!-- Far-Left Horizontal Ray (Charcoal Black #1D1D1B) -->
+    <line x1="182" y1="156" x2="204" y2="160" stroke="#1D1D1B" stroke-width="11" stroke-linecap="round" />
     
-    <!-- Far-Right Horizontal Ray (Light Lavender #C4B5FD) -->
-    <line x1="330" y1="156" x2="308" y2="160" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
+    <!-- Far-Right Horizontal Ray (Charcoal Black #1D1D1B) -->
+    <line x1="330" y1="156" x2="308" y2="160" stroke="#1D1D1B" stroke-width="11" stroke-linecap="round" />
 
-    <!-- 2. Dynamic Upward Accomplishment Arrow (Website Purple #8B5CF6) -->
+    <!-- 2. Dynamic Upward Accomplishment Arrow (SOLID BLACK #1D1D1B matching user logo) -->
     <path 
       d="M 256 142 
          L 286 182 
@@ -29,13 +29,13 @@
          L 246 182 
          L 226 182 
          Z" 
-      fill="#8B5CF6" 
-      stroke="#8B5CF6" 
+      fill="#1D1D1B" 
+      stroke="#1D1D1B" 
       stroke-width="2" 
       stroke-linejoin="round" 
     />
 
-    <!-- 3. Central Flame / Bulb of Mastery (Purple #8B5CF6) -->
+    <!-- 3. Central Flame / Bulb of Mastery (Terracotta Orange #C96F55) -->
     <path 
       d="M 246 208 
          C 246 226, 204 246, 200 278 
@@ -43,10 +43,10 @@
          C 282 334, 316 308, 312 278 
          C 308 246, 266 226, 266 208 
          Z" 
-      fill="#8B5CF6" 
+      fill="#C96F55" 
     />
 
-    <!-- 4. Open Book Pages (Deep Purple #6D28D9) -->
+    <!-- 4. Open Book Pages (Warm Sand #DEBAA2) -->
     <!-- Left Page Wing -->
     <path 
       d="M 112 328 
@@ -55,8 +55,8 @@
          C 180 364, 138 354, 106 342 
          C 107 334, 109 330, 112 328 
          Z" 
-      fill="#6D28D9" 
-      stroke="#8B5CF6" 
+      fill="#DEBAA2" 
+      stroke="#CCA389" 
       stroke-width="1.5" 
     />
 
@@ -68,18 +68,18 @@
          C 332 364, 374 354, 406 342 
          C 405 334, 403 330, 400 328 
          Z" 
-      fill="#6D28D9" 
-      stroke="#8B5CF6" 
+      fill="#DEBAA2" 
+      stroke="#CCA389" 
       stroke-width="1.5" 
     />
 
-    <!-- 5. Minimalist Foundation Line / Book Base (Website Purple #8B5CF6) -->
+    <!-- 5. Minimalist Foundation Line / Book Base (Charcoal Obsidian #1D1D1B) -->
     <path 
       d="M 96 350 
          C 142 376, 202 378, 256 360 
          C 310 378, 370 376, 416 350" 
       fill="none" 
-      stroke="#8B5CF6" 
+      stroke="#1D1D1B" 
       stroke-width="16" 
       stroke-linecap="round" 
       stroke-linejoin="round" 

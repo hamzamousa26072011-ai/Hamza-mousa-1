@@ -51,7 +51,7 @@ export default function Sidebar({
     { id: "countdown", label: "Exam Countdown", icon: CalendarClock },
     { id: "habits", label: "Habit Tracker", icon: CalendarCheck },
     { id: "scholar", label: "Ai tutor", icon: Sparkles },
-    { id: "focus", label: "Focus Time", icon: Timer },
+    { id: "focus", label: "Timer", icon: Timer },
     { id: "apps", label: "Study Apps", icon: Compass },
     { id: "settings", label: "Settings", icon: Settings },
   ];

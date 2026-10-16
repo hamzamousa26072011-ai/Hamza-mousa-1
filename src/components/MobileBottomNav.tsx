@@ -43,7 +43,7 @@ export default function MobileBottomNav({
     { id: "countdown", label: "Exams", icon: CalendarClock },
     { id: "habits", label: "Habits", icon: CalendarCheck },
     { id: "scholar", label: "Tutor", icon: GraduationCap },
-    { id: "focus", label: "Focus", icon: Timer, isFocus: true },
+    { id: "focus", label: "Timer", icon: Timer, isFocus: true },
     { id: "apps", label: "Apps", icon: Compass },
     { id: "settings", label: "Settings", icon: Settings }
   ];
