@@ -1,6 +1,7 @@
-// Web Audio API Procedural Ambient Soundscapes Synthesizer
-// Synthesizes: Silent and White Noise (Gentle Rain with Soft Droplets)
-// 100% client-side, zero external assets, instant zero-latency playback
+// High-Fidelity Artificial Calm Rain Soundscape (Web Audio API)
+// Seamless, continuous, gentle rain sound with soft drops
+// Uses /custom_calm_rain.mp3 (with /custom_calm_rain.wav & procedural fallback)
+// Completely steady & soothing — NO water pouring or shower rush
 
 export type SoundscapeType = "silent" | "white_noise";
 
@@ -19,10 +20,11 @@ export const SOUNDSCAPE_OPTIONS: SoundscapeOption[] = [
 let audioCtx: AudioContext | null = null;
 let currentSoundscape: SoundscapeType = "silent";
 let masterGainNode: GainNode | null = null;
-let activeSourceNode: AudioNode | null = null;
-let activeInterval: any = null;
+let rainSourceNode: AudioBufferSourceNode | null = null;
 let currentVolume = 0.6;
 let isSoundscapePaused = false;
+let rainAudioBuffer: AudioBuffer | null = null;
+let isPreloading = false;
 
 function getAudioContext(): AudioContext {
   if (!audioCtx) {
@@ -35,7 +37,7 @@ function getAudioContext(): AudioContext {
   return audioCtx;
 }
 
-// Ensure master gain is initialized
+// Master Gain Node for smooth volume control
 function getMasterGain(ctx: AudioContext): GainNode {
   if (!masterGainNode) {
     masterGainNode = ctx.createGain();
@@ -45,21 +47,20 @@ function getMasterGain(ctx: AudioContext): GainNode {
   return masterGainNode;
 }
 
-// Cached rain noise buffer
-let cachedRainBuffer: AudioBuffer | null = null;
+/**
+ * Procedural fallback buffer in case audio file cannot be loaded (e.g. offline/network err)
+ */
+function createProceduralCalmRainBuffer(ctx: AudioContext): AudioBuffer {
+  const durationSec = 8;
+  const sampleRate = ctx.sampleRate;
+  const numSamples = sampleRate * durationSec;
+  const buffer = ctx.createBuffer(2, numSamples, sampleRate);
 
-// RAIN NOISE BUFFER (Pink & Brown noise mix for realistic soft rainfall)
-function createRainBuffer(ctx: AudioContext): AudioBuffer {
-  if (cachedRainBuffer && cachedRainBuffer.sampleRate === ctx.sampleRate) {
-    return cachedRainBuffer;
-  }
-
-  const bufferSize = ctx.sampleRate * 4;
-  const buffer = ctx.createBuffer(2, bufferSize, ctx.sampleRate);
   for (let ch = 0; ch < 2; ch++) {
     const data = buffer.getChannelData(ch);
     let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-    for (let i = 0; i < bufferSize; i++) {
+
+    for (let i = 0; i < numSamples; i++) {
       const white = Math.random() * 2 - 1;
       b0 = 0.99886 * b0 + white * 0.0555179;
       b1 = 0.99332 * b1 + white * 0.0750759;
@@ -67,83 +68,109 @@ function createRainBuffer(ctx: AudioContext): AudioBuffer {
       b3 = 0.86650 * b3 + white * 0.3104856;
       b4 = 0.55000 * b4 + white * 0.5329522;
       b5 = -0.7616 * b5 - white * 0.0168980;
-      const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.12;
+      const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.07;
       b6 = white * 0.115926;
-      data[i] = pink;
+
+      const t = i / sampleRate;
+      const subtleBreath = 1.0 + 0.06 * Math.sin(2 * Math.PI * 0.1 * t + (ch === 1 ? 0.8 : 0));
+      data[i] = pink * subtleBreath;
     }
   }
 
-  // Crossfade at boundaries for seamless infinite looping
-  const xfade = Math.floor(0.1 * ctx.sampleRate);
+  // Crossfade ends for loop
+  const xfadeLen = Math.floor(0.3 * sampleRate);
   for (let ch = 0; ch < 2; ch++) {
     const data = buffer.getChannelData(ch);
-    for (let i = 0; i < xfade; i++) {
-      const alpha = i / xfade;
-      const endIdx = bufferSize - xfade + i;
-      data[i] = data[endIdx] * (1 - alpha) + data[i] * alpha;
+    for (let i = 0; i < xfadeLen; i++) {
+      const alpha = i / xfadeLen;
+      const startIdx = i;
+      const endIdx = numSamples - xfadeLen + i;
+      data[startIdx] = data[endIdx] * (1 - alpha) + data[startIdx] * alpha;
     }
   }
 
-  cachedRainBuffer = buffer;
   return buffer;
 }
 
-// Random Rain Droplet transient (organic soft clicks & water drops)
-function playSoftRainDrop(ctx: AudioContext, target: GainNode) {
-  try {
-    const osc = ctx.createOscillator();
-    const dropGain = ctx.createGain();
-    const baseFreq = 700 + Math.random() * 800;
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.3, ctx.currentTime + 0.07);
+/**
+ * Pre-fetch and decode the calm rain audio file into memory for instant zero-latency playback
+ */
+export async function preloadRainAudio(): Promise<AudioBuffer | null> {
+  if (rainAudioBuffer) return rainAudioBuffer;
+  if (isPreloading) return null;
+  if (typeof window === "undefined") return null;
 
-    dropGain.gain.setValueAtTime(0.001, ctx.currentTime);
-    dropGain.gain.linearRampToValueAtTime(0.03 + Math.random() * 0.02, ctx.currentTime + 0.01);
-    dropGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.07);
+  isPreloading = true;
+  const ctx = getAudioContext();
 
-    osc.connect(dropGain);
-    dropGain.connect(target);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.08);
-  } catch {}
-}
+  const candidateUrls = [
+    "/custom_calm_rain.mp3",
+    "/custom_calm_rain.wav",
+  ];
 
-// Stop current playing nodes completely
-export function stopAllSoundscapes() {
-  isSoundscapePaused = false;
-  if (activeInterval) {
-    clearInterval(activeInterval);
-    activeInterval = null;
+  for (const url of candidateUrls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const arrayBuffer = await res.arrayBuffer();
+      const decoded = await ctx.decodeAudioData(arrayBuffer);
+      if (decoded && decoded.duration > 0) {
+        rainAudioBuffer = decoded;
+        isPreloading = false;
+        return decoded;
+      }
+    } catch {
+      // try next candidate
+    }
   }
 
-  if (activeSourceNode) {
+  // Fallback if network fails
+  rainAudioBuffer = createProceduralCalmRainBuffer(ctx);
+  isPreloading = false;
+  return rainAudioBuffer;
+}
+
+// Automatically trigger preload on load in browser environment
+if (typeof window !== "undefined") {
+  setTimeout(() => {
+    preloadRainAudio().catch(() => {});
+  }, 300);
+}
+
+// Stop all sound synthesis completely
+export function stopAllSoundscapes() {
+  isSoundscapePaused = false;
+
+  if (rainSourceNode) {
     try {
-      (activeSourceNode as any).stop?.();
-      activeSourceNode.disconnect();
+      rainSourceNode.stop();
+      rainSourceNode.disconnect();
     } catch {}
-    activeSourceNode = null;
+    rainSourceNode = null;
   }
 
   currentSoundscape = "silent";
 }
 
-// Pause current soundscape (e.g. when timer paused)
+// Pause rain sound (e.g. when timer paused)
 export function pauseSoundscape() {
   if (currentSoundscape === "silent") return;
   isSoundscapePaused = true;
+
   if (audioCtx && audioCtx.state === "running") {
     audioCtx.suspend().catch(() => {});
   }
 }
 
-// Resume soundscape when timer resumed
+// Resume rain sound when timer resumes
 export function resumeSoundscape() {
   if (currentSoundscape === "silent") return;
   isSoundscapePaused = false;
+
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume().catch(() => {});
   }
+
   setSoundscape(currentSoundscape, currentVolume);
 }
 
@@ -151,8 +178,8 @@ export function isSoundscapePausedState(): boolean {
   return isSoundscapePaused;
 }
 
-// Start or Switch Soundscape
-export function setSoundscape(type: SoundscapeType, volume = currentVolume) {
+// Start or Switch Soundscape to artificial gentle rain
+export async function setSoundscape(type: SoundscapeType, volume = currentVolume) {
   currentVolume = Math.max(0.0, Math.min(1.0, volume));
 
   if (type === "silent") {
@@ -162,73 +189,73 @@ export function setSoundscape(type: SoundscapeType, volume = currentVolume) {
   }
 
   isSoundscapePaused = false;
+  currentSoundscape = "white_noise";
 
   try {
     const ctx = getAudioContext();
     if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
+      await ctx.resume().catch(() => {});
     }
 
-    // Stop whatever was playing before
-    if (activeInterval) {
-      clearInterval(activeInterval);
-      activeInterval = null;
-    }
-    if (activeSourceNode) {
+    // Stop existing node if playing
+    if (rainSourceNode) {
       try {
-        (activeSourceNode as any).stop?.();
-        activeSourceNode.disconnect();
+        rainSourceNode.stop();
+        rainSourceNode.disconnect();
       } catch {}
-      activeSourceNode = null;
+      rainSourceNode = null;
     }
 
     const master = getMasterGain(ctx);
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(currentVolume, ctx.currentTime);
-    currentSoundscape = type;
 
-    // White Noise (gentle rain with soft droplets)
-    const rain = ctx.createBufferSource();
-    rain.buffer = createRainBuffer(ctx);
-    rain.loop = true;
+    // Get buffer (cached, preloaded, or fallback)
+    let buffer = rainAudioBuffer;
+    if (!buffer) {
+      buffer = await preloadRainAudio();
+    }
+    if (!buffer) {
+      buffer = createProceduralCalmRainBuffer(ctx);
+    }
 
-    const lowPass = ctx.createBiquadFilter();
-    lowPass.type = "lowpass";
-    lowPass.frequency.setValueAtTime(1600, ctx.currentTime);
+    // If user switched back to silent while loading, abort
+    if (currentSoundscape !== "white_noise") return;
 
+    // Create highpass filter to eliminate sub-bass rumble
     const highPass = ctx.createBiquadFilter();
     highPass.type = "highpass";
-    highPass.frequency.setValueAtTime(220, ctx.currentTime);
+    highPass.frequency.setValueAtTime(200, ctx.currentTime);
+    highPass.Q.setValueAtTime(0.5, ctx.currentTime);
 
-    const rainGain = ctx.createGain();
-    rainGain.gain.setValueAtTime(0.75, ctx.currentTime);
+    // Create lowpass filter to remove harshness above 12000Hz
+    const lowPass = ctx.createBiquadFilter();
+    lowPass.type = "lowpass";
+    lowPass.frequency.setValueAtTime(11000, ctx.currentTime);
 
-    rain.connect(highPass);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    // Connect: source -> highPass -> lowPass -> master -> destination
+    source.connect(highPass);
     highPass.connect(lowPass);
-    lowPass.connect(rainGain);
-    rainGain.connect(master);
-    rain.start(0);
+    lowPass.connect(master);
 
-    activeSourceNode = rain;
+    source.start(0);
+    rainSourceNode = source;
 
-    // Organic soft rain droplets
-    activeInterval = setInterval(() => {
-      if (currentSoundscape === "white_noise" && ctx.state === "running") {
-        if (Math.random() > 0.45) {
-          playSoftRainDrop(ctx, rainGain);
-        }
-      }
-    }, 190);
   } catch (err) {
-    console.warn("Soundscape synthesizer error:", err);
+    console.warn("White noise soundscape playback error:", err);
   }
 }
 
-// Update volume dynamically
+// Update volume dynamically with smooth ramp
 export function setSoundscapeVolume(vol: number) {
   currentVolume = Math.max(0.0, Math.min(1.0, vol));
+
   if (masterGainNode && audioCtx) {
-    masterGainNode.gain.linearRampToValueAtTime(currentVolume, audioCtx.currentTime + 0.1);
+    masterGainNode.gain.linearRampToValueAtTime(currentVolume, audioCtx.currentTime + 0.05);
   }
 }
 

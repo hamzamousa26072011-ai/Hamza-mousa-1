@@ -1255,7 +1255,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   placeholder="e.g. Mathematics Paper 1"
                   className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium transition outline-none ${
                     isLight 
-                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
                       : "bg-[#161228] border-white/10 text-white placeholder-slate-500 focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                   }`}
                 />
@@ -1275,7 +1275,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     onChange={(e) => setExamForm({ ...examForm, examDate: e.target.value })}
                     className={`w-full pl-11 pr-4 py-3 rounded-2xl border text-sm font-medium transition outline-none cursor-pointer ${
                       isLight 
-                        ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                        ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
                         : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                     }`}
                   />
@@ -1307,7 +1307,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     placeholder="09"
                     className={`w-14 text-center py-2.5 px-2 rounded-2xl border font-mono text-sm font-bold transition outline-none ${
                       isLight 
-                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
                         : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                     }`}
                   />
@@ -1330,7 +1330,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     placeholder="00"
                     className={`w-14 text-center py-2.5 px-2 rounded-2xl border font-mono text-sm font-bold transition outline-none ${
                       isLight 
-                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
                         : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                     }`}
                   />
@@ -1349,7 +1349,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   placeholder="Add any additional details about the exam. You can add line breaks."
                   className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium transition outline-none resize-y ${
                     isLight 
-                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/15" 
+                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
                       : "bg-[#161228] border-white/10 text-white placeholder-slate-500 focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                   }`}
                 />
@@ -1379,7 +1379,9 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                         onClick={() => setExamForm({ ...examForm, cardColor: colorOpt.id as any })}
                         className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
                           isSelected
-                            ? "bg-[#4F46E5] text-white shadow-md shadow-[#4F46E5]/25 border border-transparent font-semibold"
+                            ? isLight
+                              ? "bg-[#C96F55] text-white shadow-md shadow-[#C96F55]/25 border border-transparent font-semibold"
+                              : "bg-[#4F46E5] text-white shadow-md shadow-[#4F46E5]/25 border border-transparent font-semibold"
                             : isLight
                             ? "bg-white border border-[#D5D2CA] text-[#1D1D1B] hover:bg-[#F3EFEA]"
                             : "bg-[#161228] border border-white/10 text-slate-200 hover:bg-[#20173A]"
@@ -1415,7 +1417,11 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-2xl bg-[#4F46E5] hover:bg-[#4338CA] text-white text-sm font-semibold shadow-md shadow-[#4F46E5]/30 active:scale-95 transition cursor-pointer"
+                  className={`px-6 py-2.5 rounded-2xl ${
+                    isLight
+                      ? "bg-[#C96F55] hover:bg-[#B85F48] shadow-[#C96F55]/30"
+                      : "bg-[#4F46E5] hover:bg-[#4338CA] shadow-[#4F46E5]/30"
+                  } text-white text-sm font-semibold shadow-md active:scale-95 transition cursor-pointer`}
                 >
                   Save
                 </button>

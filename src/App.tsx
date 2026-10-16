@@ -52,8 +52,10 @@ import {
   Zap,
   Key,
   RefreshCw,
-  X
+  X,
+  HelpCircle
 } from "lucide-react";
+import UserGuideModal from "./components/UserGuideModal";
 
 // Import modular components
 import Sidebar from "./components/Sidebar";
@@ -82,6 +84,24 @@ import {
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+
+  // User Guide Modal: opens automatically ONLY on 1st time visit, and can be reopened anytime
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem("ENGEZ_USER_GUIDE_SEEN_V1");
+    if (!hasSeenGuide) {
+      const timer = setTimeout(() => {
+        setIsGuideOpen(true);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCloseGuide = () => {
+    setIsGuideOpen(false);
+    localStorage.setItem("ENGEZ_USER_GUIDE_SEEN_V1", "true");
+  };
 
   // Security Lockdown State
   const [securityLockdown, setSecurityLockdown] = useState<{
@@ -1584,6 +1604,20 @@ export default function App() {
               {focusModeActive && <span className={`w-1.5 h-1.5 ${settings.themeMode === "light" ? "bg-[#C96F55]" : "bg-[#8B5CF6]"} rounded-full animate-ping`} />}
             </button>
 
+            {/* User Guide Button */}
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer min-h-[38px] ${
+                settings.themeMode === "light"
+                  ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E8D7C9] text-[#1D1D1B]"
+                  : "bg-[#120E22]/90 hover:bg-[#1A1432] border-white/10 text-white"
+              }`}
+              title="How to Use Website / User Guide"
+            >
+              <HelpCircle size={14} className={settings.themeMode === "light" ? "text-[#C96F55]" : "text-indigo-400"} />
+              <span className="hidden sm:inline">Guide</span>
+            </button>
+
             {/* Streak Badge */}
             <div className={`px-2.5 sm:px-3 py-1.5 rounded-xl ${
               settings.themeMode === "light"
@@ -1816,6 +1850,7 @@ export default function App() {
                   onGoogleLogin={handleGoogleLogin}
                   onOpenPrivacyPolicy={() => setIsPrivacyModalOpen(true)}
                   onOpenDnsModal={() => setShowDnsModal(true)}
+                  onOpenUserGuide={() => setIsGuideOpen(true)}
                   isGoogleLoading={isGoogleLoading}
                   themeMode={settings.themeMode}
                 />
@@ -2379,6 +2414,17 @@ export default function App() {
         isOpen={showDnsModal}
         onClose={() => setShowDnsModal(false)}
         themeMode={settings.themeMode}
+      />
+
+      {/* INTERACTIVE SMOOTH-ANIMATED USER GUIDE (Auto-shown on 1st visit) */}
+      <UserGuideModal
+        isOpen={isGuideOpen}
+        onClose={handleCloseGuide}
+        themeMode={settings.themeMode}
+        onNavigateTab={(tab) => {
+          setCurrentTab(tab);
+          handleCloseGuide();
+        }}
       />
 
     </div>

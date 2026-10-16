@@ -12,7 +12,8 @@ import {
   ShieldCheck, 
   UserCheck, 
   Loader2, 
-  Check
+  Check,
+  HelpCircle
 } from "lucide-react";
 import { AppSettings } from "../types";
 import { User } from "firebase/auth";
@@ -29,6 +30,7 @@ interface SettingsTabProps {
   onGoogleLogin?: () => Promise<void> | void;
   onOpenPrivacyPolicy?: () => void;
   onOpenDnsModal?: () => void;
+  onOpenUserGuide?: () => void;
   isGoogleLoading?: boolean;
   themeMode?: "light" | "dark";
 }
@@ -56,6 +58,7 @@ export default function SettingsTab({
   onGoogleLogin,
   onOpenPrivacyPolicy,
   onOpenDnsModal,
+  onOpenUserGuide,
   isGoogleLoading = false,
   themeMode = "dark"
 }: SettingsTabProps) {
@@ -426,15 +429,27 @@ export default function SettingsTab({
               <ShieldCheck size={13} />
               <span>Zero-Retention Student AI Shield</span>
             </span>
-            {onOpenPrivacyPolicy && (
-              <button
-                type="button"
-                onClick={onOpenPrivacyPolicy}
-                className="underline hover:text-[#C96F55] transition cursor-pointer font-bold"
-              >
-                Privacy Policy & Data Controls
-              </button>
-            )}
+            <div className="flex flex-wrap items-center gap-3">
+              {onOpenUserGuide && (
+                <button
+                  type="button"
+                  onClick={onOpenUserGuide}
+                  className="hover:text-[#C96F55] transition cursor-pointer font-bold flex items-center gap-1 text-[10px]"
+                >
+                  <HelpCircle size={12} />
+                  <span>Interactive User Guide</span>
+                </button>
+              )}
+              {onOpenPrivacyPolicy && (
+                <button
+                  type="button"
+                  onClick={onOpenPrivacyPolicy}
+                  className="underline hover:text-[#C96F55] transition cursor-pointer font-bold"
+                >
+                  Privacy Policy & Data Controls
+                </button>
+              )}
+            </div>
           </div>
 
         </div>

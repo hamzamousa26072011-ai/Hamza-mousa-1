@@ -36,7 +36,7 @@ import {
 } from "../lib/ambientSoundscapes";
 import { FlipClockTimer } from "./FlipClockTimer";
 
-export type TimerModeType = "p2" | "p4" | "p6" | "custom";
+export type TimerModeType = "p2" | "p4" | "p6" | "math" | "custom";
 
 interface FocusTabProps {
   focusModeActive: boolean;
@@ -76,11 +76,13 @@ export default function FocusTab({
   // P2: exactly 45 min
   // P4: 1 hour 15 min = 75 min
   // P6: 1 hour = 60 min
+  // Math: 2 hours = 120 min
   // Otherwise: custom
   const determineMode = (mins: number): TimerModeType => {
     if (mins === 45) return "p2";
     if (mins === 75) return "p4";
     if (mins === 60) return "p6";
+    if (mins === 120) return "math";
     return "custom";
   };
 
@@ -313,6 +315,12 @@ export default function FocusTab({
       setCustomHours(1);
       setCustomMinutes(0);
       setIsCustomEditing(false);
+    } else if (mode === "math") {
+      // Math: exactly 2 hours = 120 min
+      onDurationChange(120);
+      setCustomHours(2);
+      setCustomMinutes(0);
+      setIsCustomEditing(false);
     } else if (mode === "custom") {
       setIsCustomEditing(true);
     }
@@ -360,6 +368,7 @@ export default function FocusTab({
     if (activeMode === "p2") return "P2 (45 min)";
     if (activeMode === "p4") return "P4 (1h 15m)";
     if (activeMode === "p6") return "P6 (1 hour)";
+    if (activeMode === "math") return "Math (2 hours)";
     return `Custom (${focusMinutesSelected}m)`;
   };
 
@@ -435,6 +444,17 @@ export default function FocusTab({
                   </button>
 
                   <button
+                    onClick={() => handleSelectMode("math")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer ${
+                      activeMode === "math"
+                        ? isLight ? "bg-[#C96F55] text-white shadow-xs font-extrabold" : "bg-indigo-600 text-white shadow-md font-extrabold"
+                        : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Math · 2h
+                  </button>
+
+                  <button
                     onClick={() => handleSelectMode("custom")}
                     className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer ${
                       activeMode === "custom"
@@ -451,14 +471,16 @@ export default function FocusTab({
                   <button
                     onClick={handleQuickToggleSound}
                     className={`py-2 px-3 ${
-                      isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
+                      isLight 
+                        ? selectedSoundscape !== "silent" ? "bg-[#FFF1EC] border-[#C96F55] text-[#C96F55]" : "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" 
+                        : selectedSoundscape !== "silent" ? "bg-indigo-600 hover:bg-indigo-500 border-indigo-600 text-white shadow-md shadow-indigo-600/20" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
                     } border rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer`}
                     title={selectedSoundscape !== "silent" ? "Sound: White Noise (Gentle Rain)" : "Quiet (Click to play White Noise)"}
                   >
                     {selectedSoundscape === "silent" ? (
                       <VolumeX size={13} className={isLight ? "text-[#77736B]" : "text-slate-400"} />
                     ) : (
-                      <Volume2 size={13} className="text-[#C96F55] animate-pulse" />
+                      <Volume2 size={13} className={isLight ? "text-[#C96F55] animate-pulse" : "text-white animate-pulse"} />
                     )}
                     <span className="text-[11px]">
                       {selectedSoundscape === "silent" ? "Quiet" : "White Noise"}
@@ -614,7 +636,7 @@ export default function FocusTab({
             </div>
             <h1 className={`text-2xl md:text-3xl font-black ${isLight ? "text-[#1D1D1B]" : "text-white"} mt-2`}>Timer</h1>
             <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} max-w-xl mt-0.5`}>
-              Exam countdown for Paper 2 (45m), Paper 4 (1h 15m), Paper 6 (1h), or type any custom study time.
+              Exam countdown for Paper 2 (45m), Paper 4 (1h 15m), Paper 6 (1h), Math (2h), or type any custom study time.
             </p>
           </div>
 
@@ -679,7 +701,7 @@ export default function FocusTab({
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {/* Mode P2: exactly 45 min */}
               <button
                 type="button"
@@ -776,6 +798,39 @@ export default function FocusTab({
                 </div>
                 <p className={`text-[10px] font-mono leading-tight ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
                   Paper 6 · 60 minutes
+                </p>
+              </button>
+
+              {/* Mode Math: exactly 2 hours (120m) */}
+              <button
+                type="button"
+                onClick={() => handleSelectMode("math")}
+                className={`py-3 px-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                  activeMode === "math"
+                    ? isLight
+                      ? "bg-[#FFF1EC] border-[#C96F55] shadow-xs ring-1 ring-[#C96F55]"
+                      : "bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500/50"
+                    : isLight
+                    ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] border-[#E8D7C9]"
+                    : "bg-[#101524] hover:bg-[#151D33] border-white/10"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-mono font-extrabold uppercase ${
+                    activeMode === "math" ? (isLight ? "text-[#C96F55]" : "text-indigo-300") : (isLight ? "text-[#1D1D1B]" : "text-white")
+                  }`}>
+                    Math
+                  </span>
+                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
+                    activeMode === "math"
+                      ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white"
+                      : isLight ? "bg-[#E8D7C9] text-[#1D1D1B]" : "bg-white/10 text-slate-300"
+                  }`}>
+                    2 hours
+                  </span>
+                </div>
+                <p className={`text-[10px] font-mono leading-tight ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
+                  Mathematics · 120 minutes
                 </p>
               </button>
 
@@ -1056,9 +1111,9 @@ export default function FocusTab({
                   </span>
                 ) : focusModeActive ? (
                   <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full ${
-                    isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-[#C96F55]/20 text-[#C96F55] border border-[#C96F55]/30"
+                    isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30"
                   } flex items-center gap-1 animate-pulse`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#C96F55]" />
+                    <span className={`w-1.5 h-1.5 rounded-full ${isLight ? "bg-[#C96F55]" : "bg-indigo-400"}`} />
                     Playing White Noise
                   </span>
                 ) : (
@@ -1111,7 +1166,9 @@ export default function FocusTab({
                 onClick={() => handleSelectSoundscape("white_noise")}
                 className={`py-3.5 px-3 rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer border select-none ${
                   selectedSoundscape === "white_noise"
-                    ? "bg-[#C96F55] text-white border-[#C96F55] shadow-md -translate-y-0.5"
+                    ? isLight
+                      ? "bg-[#C96F55] text-white border-[#C96F55] shadow-md -translate-y-0.5"
+                      : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600 shadow-md shadow-indigo-600/30 -translate-y-0.5"
                     : isLight
                     ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] text-[#77736B] border-[#E8D7C9]"
                     : "bg-[#101524] hover:bg-[#151D33] text-slate-400 border-white/10"
