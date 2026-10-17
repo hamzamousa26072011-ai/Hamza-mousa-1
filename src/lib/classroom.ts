@@ -12,7 +12,7 @@ import {
   sendEmailVerification,
   reload
 } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { initializeFirestore, getFirestore, doc, getDoc, getDocFromServer, setDoc, serverTimestamp } from "firebase/firestore";
 import firebaseDefaultConfig from "../../firebase-applet-config.json";
 
 export const CANONICAL_CUSTOM_DOMAIN = "engeznafsak.com";
@@ -71,19 +71,33 @@ const app = initializeApp(activeFirebaseConfig);
 export const auth = getAuth(app);
 
 // Determine Firestore database instance:
-// If custom project is used, default to standard Firestore (default) database unless explicitly specified.
-const isCustomProjectActive = (
-  (activeFirebaseConfig as any).projectId === "engez-nafsak" ||
-  (typeof window !== "undefined" && (
-    !!localStorage.getItem("ENGEZ_FIREBASE_CONFIG") ||
-    !!(import.meta as any)?.env?.VITE_FIREBASE_PROJECT_ID
-  ))
-);
+// The provisioned database ID for this AI Studio project is "ai-studio-engeznafsak-86c23a66-749d-4225-a308-02cd0e3275d0"
+const rawDbId = (activeFirebaseConfig as any)?.firestoreDatabaseId || (firebaseDefaultConfig as any)?.firestoreDatabaseId;
+const targetDbId = (rawDbId && rawDbId !== "(default)") ? rawDbId : undefined;
 
-const customDbId = (activeFirebaseConfig as any).firestoreDatabaseId;
-export const db = (!isCustomProjectActive && customDbId && customDbId !== "(default)")
-  ? getFirestore(app, customDbId)
-  : getFirestore(app);
+let firestoreInstance: ReturnType<typeof getFirestore>;
+try {
+  firestoreInstance = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+  }, targetDbId);
+} catch {
+  firestoreInstance = targetDbId ? getFirestore(app, targetDbId) : getFirestore(app);
+}
+
+export const db = firestoreInstance;
+
+// Validate connection to Firestore on initial boot as mandated by Firebase integration rules
+if (typeof window !== "undefined") {
+  (async () => {
+    try {
+      await getDocFromServer(doc(db, "test", "connection"));
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("the client is offline")) {
+        console.warn("Please check your Firebase configuration: Firestore client is offline.");
+      }
+    }
+  })();
+}
 
 export interface SavedFirebaseProjectConfig {
   projectId: string;

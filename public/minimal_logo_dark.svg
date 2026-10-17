@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <defs>
+    <linearGradient id="engez-dark-flame" x1="256" y1="208" x2="256" y2="348" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C084FC" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#6D28D9" />
+    </linearGradient>
+    <linearGradient id="engez-dark-border" x1="16" y1="16" x2="496" y2="496" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.55" />
+      <stop offset="50%" stop-color="#A855F7" stop-opacity="0.30" />
+      <stop offset="100%" stop-color="#6D28D9" stop-opacity="0.50" />
+    </linearGradient>
+    <radialGradient id="engez-dark-glow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#140E26" />
+      <stop offset="65%" stop-color="#0A0714" />
+      <stop offset="100%" stop-color="#05030A" />
+    </radialGradient>
+  </defs>
+
+  <!-- Deep Obsidian & Violet surface container matching website dark theme -->
+  <rect x="16" y="16" width="480" height="480" rx="104" fill="url(#engez-dark-glow)" stroke="url(#engez-dark-border)" stroke-width="4" />
+
+  <g id="engez-brand-mark" transform="translate(0, 10)">
+    <!-- 1. Radiating Sunburst Rays -->
+    <!-- Top Center Ray: Neon Violet / Purple (#A855F7) -->
+    <line x1="256" y1="88" x2="256" y2="124" stroke="#A855F7" stroke-width="12" stroke-linecap="round" />
+    
+    <!-- Top-Left Diagonal Ray: Soft Lavender (#C4B5FD) -->
+    <line x1="204" y1="116" x2="224" y2="134" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
+    
+    <!-- Top-Right Diagonal Ray: Soft Lavender (#C4B5FD) -->
+    <line x1="308" y1="116" x2="288" y2="134" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
+    
+    <!-- Far-Left Horizontal Ray: Crisp Pure White (#FFFFFF) -->
+    <line x1="182" y1="156" x2="204" y2="160" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" />
+    
+    <!-- Far-Right Horizontal Ray: Crisp Pure White (#FFFFFF) -->
+    <line x1="330" y1="156" x2="308" y2="160" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" />
+
+    <!-- 2. Dynamic Upward Accomplishment Arrow: Crisp Pure White (#FFFFFF) -->
+    <path 
+      d="M 256 142 
+         L 286 182 
+         L 266 182 
+         L 266 210 
+         L 246 210 
+         L 246 182 
+         L 226 182 
+         Z" 
+      fill="#FFFFFF" 
+      stroke="#FFFFFF" 
+      stroke-width="2" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- 3. Central Flame / Bulb of Mastery: Neon Violet Gradient (#8B5CF6 -> #6D28D9) -->
+    <path 
+      d="M 246 208 
+         C 246 226, 204 246, 200 278 
+         C 196 308, 230 334, 256 348 
+         C 282 334, 316 308, 312 278 
+         C 308 246, 266 226, 266 208 
+         Z" 
+      fill="url(#engez-dark-flame)" 
+      stroke="#A855F7"
+      stroke-width="1.5"
+    />
+
+    <!-- 4. Open Book Pages: Luminous Lavender Wings (#C4B5FD) -->
+    <!-- Left Page Wing -->
+    <path 
+      d="M 112 328 
+         C 152 326, 196 338, 236 352 
+         C 236 358, 230 364, 222 366 
+         C 180 364, 138 354, 106 342 
+         C 107 334, 109 330, 112 328 
+         Z" 
+      fill="#C4B5FD" 
+      stroke="#A78BFA" 
+      stroke-width="1.5" 
+    />
+
+    <!-- Right Page Wing -->
+    <path 
+      d="M 400 328 
+         C 360 326, 316 338, 276 352 
+         C 276 358, 282 364, 290 366 
+         C 332 364, 374 354, 406 342 
+         C 405 334, 403 330, 400 328 
+         Z" 
+      fill="#C4B5FD" 
+      stroke="#A78BFA" 
+      stroke-width="1.5" 
+    />
+
+    <!-- 5. Minimalist Foundation Line / Book Base: Crisp Pure White (#FFFFFF) -->
+    <path 
+      d="M 96 350 
+         C 142 376, 202 378, 256 360 
+         C 310 378, 370 376, 416 350" 
+      fill="none" 
+      stroke="#FFFFFF" 
+      stroke-width="16" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+    />
+  </g>
+</svg>

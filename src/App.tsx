@@ -73,6 +73,7 @@ import { DomainDnsModal } from "./components/DomainDnsModal";
 import { ExamCountdownTab } from "./components/ExamCountdownTab";
 import { ExamItem, FriendItem } from "./types";
 import { CyberWaveBackground } from "./components/CyberWaveBackground";
+import { EngezBrandLogo } from "./components/EngezBrandLogo";
 import { pauseSoundscape } from "./lib/ambientSoundscapes";
 import { 
   checkPayloadForThreats, 
@@ -644,10 +645,17 @@ export default function App() {
       root.setAttribute("data-theme", "engez-dark");
     }
 
-    // Dynamically update favicon to match the active theme
+    // Dynamically update favicon and touch icons to match the active theme
     const favicon = document.querySelector<HTMLLinkElement>("link[rel*='icon']");
+    const appleIcon = document.querySelector<HTMLLinkElement>("link[rel='apple-touch-icon']");
+    const iconPath = settings.themeMode === "light" 
+      ? "/engez_brand_emblem.svg?v=3" 
+      : "/engez_brand_emblem_dark.svg?v=3";
     if (favicon) {
-      favicon.href = settings.themeMode === "light" ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg";
+      favicon.href = iconPath;
+    }
+    if (appleIcon) {
+      appleIcon.href = iconPath;
     }
   }, [settings]);
 
@@ -1574,13 +1582,9 @@ export default function App() {
             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${
               settings.themeMode === "light" 
                 ? "bg-[#FAF8F5] border-[#E8D7C9] shadow-xs" 
-                : "bg-[#141210] border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+                : "bg-[#0A0714] border-[#8B5CF6]/30 shadow-[0_4px_12px_rgba(139,92,246,0.2)]"
             } border p-0.5 flex items-center justify-center shrink-0 overflow-hidden hover:scale-105 transition-transform`}>
-              <img 
-                src={settings.themeMode === "light" ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg"} 
-                alt="Engez Nafsak" 
-                className="w-full h-full object-contain" 
-              />
+              <EngezBrandLogo themeMode={settings.themeMode} withContainer={false} className="w-full h-full object-contain" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -1935,13 +1939,9 @@ export default function App() {
                 <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl ${
                   settings.themeMode === "light" 
                     ? "bg-[#FAF8F5] border-[#E8D7C9] shadow-lg" 
-                    : "bg-[#141210] border-white/20 shadow-[0_8px_30px_rgba(0,0,0,0.8)]"
+                    : "bg-[#0A0714] border-[#8B5CF6]/35 shadow-[0_8px_30px_rgba(139,92,246,0.3)]"
                 } border p-1.5 flex items-center justify-center overflow-hidden shrink-0 transform hover:scale-105 transition-transform`}>
-                  <img 
-                    src={settings.themeMode === "light" ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg"} 
-                    alt="Engez Nafsak Logo" 
-                    className="w-full h-full object-contain" 
-                  />
+                  <EngezBrandLogo themeMode={settings.themeMode} withContainer={false} className="w-full h-full object-contain" />
                 </div>
                 
                 <div className="space-y-1">

@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Play
 } from "lucide-react";
+import { EngezBrandLogo } from "./EngezBrandLogo";
 
 interface UserGuideModalProps {
   isOpen: boolean;
@@ -80,11 +81,9 @@ export default function UserGuideModal({
       ],
       preview: (
         <div className={`p-4 rounded-2xl border ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"} flex flex-col items-center justify-center text-center space-y-3`}>
-          <img 
-            src={isLight ? "/engez_brand_emblem.svg" : "/engez_brand_emblem_dark.svg"} 
-            alt="Engez Nafsak" 
-            className="w-16 h-16 object-contain drop-shadow-md"
-          />
+          <div className="w-16 h-16 shrink-0">
+            <EngezBrandLogo themeMode={isLight ? "light" : "dark"} withContainer={true} className="w-full h-full object-contain drop-shadow-md" />
+          </div>
           <div>
             <h4 className="font-sans font-black text-base">إنجز نفسك • Engez Nafsak</h4>
             <p className={`text-[11px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} mt-0.5`}>
