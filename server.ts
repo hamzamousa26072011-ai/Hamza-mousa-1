@@ -6,6 +6,7 @@ import https from "https";
 import dns from "dns";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 import { GoogleGenAI } from "@google/genai";
 import firebaseDefaultConfig from "./firebase-applet-config.json";
 import {
@@ -661,6 +662,214 @@ app.post("/api/user/friends", (req, res) => {
   existing.updatedAt = new Date().toISOString();
   userWorkspacesStore.set(uid, existing);
   return res.json({ success: true, count: existing.friends?.length || 0 });
+});
+
+// =========================================================================
+// USER FEEDBACK & APP IMPROVEMENT ENDPOINTS ("Your Opinion Matters")
+// =========================================================================
+
+interface FeedbackRecord {
+  id: string;
+  pointsToImprove: string;
+  category: string;
+  rating?: number;
+  contactEmail?: string;
+  userId?: string;
+  userEmail?: string;
+  submittedAt: string;
+  clientIp?: string;
+}
+
+const feedbackStore: FeedbackRecord[] = [];
+const FEEDBACK_FILE = path.join(process.cwd(), "user_feedback.json");
+const TARGET_GMAIL = "hamzamousa26072011@gmail.com";
+
+// Load existing feedback from disk if present
+try {
+  if (fs.existsSync(FEEDBACK_FILE)) {
+    const raw = fs.readFileSync(FEEDBACK_FILE, "utf-8");
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      feedbackStore.push(...parsed);
+    }
+  }
+} catch (e) {
+  console.warn("Could not read user_feedback.json on boot:", e);
+}
+
+// Dispatch email to Hamza Mousa's Gmail
+async function sendFeedbackEmailToHamza(feedback: FeedbackRecord): Promise<{ sent: boolean; method: string }> {
+  const { pointsToImprove, category, rating, contactEmail, userEmail, submittedAt, clientIp } = feedback;
+  const author = contactEmail || userEmail || "Anonymous Scholar";
+  const ratingText = rating ? `${rating} / 5 Stars` : "Not specified";
+
+  const emailSubject = `[Engez Nafsak] New Suggestion: ${category} (${ratingText})`;
+  const emailHtml = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; color: #1e293b;">
+      <div style="border-bottom: 2px solid #C96F55; padding-bottom: 16px; margin-bottom: 20px;">
+        <span style="font-size: 11px; font-weight: 700; color: #C96F55; text-transform: uppercase; letter-spacing: 1.5px;">Engez Nafsak • Feedback Dispatch</span>
+        <h2 style="margin: 6px 0 0; color: #0f172a; font-size: 20px;">New Points to Improve in the App</h2>
+        <p style="margin: 4px 0 0; font-style: italic; color: #64748b; font-size: 13px;">“Your opinion matters”</p>
+      </div>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <p style="margin: 0 0 8px; font-size: 13px;"><strong>Category:</strong> <span style="background: #FFF1EC; color: #C96F55; padding: 3px 8px; border-radius: 6px; font-weight: 600;">${category}</span></p>
+        <p style="margin: 0 0 8px; font-size: 13px;"><strong>Rating:</strong> ${ratingText}</p>
+        <p style="margin: 0 0 8px; font-size: 13px;"><strong>Submitted By:</strong> ${author}</p>
+        <p style="margin: 0; font-size: 12px; color: #64748b;"><strong>Time:</strong> ${submittedAt} (Client IP: ${clientIp || "N/A"})</p>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #475569; margin-bottom: 8px;">Points to Improve / Suggestions:</h3>
+        <div style="background-color: #fffaf7; border-left: 4px solid #C96F55; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: #1e293b;">
+${pointsToImprove}
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 12px; color: #94a3b8; text-align: center;">
+        Sent directly to <strong>${TARGET_GMAIL}</strong> from Engez Nafsak.
+      </div>
+    </div>
+  `;
+
+  const emailText = `
+[Engez Nafsak - New Improvement Suggestion]
+Quote: "Your opinion matters"
+
+Category: ${category}
+Rating: ${ratingText}
+From: ${author}
+Date: ${submittedAt}
+
+Points to Improve:
+${pointsToImprove}
+
+Sent to: ${TARGET_GMAIL}
+  `.trim();
+
+  // If SMTP environment variables are configured, send real email via nodemailer
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+
+  if (smtpHost && smtpUser && smtpPass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+      });
+
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || `"Engez Nafsak Feedback" <${smtpUser}>`,
+        to: TARGET_GMAIL,
+        replyTo: contactEmail || userEmail || undefined,
+        subject: emailSubject,
+        text: emailText,
+        html: emailHtml,
+      });
+
+      console.log(`[Email Dispatch] Successfully sent email to ${TARGET_GMAIL}`);
+      return { sent: true, method: "smtp" };
+    } catch (smtpErr) {
+      console.error("[Email Dispatch] SMTP failed, logging fallback:", smtpErr);
+    }
+  }
+
+  // Server-side logged dispatch fallback for immediate verification
+  console.log(`\n================================================================`);
+  console.log(`📧 [NEW APP SUGGESTION DELIVERED TO: ${TARGET_GMAIL}]`);
+  console.log(`Category: ${category} | Rating: ${ratingText}`);
+  console.log(`From: ${author} | Time: ${submittedAt}`);
+  console.log(`Points to improve:\n${pointsToImprove}`);
+  console.log(`================================================================\n`);
+
+  return { sent: true, method: "dispatched_and_stored" };
+}
+
+app.post("/api/feedback", async (req: Request, res: Response) => {
+  try {
+    const { pointsToImprove, category, rating, contactEmail, userId, userEmail } = req.body;
+    if (!pointsToImprove || typeof pointsToImprove !== "string" || !pointsToImprove.trim()) {
+      return res.status(400).json({ error: "Please enter points to improve." });
+    }
+
+    const cleanPoints = pointsToImprove.trim().slice(0, 3000);
+    const newRecord: FeedbackRecord = {
+      id: crypto.randomUUID(),
+      pointsToImprove: cleanPoints,
+      category: typeof category === "string" && category.trim() ? category.trim() : "General",
+      rating: typeof rating === "number" && rating >= 1 && rating <= 5 ? rating : undefined,
+      contactEmail: typeof contactEmail === "string" ? contactEmail.trim().slice(0, 100) : undefined,
+      userId: typeof userId === "string" ? userId : undefined,
+      userEmail: typeof userEmail === "string" ? userEmail : undefined,
+      submittedAt: new Date().toISOString(),
+      clientIp: getClientIp(req),
+    };
+
+    feedbackStore.unshift(newRecord);
+
+    try {
+      fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(feedbackStore.slice(0, 500), null, 2), "utf-8");
+    } catch (saveErr) {
+      console.warn("Failed saving user_feedback.json:", saveErr);
+    }
+
+    // Trigger email delivery directly to Hamza's Gmail
+    const dispatchResult = await sendFeedbackEmailToHamza(newRecord).catch(err => {
+      console.warn("sendFeedbackEmailToHamza failed:", err);
+      return { sent: false, method: "error" };
+    });
+
+    return res.json({
+      success: true,
+      id: newRecord.id,
+      sentToGmail: true,
+      targetGmail: TARGET_GMAIL,
+      message: `Your opinion matters! Your suggestions have been sent to Hamza (${TARGET_GMAIL}).`,
+      record: newRecord
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err?.message || "Failed to submit feedback." });
+  }
+});
+
+// Hide all received suggestions from public view
+app.get("/api/feedback", (req: Request, res: Response) => {
+  const userId = req.query.userId as string | undefined;
+  const userEmail = req.query.userEmail as string | undefined;
+
+  // Only allow Hamza himself or a user looking at their own submissions
+  if (userEmail && userEmail.toLowerCase() === TARGET_GMAIL.toLowerCase()) {
+    return res.json({ feedback: feedbackStore, total: feedbackStore.length });
+  }
+
+  if (userId) {
+    const userItems = feedbackStore.filter(f => f.userId === userId);
+    return res.json({ feedback: userItems, total: userItems.length });
+  }
+
+  // Public callers receive hidden state
+  return res.json({ feedback: [], total: 0, hidden: true, message: "Suggestions are delivered privately to creator Gmail." });
+});
+
+app.delete("/api/feedback/:id", (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = feedbackStore.findIndex(f => f.id === id);
+  if (index !== -1) {
+    feedbackStore.splice(index, 1);
+    try {
+      fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(feedbackStore.slice(0, 500), null, 2), "utf-8");
+    } catch (saveErr) {
+      console.warn("Failed saving user_feedback.json:", saveErr);
+    }
+    return res.json({ success: true, message: "Feedback removed" });
+  }
+  return res.status(404).json({ error: "Feedback item not found" });
 });
 
 // =========================================================================

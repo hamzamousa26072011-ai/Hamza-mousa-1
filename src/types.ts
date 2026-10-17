@@ -223,3 +223,14 @@ export interface FriendLeaderboardEntry {
   badge?: string;
 }
 
+export interface UserFeedbackItem {
+  id: string;
+  pointsToImprove: string;
+  category: string;
+  rating?: number;
+  contactEmail?: string;
+  userId?: string;
+  userEmail?: string;
+  submittedAt: string;
+}
+
