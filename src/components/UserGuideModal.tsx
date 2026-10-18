@@ -80,21 +80,21 @@ export default function UserGuideModal({
         }
       ],
       preview: (
-        <div className={`p-4 rounded-2xl border ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"} flex flex-col items-center justify-center text-center space-y-3`}>
+        <div className={`p-4 rounded-2xl border ${isLight ? "bg-[#F5EFE9] border-[#EBE4DC]" : "bg-[#161A2B] border-white/10"} flex flex-col items-center justify-center text-center space-y-3`}>
           <div className="w-16 h-16 shrink-0">
             <EngezBrandLogo themeMode={isLight ? "light" : "dark"} withContainer={true} className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div>
             <h4 className="font-sans font-black text-base">إنجز نفسك • Engez Nafsak</h4>
-            <p className={`text-[11px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} mt-0.5`}>
+            <p className={`text-[11px] font-mono ${isLight ? "text-[#82776E]" : "text-slate-400"} mt-0.5`}>
               High-Speed Revision & Exam Preparation
             </p>
           </div>
           <div className="flex gap-2">
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isLight ? "bg-[#FFF1EC] text-[#C96F55]" : "bg-indigo-950/60 text-indigo-300"}`}>
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/15 text-[#C084FC]"}`}>
               ✓ Offline & Cloud Sync
             </span>
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isLight ? "bg-[#EAF3EC] text-[#66856D]" : "bg-emerald-950/60 text-emerald-300"}`}>
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isLight ? "bg-[#EBF4ED] text-[#4D7C5B]" : "bg-emerald-500/15 text-emerald-300"}`}>
               ✓ Zero Distractions
             </span>
           </div>
@@ -308,11 +308,11 @@ export default function UserGuideModal({
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
           className={`relative max-w-xl w-full rounded-3xl border shadow-2xl overflow-hidden my-auto ${
-            isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0B0F1D] border-white/15 text-white"
+            isLight ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614]" : "bg-[#101322] border-white/10 text-[#F8FAFC]"
           }`}
         >
           {/* Top Decorative Header Accent */}
-          <div className="h-1.5 w-full bg-gradient-to-r from-[#C96F55] via-indigo-500 to-emerald-500" />
+          <div className="h-1.5 w-full bg-gradient-to-r from-[#C25E42] via-[#8B5CF6] to-[#10B981]" />
 
           {/* Top Actions: Skip Guide & Close */}
           <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
@@ -321,7 +321,7 @@ export default function UserGuideModal({
               onClick={handleSkip}
               className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition cursor-pointer flex items-center gap-1 border ${
                 isLight
-                  ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]"
+                  ? "bg-[#FAF8F5] hover:bg-[#F5EFE9] border-[#EBE4DC] text-[#82776E] hover:text-[#1A1614]"
                   : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300 hover:text-white"
               }`}
               title="Skip guide and start using app"

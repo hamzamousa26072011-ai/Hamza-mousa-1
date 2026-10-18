@@ -112,15 +112,15 @@ export default function DashboardTab({
           <div className="flex items-center gap-2">
             <span className={`text-xs font-mono font-bold tracking-widest uppercase flex items-center gap-1.5 ${
               isLight 
-                ? "text-[#C96F55] bg-[#FFF1EC] border border-[#E8D7C9]" 
+                ? "text-[#C25E42] bg-[#FFF2ED] border border-[#F2D5CA]" 
                 : "text-[#C084FC] bg-[#8B5CF6]/15 border border-[#8B5CF6]/35"
             } px-2.5 py-1 rounded-lg`}>
-              <Sparkles size={13} className={isLight ? "text-[#C96F55]" : "text-[#A855F7]"} />
+              <Sparkles size={13} className={isLight ? "text-[#C25E42]" : "text-[#A855F7]"} />
               <span>ENGEZ NAFSAK ACADEMY</span>
             </span>
             <span className={`${
               isLight 
-                ? "text-[#66856D] bg-[#E3EEE5] border border-[#C5DAC9]" 
+                ? "text-[#4D7C5B] bg-[#EBF4ED] border border-[#D3E6D7]" 
                 : "text-emerald-400 bg-emerald-500/15 border border-emerald-500/30"
             } px-2.5 py-1 rounded-lg text-[10px] font-mono tracking-wider font-bold flex items-center gap-1.5`}>
               <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
@@ -128,13 +128,13 @@ export default function DashboardTab({
             </span>
           </div>
 
-          <h1 className={`text-3xl md:text-4xl font-extrabold ${isLight ? "text-[#1D1D1B]" : "text-white"} mt-3 tracking-tight`}>
-            Yalla, <span className={`${isLight ? "bg-gradient-to-r from-[#C96F55] via-[#DE7A5E] to-[#C96F55]" : "bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-[#DDD6FE]"} text-transparent bg-clip-text font-black inline-block`}>engez nafsak</span> today! ⚡
+          <h1 className={`text-3xl md:text-4xl font-extrabold ${isLight ? "text-[#1A1614]" : "text-white"} mt-3 tracking-tight`}>
+            Yalla, <span className={`${isLight ? "bg-gradient-to-r from-[#C25E42] via-[#D97757] to-[#C25E42]" : "bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-[#DDD6FE]"} text-transparent bg-clip-text font-black inline-block`}>engez nafsak</span> today! ⚡
           </h1>
           <p className={`text-sm md:text-base mt-2 tracking-tight flex flex-wrap items-center gap-3 font-semibold ${
-            isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"
+            isLight ? "text-[#82776E]" : "text-[#C4B5FD]/75"
           }`}>
-            <span className={isLight ? "text-[#77736B] font-medium" : "text-[#B8AFA6] font-medium"}>
+            <span className={isLight ? "text-[#82776E] font-medium" : "text-[#B8AFA6] font-medium"}>
               A road to a better life without procrastination 🚀
             </span>
           </p>
@@ -143,28 +143,28 @@ export default function DashboardTab({
         {/* Global Streak / Focus Counter Block */}
         <div className={`flex items-center gap-4 ${
           isLight 
-            ? "bg-[#FAF8F5] border border-[#E8D7C9]" 
-            : "bg-[#0A0714]/85 border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+            ? "bg-[#FFFFFF] border border-[#EBE4DC] shadow-xs" 
+            : "bg-[#101322] border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl"
         } px-5 py-3.5 rounded-2xl self-stretch lg:self-auto justify-around lg:justify-start`}>
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-orange-500 text-white shadow-xs flex items-center justify-center">
               <Flame size={22} className="fill-current animate-bounce" />
             </div>
             <div>
-              <p className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase tracking-tight font-bold`}>Streak</p>
-              <h3 className={`text-lg font-black ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>{streak} Days</h3>
+              <p className={`text-[9px] font-mono ${isLight ? "text-[#82776E]" : "text-[#C4B5FD]/75"} uppercase tracking-tight font-bold`}>Streak</p>
+              <h3 className={`text-lg font-black ${isLight ? "text-[#1A1614]" : "text-white"}`}>{streak} Days</h3>
             </div>
           </div>
           
-          <div className={`w-px h-10 ${isLight ? "bg-[#E8D7C9]" : "bg-white/10"}`} />
+          <div className={`w-px h-10 ${isLight ? "bg-[#EBE4DC]" : "bg-white/10"}`} />
 
           <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-xl ${isLight ? "bg-[#C96F55]" : "bg-[#7C3AED] shadow-lg shadow-[#7C3AED]/30"} text-white shadow-xs flex items-center justify-center`}>
+            <div className={`w-11 h-11 rounded-xl ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6] shadow-lg shadow-[#8B5CF6]/30"} text-white shadow-xs flex items-center justify-center`}>
               <Award size={22} className="animate-pulse" />
             </div>
             <div>
-              <p className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase tracking-tight font-bold`}>Focus Blocks</p>
-              <h3 className={`text-lg font-black ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>{pomodoroCount} Done</h3>
+              <p className={`text-[9px] font-mono ${isLight ? "text-[#82776E]" : "text-[#C4B5FD]/75"} uppercase tracking-tight font-bold`}>Focus Blocks</p>
+              <h3 className={`text-lg font-black ${isLight ? "text-[#1A1614]" : "text-white"}`}>{pomodoroCount} Done</h3>
             </div>
           </div>
         </div>

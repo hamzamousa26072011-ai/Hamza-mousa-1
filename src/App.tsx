@@ -649,8 +649,8 @@ export default function App() {
     const favicon = document.querySelector<HTMLLinkElement>("link[rel*='icon']");
     const appleIcon = document.querySelector<HTMLLinkElement>("link[rel='apple-touch-icon']");
     const iconPath = settings.themeMode === "light" 
-      ? "/engez_brand_emblem.svg?v=3" 
-      : "/engez_brand_emblem_dark.svg?v=3";
+      ? "/engez_brand_emblem.svg?v=4" 
+      : "/engez_brand_emblem_dark.svg?v=4";
     if (favicon) {
       favicon.href = iconPath;
     }
@@ -1549,7 +1549,7 @@ export default function App() {
 
   return (
     <div className={`flex min-h-screen ${
-      settings.themeMode === "light" ? "bg-[#FAF8F5] text-[#1D1D1B]" : "bg-[#000000] text-white"
+      settings.themeMode === "light" ? "bg-[#FBF9F5] text-[#1A1614]" : "bg-[#090A10] text-[#F8FAFC]"
     } overflow-x-hidden relative transition-colors duration-300 font-sans`}>
       
       {/* CYBER WAVE PERSPECTIVE GRID & CELESTIAL GLOWING SPHERES */}
@@ -1575,31 +1575,31 @@ export default function App() {
         {/* TOP STATUS & PROFILE HEADER BAR */}
         <header className={`flex flex-row items-center justify-between gap-3 ${
           settings.themeMode === "light" 
-            ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" 
-            : "bg-[#0A0714]/85 border-white/10 text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)]"
+            ? "bg-[#FFFFFF]/90 border-[#EBE4DC] text-[#1A1614] shadow-xs" 
+            : "bg-[#101322]/90 border-white/[0.08] text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)]"
         } border rounded-2xl p-3 sm:p-4 md:px-6 backdrop-blur-2xl transition-all duration-300`}>
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${
               settings.themeMode === "light" 
-                ? "bg-[#FAF8F5] border-[#E8D7C9] shadow-xs" 
-                : "bg-[#0A0714] border-[#8B5CF6]/30 shadow-[0_4px_12px_rgba(139,92,246,0.2)]"
+                ? "bg-[#FAF8F5] border-[#EBE4DC] shadow-2xs" 
+                : "bg-[#101322] border-[#8B5CF6]/35 shadow-[0_4px_14px_rgba(139,92,246,0.25)]"
             } border p-0.5 flex items-center justify-center shrink-0 overflow-hidden hover:scale-105 transition-transform`}>
               <EngezBrandLogo themeMode={settings.themeMode} withContainer={false} className="w-full h-full object-contain" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className={`font-extrabold ${settings.themeMode === "light" ? "text-[#1D1D1B]" : "text-white"} text-sm sm:text-base tracking-tight truncate font-sans`}>
+                <span className={`font-extrabold ${settings.themeMode === "light" ? "text-[#1A1614]" : "text-[#F8FAFC]"} text-sm sm:text-base tracking-tight truncate font-sans`}>
                   Engez Nafsak
                 </span>
                 <span className={`text-[9px] sm:text-[10px] font-sans font-bold ${
                   settings.themeMode === "light" 
-                    ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]" 
+                    ? "bg-[#FFF2ED] border-[#F2D5CA] text-[#C25E42]" 
                     : "bg-[#8B5CF6]/15 border-[#8B5CF6]/35 text-[#C084FC]"
                 } border px-1.5 sm:px-2 py-0.5 rounded-md uppercase shrink-0`}>
                   إنجز نفسك
                 </span>
               </div>
-              <p className={`text-[10px] sm:text-[11px] ${settings.themeMode === "light" ? "text-[#77736B]" : "text-[#C4B5FD]/75"} font-sans truncate`}>
+              <p className={`text-[10px] sm:text-[11px] ${settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} font-sans truncate`}>
                 {subjects.length} Subjects Active • {tasks.filter(t => !t.completed).length} Tasks Left
               </p>
             </div>
@@ -1612,17 +1612,17 @@ export default function App() {
               className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 sm:gap-2 transition cursor-pointer min-h-[38px] ${
                 focusModeActive
                   ? settings.themeMode === "light"
-                    ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55] animate-pulse"
+                    ? "bg-[#FFF2ED] border-[#F2D5CA] text-[#C25E42] animate-pulse"
                     : "bg-[#8B5CF6]/25 border-[#8B5CF6]/50 text-[#C084FC] shadow-xs animate-pulse"
                   : settings.themeMode === "light"
-                  ? "bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#E8D7C9]"
-                  : "bg-[#120E22]/90 border-white/10 text-white hover:bg-[#1A1432]"
+                  ? "bg-[#F5EFE9] border-[#EBE4DC] text-[#1A1614] hover:bg-[#EDE4DC]"
+                  : "bg-[#161A2B] border-white/[0.08] text-white hover:bg-[#1E2338]"
               }`}
               title="Timer"
             >
-              <Clock size={13} className={focusModeActive ? (settings.themeMode === "light" ? "text-[#C96F55]" : "text-[#8B5CF6]") : settings.themeMode === "light" ? "text-[#77736B]" : "text-[#C4B5FD]"} />
+              <Clock size={13} className={focusModeActive ? (settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]") : settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} />
               <span className="text-[11px] sm:text-xs">{formatFocusTime()}</span>
-              {focusModeActive && <span className={`w-1.5 h-1.5 ${settings.themeMode === "light" ? "bg-[#C96F55]" : "bg-[#8B5CF6]"} rounded-full animate-ping`} />}
+              {focusModeActive && <span className={`w-1.5 h-1.5 ${settings.themeMode === "light" ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} rounded-full animate-ping`} />}
             </button>
 
             {/* User Guide Button */}
@@ -1630,22 +1630,22 @@ export default function App() {
               onClick={() => setIsGuideOpen(true)}
               className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer min-h-[38px] ${
                 settings.themeMode === "light"
-                  ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E8D7C9] text-[#1D1D1B]"
-                  : "bg-[#120E22]/90 hover:bg-[#1A1432] border-white/10 text-white"
+                  ? "bg-[#F5EFE9] hover:bg-[#EDE4DC] border-[#EBE4DC] text-[#1A1614]"
+                  : "bg-[#161A2B] hover:bg-[#1E2338] border-white/[0.08] text-white"
               }`}
               title="How to Use Website / User Guide"
             >
-              <HelpCircle size={14} className={settings.themeMode === "light" ? "text-[#C96F55]" : "text-indigo-400"} />
+              <HelpCircle size={14} className={settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]"} />
               <span className="hidden sm:inline">Guide</span>
             </button>
 
             {/* Streak Badge */}
             <div className={`px-2.5 sm:px-3 py-1.5 rounded-xl ${
               settings.themeMode === "light"
-                ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]"
+                ? "bg-[#FFF2ED] border-[#F2D5CA] text-[#C25E42]"
                 : "bg-[#8B5CF6]/15 border-[#8B5CF6]/35 text-[#C084FC]"
             } border text-[11px] sm:text-xs font-mono font-bold flex items-center gap-1 sm:gap-1.5 shadow-2xs min-h-[38px]`}>
-              <Flame size={13} className={`fill-current ${settings.themeMode === "light" ? "text-[#C96F55]" : "text-[#8B5CF6] dark:text-[#C084FC]"}`} />
+              <Flame size={13} className={`fill-current ${settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]"}`} />
               <span>{streak}d</span>
             </div>
 
@@ -1653,8 +1653,8 @@ export default function App() {
             {currentUser ? (
               <div className={`flex items-center gap-1.5 sm:gap-2 ${
                 settings.themeMode === "light"
-                  ? "bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]"
-                  : "bg-[#1E1735] border-[#2C1F4A] text-[#FAF8F5]"
+                  ? "bg-[#F5EFE9] border-[#EBE4DC] text-[#1A1614]"
+                  : "bg-[#161A2B] border-white/[0.08] text-[#F8FAFC]"
               } border px-2 sm:px-3 py-1.5 rounded-xl min-h-[38px]`}>
                 {currentUser.photoURL ? (
                   <img
@@ -1927,8 +1927,8 @@ export default function App() {
               transition={{ type: "spring", damping: 25, stiffness: 240 }}
               className={`w-full max-w-md ${
                 settings.themeMode === "light"
-                  ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xl"
-                  : "bg-[#0A0714] border-white/15 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
+                  ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614] shadow-2xl"
+                  : "bg-[#101322] border-white/10 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
               } border rounded-3xl p-6 md:p-8 space-y-6 relative overflow-hidden text-center`}
             >
               {/* Decorative top ambient glow */}
@@ -1938,17 +1938,17 @@ export default function App() {
               <div className="flex flex-col items-center gap-3.5 relative z-10">
                 <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl ${
                   settings.themeMode === "light" 
-                    ? "bg-[#FAF8F5] border-[#E8D7C9] shadow-lg" 
-                    : "bg-[#0A0714] border-[#8B5CF6]/35 shadow-[0_8px_30px_rgba(139,92,246,0.3)]"
+                    ? "bg-[#FAF8F5] border-[#EBE4DC] shadow-md" 
+                    : "bg-[#101322] border-[#8B5CF6]/35 shadow-[0_8px_30px_rgba(139,92,246,0.3)]"
                 } border p-1.5 flex items-center justify-center overflow-hidden shrink-0 transform hover:scale-105 transition-transform`}>
                   <EngezBrandLogo themeMode={settings.themeMode} withContainer={false} className="w-full h-full object-contain" />
                 </div>
                 
                 <div className="space-y-1">
-                  <h2 className={`text-2xl font-black ${settings.themeMode === "light" ? "text-[#1D1D1B]" : "text-white"} font-sans tracking-tight`}>
-                    Engez Nafsak • <span className={settings.themeMode === "light" ? "text-[#C96F55]" : "text-[#8B5CF6]"}>إنجز نفسك</span>
+                  <h2 className={`text-2xl font-black ${settings.themeMode === "light" ? "text-[#1A1614]" : "text-[#F8FAFC]"} font-sans tracking-tight`}>
+                    Engez Nafsak • <span className={settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]"}>إنجز نفسك</span>
                   </h2>
-                  <p className={`text-xs ${settings.themeMode === "light" ? "text-[#77736B]" : "text-slate-400"} font-sans font-medium`}>
+                  <p className={`text-xs ${settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} font-sans font-medium`}>
                     Your Dedicated Exam Planner & Academic Suite
                   </p>
                 </div>

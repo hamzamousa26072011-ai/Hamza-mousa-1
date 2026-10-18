@@ -303,33 +303,33 @@ export default function SettingsTab({
           </div>
 
           {/* Theme Mode */}
-          <div className={`space-y-3 pt-3 border-t ${isLight ? "border-[#E8D7C9]" : "border-[#38332E]"}`}>
+          <div className={`space-y-3 pt-3 border-t ${isLight ? "border-[#EBE4DC]" : "border-white/10"}`}>
             <div className="flex justify-between items-center">
               <div>
-                <span className={`text-xs font-bold ${isLight ? "text-[#1D1D1B]" : "text-[#F6F3EE]"} block`}>Theme & Brand Identity</span>
-                <span className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-[#ADA59B]"}`}>Switch between warm minimalist dark mode or the logo-inspired light theme.</span>
+                <span className={`text-xs font-bold ${isLight ? "text-[#1A1614]" : "text-[#F8FAFC]"} block`}>Theme & Brand Identity</span>
+                <span className={`text-[11px] ${isLight ? "text-[#82776E]" : "text-slate-400"}`}>Switch between the aesthetic Velvet Obsidian dark theme and the warm Ivory Calico light theme.</span>
               </div>
               {settings.themeMode === "light" ? (
-                <Sun size={16} className="text-[#C96F55] shrink-0" />
+                <Sun size={16} className="text-[#C25E42] shrink-0" />
               ) : (
-                <Moon size={16} className="text-[#C96F55] shrink-0" />
+                <Moon size={16} className="text-[#C084FC] shrink-0" />
               )}
             </div>
 
             <div className={`grid grid-cols-2 gap-2 ${
-              isLight ? "bg-[#F0EEE8] border-[#E8D7C9]" : "bg-[#120E22] border-white/10"
+              isLight ? "bg-[#F5EFE9] border-[#EBE4DC]" : "bg-[#161A2B] border-white/10"
             } border p-1 rounded-2xl w-full`}>
               <button
                 type="button"
                 onClick={() => onUpdateSettings({ themeMode: "dark" })}
                 className={`py-2 rounded-xl text-xs font-mono font-black uppercase transition cursor-pointer flex items-center justify-center gap-1.5 ${
                   settings.themeMode === "dark"
-                    ? "bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/25"
-                    : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-[#C4B5FD]/75 hover:text-white"
+                    ? "bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/30"
+                    : isLight ? "text-[#736B63] hover:text-[#1A1614]" : "text-[#C084FC]/75 hover:text-white"
                 }`}
               >
                 <Moon size={13} />
-                <span>Engez Dark</span>
+                <span>Velvet Dark</span>
               </button>
 
               <button
@@ -337,12 +337,12 @@ export default function SettingsTab({
                 onClick={() => onUpdateSettings({ themeMode: "light" })}
                 className={`py-2 rounded-xl text-xs font-mono font-black uppercase transition cursor-pointer flex items-center justify-center gap-1.5 ${
                   settings.themeMode === "light"
-                    ? "bg-[#C96F55] text-white shadow-lg shadow-[#C96F55]/20"
-                    : "text-[#C4B5FD]/75 hover:text-white"
+                    ? "bg-[#C25E42] text-white shadow-lg shadow-[#C25E42]/20"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 <Sun size={13} />
-                <span>Engez Light</span>
+                <span>Ivory Light</span>
               </button>
             </div>
           </div>

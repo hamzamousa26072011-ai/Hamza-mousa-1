@@ -1,19 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="920" height="320" fill="none">
   <defs>
     <linearGradient id="logo-dark-flame-h" x1="256" y1="208" x2="256" y2="348" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#C084FC" />
-      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="0%" stop-color="#E9D5FF" />
+      <stop offset="30%" stop-color="#C084FC" />
+      <stop offset="70%" stop-color="#8B5CF6" />
       <stop offset="100%" stop-color="#6D28D9" />
     </linearGradient>
     <linearGradient id="logo-dark-border-h" x1="0" y1="0" x2="920" y2="320" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.45" />
-      <stop offset="50%" stop-color="#A855F7" stop-opacity="0.20" />
-      <stop offset="100%" stop-color="#6D28D9" stop-opacity="0.35" />
+      <stop offset="0%" stop-color="#C084FC" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0.5" />
     </linearGradient>
     <radialGradient id="logo-dark-bg-h" cx="20%" cy="50%" r="80%">
-      <stop offset="0%" stop-color="#140E26" />
-      <stop offset="65%" stop-color="#0A0714" />
-      <stop offset="100%" stop-color="#05030A" />
+      <stop offset="0%" stop-color="#181C30" />
+      <stop offset="55%" stop-color="#101322" />
+      <stop offset="100%" stop-color="#08090E" />
     </radialGradient>
   </defs>
 
@@ -22,23 +23,23 @@
   <!-- EMBLEM SCALED ON LEFT -->
   <g transform="translate(24, 0) scale(0.62)">
     <!-- Radiating Sunburst Rays -->
-    <line x1="256" y1="88" x2="256" y2="124" stroke="#A855F7" stroke-width="12" stroke-linecap="round" />
-    <line x1="204" y1="116" x2="224" y2="134" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
-    <line x1="308" y1="116" x2="288" y2="134" stroke="#C4B5FD" stroke-width="11" stroke-linecap="round" />
-    <line x1="182" y1="156" x2="204" y2="160" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" />
-    <line x1="330" y1="156" x2="308" y2="160" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" />
+    <line x1="256" y1="88" x2="256" y2="124" stroke="#C084FC" stroke-width="12" stroke-linecap="round" />
+    <line x1="204" y1="116" x2="224" y2="134" stroke="#A855F7" stroke-width="11" stroke-linecap="round" />
+    <line x1="308" y1="116" x2="288" y2="134" stroke="#A855F7" stroke-width="11" stroke-linecap="round" />
+    <line x1="182" y1="156" x2="204" y2="160" stroke="#F8FAFC" stroke-width="11" stroke-linecap="round" />
+    <line x1="330" y1="156" x2="308" y2="160" stroke="#F8FAFC" stroke-width="11" stroke-linecap="round" />
 
     <!-- Upward Arrow -->
     <path d="M 256 142 L 286 182 L 266 182 L 266 210 L 246 210 L 246 182 L 226 182 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" />
 
     <!-- Central Flame -->
-    <path d="M 246 208 C 246 226, 204 246, 200 278 C 196 308, 230 334, 256 348 C 282 334, 316 308, 312 278 C 308 246, 266 226, 266 208 Z" fill="url(#logo-dark-flame-h)" stroke="#A855F7" stroke-width="1.5" />
+    <path d="M 246 208 C 246 226, 204 246, 200 278 C 196 308, 230 334, 256 348 C 282 334, 316 308, 312 278 C 308 246, 266 226, 266 208 Z" fill="url(#logo-dark-flame-h)" stroke="#E9D5FF" stroke-width="1.5" />
 
     <!-- Book Pages -->
-    <path d="M 112 328 C 152 326, 196 338, 236 352 C 236 358, 230 364, 222 366 C 180 364, 138 354, 106 342 C 107 334, 109 330, 112 328 Z" fill="#C4B5FD" stroke="#A78BFA" stroke-width="1.5" />
-    <path d="M 400 328 C 360 326, 316 338, 276 352 C 276 358, 282 364, 290 366 C 332 364, 374 354, 406 342 C 405 334, 403 330, 400 328 Z" fill="#C4B5FD" stroke="#A78BFA" stroke-width="1.5" />
+    <path d="M 112 328 C 152 326, 196 338, 236 352 C 236 358, 230 364, 222 366 C 180 364, 138 354, 106 342 C 107 334, 109 330, 112 328 Z" fill="#A1A1AA" stroke="#71717A" stroke-width="1.5" />
+    <path d="M 400 328 C 360 326, 316 338, 276 352 C 276 358, 282 364, 290 366 C 332 364, 374 354, 406 342 C 405 334, 403 330, 400 328 Z" fill="#A1A1AA" stroke="#71717A" stroke-width="1.5" />
 
-    <!-- Foundation Arc -->
+    <!-- Base Spine -->
     <path d="M 96 350 C 142 376, 202 378, 256 360 C 310 378, 370 376, 416 350" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
   </g>
 
@@ -49,7 +50,7 @@
           font-size="72" 
           font-weight="800" 
           letter-spacing="-1.5" 
-          fill="#FFFFFF">Engez Nafsak</text>
+          fill="#F8FAFC">Engez Nafsak</text>
 
     <text x="2" y="224" 
           font-family="'Noto Sans Arabic', 'Cairo', 'Almarai', 'Segoe UI', Tahoma, sans-serif" 
