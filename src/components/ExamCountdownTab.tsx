@@ -411,7 +411,17 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
     const dots = exams.map(e => {
       const t = new Date(`${e.examDate}T${e.examTime || "09:00"}`).getTime();
       const pos = Math.min(100, Math.max(0, ((t - minDate) / span) * 100));
-      return { id: e.id, title: e.title, pos, isPast: t < nowTime };
+      const countdown = calculateCountdown(e.examDate, e.examTime);
+      const isMoreThan10Days = !countdown.isPast && (countdown.days > 10 || (countdown.days === 10 && (countdown.hours > 0 || countdown.minutes > 0)));
+      const isUrgent = !countdown.isPast && countdown.days < 2;
+      return { 
+        id: e.id, 
+        title: e.title, 
+        pos, 
+        isPast: countdown.isPast,
+        isMoreThan10Days,
+        isUrgent
+      };
     });
 
     return { percentage: pct, rangeLabel, dots };
@@ -670,19 +680,19 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               {filteredExams.map((exam) => {
                 const countdown = calculateCountdown(exam.examDate, exam.examTime);
                 const isUrgent = !countdown.isPast && countdown.days < 2;
-                const isApproaching = !countdown.isPast && countdown.days >= 2 && countdown.days <= 14;
-                const isDistant = !countdown.isPast && countdown.days > 14;
+                const isMoreThan10Days = !countdown.isPast && (countdown.days > 10 || (countdown.days === 10 && (countdown.hours > 0 || countdown.minutes > 0)));
+                const isApproaching = !countdown.isPast && !isUrgent && !isMoreThan10Days;
 
                 // Color palette according to urgency & card theme
                 const chosenColor = exam.cardColor || "automatic";
-                let cardBg = isLight ? "bg-white" : "bg-[#0A0714]/90 backdrop-blur-xl";
-                let borderColor = isLight ? "border-[#E8D7C9]" : "border-white/10";
-                let titleColor = isLight ? "text-[#1D1D1B]" : "text-white";
-                let pillBg = isLight ? "bg-[#F7F5F0]" : "bg-white/5";
+                let cardBg = isLight ? "bg-white" : "bg-[#101322]/90 backdrop-blur-xl";
+                let borderColor = isLight ? "border-[#EBE4DC]" : "border-white/10";
+                let titleColor = isLight ? "text-[#1A1614]" : "text-white";
+                let pillBg = isLight ? "bg-[#F5EFE9]" : "bg-white/5";
 
                 if (countdown.isPast) {
-                  cardBg = isLight ? "bg-[#F7F5F0]/60 opacity-70" : "bg-[#06040C]/70 border-white/5 opacity-65";
-                  borderColor = isLight ? "border-[#E8D7C9]" : "border-white/5";
+                  cardBg = isLight ? "bg-[#F5EFE9]/60 opacity-70" : "bg-[#06040C]/70 border-white/5 opacity-65";
+                  borderColor = isLight ? "border-[#EBE4DC]" : "border-white/5";
                 } else if (chosenColor === "lavender") {
                   cardBg = isLight ? "bg-[#FAF8FF]" : "bg-[#140E28]/90 border-[#A78BFA]/35 shadow-[0_8px_30px_rgba(139,92,246,0.18)]";
                   borderColor = isLight ? "border-[#DDD6FE]" : "border-[#A78BFA]/40";
@@ -694,9 +704,9 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   titleColor = isLight ? "text-[#0369A1]" : "text-[#BAE6FD]";
                   pillBg = isLight ? "bg-[#E0F2FE]" : "bg-sky-500/20";
                 } else if (chosenColor === "mint") {
-                  cardBg = isLight ? "bg-[#F0FDF4]" : "bg-[#081F15]/90 border-[#34D399]/35 shadow-[0_8px_30px_rgba(52,211,153,0.18)]";
-                  borderColor = isLight ? "border-[#A7F3D0]" : "border-[#34D399]/40";
-                  titleColor = isLight ? "text-[#15803D]" : "text-[#A7F3D0]";
+                  cardBg = isLight ? "bg-[#F0FDF4]" : "bg-[#071E14]/90 border-emerald-500/35 shadow-[0_8px_30px_rgba(16,185,129,0.18)]";
+                  borderColor = isLight ? "border-[#A7F3D0]" : "border-emerald-500/40";
+                  titleColor = isLight ? "text-[#15803D]" : "text-[#34D399]";
                   pillBg = isLight ? "bg-[#DCFCE7]" : "bg-emerald-500/20";
                 } else if (chosenColor === "sunset") {
                   cardBg = isLight ? "bg-[#FFF7ED]" : "bg-[#261208]/90 border-[#FB923C]/35 shadow-[0_8px_30px_rgba(251,146,60,0.18)]";
@@ -719,15 +729,21 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   titleColor = isLight ? "text-[#334155]" : "text-[#E2E8F0]";
                   pillBg = isLight ? "bg-[#F1F5F9]" : "bg-slate-500/20";
                 } else if (exam.colorTheme === "burgundy" || isUrgent) {
-                  // Red / Burgundy urgency tone
-                  cardBg = isLight ? "bg-[#FFF4F4]" : "bg-[#18090C]/90 border-red-500/30";
+                  // Red / Burgundy urgency tone (< 2 days remaining)
+                  cardBg = isLight ? "bg-[#FFF4F4]" : "bg-[#18090C]/90 border-red-500/30 shadow-[0_8px_30px_rgba(239,68,68,0.15)]";
                   borderColor = isLight ? "border-[#FCA5A5]" : "border-red-500/30";
                   titleColor = isLight ? "text-[#991B1B]" : "text-red-300";
                   pillBg = isLight ? "bg-[#FEE2E2]" : "bg-red-500/15";
+                } else if (isMoreThan10Days || exam.colorTheme === "green" || exam.colorTheme === "mint") {
+                  // Green themed for exams with more than 10 days till it comes!
+                  cardBg = isLight ? "bg-[#F0FDF4]" : "bg-[#071E14]/90 border-emerald-500/35 shadow-[0_8px_30px_rgba(16,185,129,0.18)]";
+                  borderColor = isLight ? "border-[#A7F3D0]" : "border-emerald-500/40";
+                  titleColor = isLight ? "text-[#15803D]" : "text-[#34D399]";
+                  pillBg = isLight ? "bg-[#DCFCE7]" : "bg-emerald-500/20";
                 } else {
-                  // Warm Amber / Terracotta default
-                  cardBg = isLight ? "bg-[#FFF9F5]" : "bg-[#140E26]/85 border-white/10";
-                  borderColor = isLight ? "border-[#FCD34D]" : "border-white/10";
+                  // Warm Amber / Yellow tone for approaching exams (2 to 10 days remaining)
+                  cardBg = isLight ? "bg-[#FFF9F5]" : "bg-[#1F1706]/90 border-amber-500/30 shadow-[0_8px_30px_rgba(245,158,11,0.15)]";
+                  borderColor = isLight ? "border-[#FCD34D]" : "border-amber-500/30";
                   titleColor = isLight ? "text-[#B45309]" : "text-amber-200";
                   pillBg = isLight ? "bg-[#FEF3C7]" : "bg-amber-500/15";
                 }
@@ -880,18 +896,21 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   </div>
 
                   {/* Exam marker dots along timeline */}
-                  {seasonStats.dots.map((dot) => (
-                    <div
-                      key={dot.id}
-                      title={dot.title}
-                      className={`absolute w-3 h-3 rounded-full border-2 transform -translate-x-1/2 transition-transform hover:scale-125 cursor-pointer ${
-                        dot.isPast 
-                          ? "bg-emerald-500 border-white dark:border-[#0A0714]" 
-                          : "bg-[#F87171] border-white dark:border-[#0A0714]"
-                      }`}
-                      style={{ left: `${dot.pos}%` }}
-                    />
-                  ))}
+                  {seasonStats.dots.map((dot) => {
+                    let dotColor = "bg-amber-400";
+                    if (dot.isPast) dotColor = "bg-slate-500 opacity-60";
+                    else if (dot.isUrgent) dotColor = "bg-[#F87171]";
+                    else if (dot.isMoreThan10Days) dotColor = "bg-emerald-400";
+
+                    return (
+                      <div
+                        key={dot.id}
+                        title={dot.title}
+                        className={`absolute w-3 h-3 rounded-full border-2 transform -translate-x-1/2 transition-transform hover:scale-125 cursor-pointer ${dotColor} border-white dark:border-[#090A10] shadow-xs`}
+                        style={{ left: `${dot.pos}%` }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 
