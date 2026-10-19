@@ -50,14 +50,13 @@ function getActiveFirebaseConfig() {
           baseConfig = { ...baseConfig, ...parsed };
         }
       }
-      // Check if user enabled custom DNS auth handler on the canonical custom domain only
-      const useCustomDnsAuth = localStorage.getItem("ENGEZ_USE_CUSTOM_DNS_AUTH") === "true";
-      const connectedDns = localStorage.getItem("ENGEZ_CONNECTED_CUSTOM_DNS") === "true";
-      const host = window.location.host;
-      const isActualCustomDomain =
-        host === CANONICAL_CUSTOM_DOMAIN || host === CANONICAL_WWW_DOMAIN;
-      if ((useCustomDnsAuth || connectedDns) && isActualCustomDomain) {
-        baseConfig.authDomain = host;
+      // Purge any legacy stale custom DNS auth flags that broke Google OAuth redirect_uri
+      localStorage.removeItem("ENGEZ_USE_CUSTOM_DNS_AUTH");
+
+      // Ensure authDomain is always a valid Firebase authorized domain (*.firebaseapp.com or *.web.app)
+      // Setting authDomain to a custom domain (e.g. www.engeznafsak.com) without Cloud Console redirect registration triggers Google Error 400: redirect_uri_mismatch
+      if (!baseConfig.authDomain || (!baseConfig.authDomain.includes(".firebaseapp.com") && !baseConfig.authDomain.includes(".web.app"))) {
+        baseConfig.authDomain = (firebaseDefaultConfig as any).authDomain || "engez-nafsak.firebaseapp.com";
       }
     } catch (e) {
       console.warn("Failed to parse custom Firebase config:", e);
@@ -178,8 +177,6 @@ export const getCustomDnsInfo = (): CustomDnsInfo => {
   const host = window.location.host;
   const hostname = window.location.hostname;
   const isCustomDns = !["localhost", "127.0.0.1"].includes(hostname) && !hostname.endsWith(".run.app");
-  const useCustomDnsAuth = localStorage.getItem("ENGEZ_USE_CUSTOM_DNS_AUTH") === "true";
-
   return {
     currentHostname: hostname,
     currentHost: host,
@@ -188,21 +185,16 @@ export const getCustomDnsInfo = (): CustomDnsInfo => {
     firebaseAuthDomain: activeAuthDomain,
     firebaseProjectId: activeProjectId,
     isCustomProject,
-    usingCustomAuthDomain: useCustomDnsAuth,
-    oauthRedirectUri: useCustomDnsAuth
-      ? `https://${host}/__/auth/handler`
-      : `https://${activeAuthDomain}/__/auth/handler`,
+    usingCustomAuthDomain: false,
+    oauthRedirectUri: `https://${activeAuthDomain}/__/auth/handler`,
     firebaseConsoleUrl: `https://console.firebase.google.com/project/${activeProjectId}/authentication/settings`,
   };
 };
 
-export const setCustomDnsAuthMode = (enabled: boolean) => {
+export const setCustomDnsAuthMode = (_enabled: boolean) => {
   if (typeof window !== "undefined") {
-    if (enabled) {
-      localStorage.setItem("ENGEZ_USE_CUSTOM_DNS_AUTH", "true");
-    } else {
-      localStorage.removeItem("ENGEZ_USE_CUSTOM_DNS_AUTH");
-    }
+    // Custom DNS auth mode is disabled to protect against Google Error 400 redirect_uri_mismatch
+    localStorage.removeItem("ENGEZ_USE_CUSTOM_DNS_AUTH");
   }
 };
 
@@ -312,7 +304,7 @@ export const connectCustomDomainToApp = (domain = CANONICAL_CUSTOM_DOMAIN) => {
   if (typeof window !== "undefined") {
     localStorage.setItem("ENGEZ_CONNECTED_CUSTOM_DNS", "true");
     localStorage.setItem("ENGEZ_ACTIVE_DOMAIN", domain);
-    localStorage.setItem("ENGEZ_USE_CUSTOM_DNS_AUTH", "true");
+    localStorage.removeItem("ENGEZ_USE_CUSTOM_DNS_AUTH");
   }
 };
 
@@ -871,13 +863,8 @@ export const googleSignIn = async (
     }
 
     return { user: result.user, accessToken: cachedAccessToken || "" };
-  } catch (error: any) {
-    const code = error?.code || "";
-    if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-      console.warn("Sign-in popup closed by user.");
-    } else {
-      console.warn("Sign-in authentication notice:", error);
-    }
+  } catch (error) {
+    console.error("Sign-in authentication error:", error);
     throw error;
   } finally {
     isSigningIn = false;
