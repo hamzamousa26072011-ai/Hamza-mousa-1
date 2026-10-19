@@ -86,12 +86,12 @@ const FlipCard: React.FC<FlipCardProps> = React.memo(({
   const isFullscreen = size === "fullscreen";
 
   const cardDim = isFullscreen
-    ? "w-28 sm:w-40 md:w-52 h-32 sm:h-44 md:h-56 rounded-2xl sm:rounded-3xl"
-    : "w-24 sm:w-36 md:w-44 lg:w-48 h-28 sm:h-36 md:h-44 lg:h-48 rounded-2xl sm:rounded-3xl";
+    ? "w-28 sm:w-44 md:w-60 lg:w-76 xl:w-92 h-36 sm:h-56 md:h-72 lg:h-88 xl:h-[26rem] rounded-2xl sm:rounded-3xl lg:rounded-[36px] xl:rounded-[44px]"
+    : "w-24 sm:w-40 md:w-52 lg:w-60 xl:w-68 h-28 sm:h-44 md:h-56 lg:h-64 xl:h-72 rounded-2xl sm:rounded-3xl lg:rounded-[32px] xl:rounded-[36px]";
 
   const fontDim = isFullscreen
-    ? "text-5xl sm:text-7xl md:text-8xl lg:text-9xl"
-    : "text-4xl sm:text-6xl md:text-7xl lg:text-8xl";
+    ? "text-5xl sm:text-7xl md:text-9xl lg:text-[10rem] xl:text-[12.5rem]"
+    : "text-4xl sm:text-6xl md:text-8xl lg:text-9xl xl:text-[10rem]";
 
   const cardBgTop = isLight 
     ? "bg-gradient-to-b from-[#FAF5FF] to-[#F3E8FF] border-[#E9D5FF]" 
@@ -118,7 +118,7 @@ const FlipCard: React.FC<FlipCardProps> = React.memo(({
       >
         
         {/* 1. UPPER STATIC BACKGROUND: Displays the NEW value */}
-        <div className={`absolute top-0 left-0 right-0 h-1/2 overflow-hidden rounded-t-2xl sm:rounded-t-3xl border-t border-x ${cardBgTop} shadow-inner`}>
+        <div className={`absolute top-0 left-0 right-0 h-1/2 overflow-hidden rounded-t-2xl sm:rounded-t-3xl lg:rounded-t-[36px] xl:rounded-t-[44px] border-t border-x ${cardBgTop} shadow-inner`}>
           <div className="absolute inset-x-0 top-0 h-[200%] flex items-center justify-center pointer-events-none">
             <span className={`${fontDim} font-mono font-black tracking-tight leading-none ${textColor} tabular-nums drop-shadow-md select-none`}>
               {currentVal}
@@ -128,7 +128,7 @@ const FlipCard: React.FC<FlipCardProps> = React.memo(({
         </div>
 
         {/* 2. LOWER STATIC BACKGROUND: Displays OLD value while flipping, then NEW value */}
-        <div className={`absolute bottom-0 left-0 right-0 h-1/2 overflow-hidden rounded-b-2xl sm:rounded-b-3xl border-b border-x ${cardBgBottom} shadow-2xl`}>
+        <div className={`absolute bottom-0 left-0 right-0 h-1/2 overflow-hidden rounded-b-2xl sm:rounded-b-3xl lg:rounded-b-[36px] xl:rounded-b-[44px] border-b border-x ${cardBgBottom} shadow-2xl`}>
           <div className="absolute inset-x-0 top-[-100%] h-[200%] flex items-center justify-center pointer-events-none">
             <span className={`${fontDim} font-mono font-black tracking-tight leading-none ${textColor} tabular-nums drop-shadow-md select-none`}>
               {isFlipping ? previousVal : currentVal}
@@ -153,7 +153,7 @@ const FlipCard: React.FC<FlipCardProps> = React.memo(({
           >
             {/* FACE A (Front Face): Shows OLD upper half as it folds forward and down */}
             <div 
-              className={`absolute inset-0 overflow-hidden rounded-t-2xl sm:rounded-t-3xl border-t border-x ${cardBgTop} backface-hidden shadow-lg`}
+              className={`absolute inset-0 overflow-hidden rounded-t-2xl sm:rounded-t-3xl lg:rounded-t-[36px] xl:rounded-t-[44px] border-t border-x ${cardBgTop} backface-hidden shadow-lg`}
               style={{ backfaceVisibility: "hidden" }}
             >
               <div className="absolute inset-x-0 top-0 h-[200%] flex items-center justify-center pointer-events-none">
@@ -166,7 +166,7 @@ const FlipCard: React.FC<FlipCardProps> = React.memo(({
 
             {/* FACE B (Back Face): Shows NEW lower half, right-side up when rotated 180° */}
             <div 
-              className={`absolute inset-0 overflow-hidden rounded-b-2xl sm:rounded-b-3xl border-b border-x ${cardBgBottom} backface-hidden shadow-2xl`}
+              className={`absolute inset-0 overflow-hidden rounded-b-2xl sm:rounded-b-3xl lg:rounded-b-[36px] xl:rounded-b-[44px] border-b border-x ${cardBgBottom} backface-hidden shadow-2xl`}
               style={{
                 backfaceVisibility: "hidden",
                 transform: "rotateX(180deg)"
@@ -183,15 +183,15 @@ const FlipCard: React.FC<FlipCardProps> = React.memo(({
         )}
 
         {/* Midline horizontal seam divider */}
-        <div className="absolute top-1/2 left-0 right-0 h-[2px] -translate-y-1/2 bg-[#090814] z-30 pointer-events-none shadow-[0_1px_1px_rgba(255,255,255,0.08)]" />
+        <div className="absolute top-1/2 left-0 right-0 h-[2px] sm:h-[3px] -translate-y-1/2 bg-[#090814] z-30 pointer-events-none shadow-[0_1px_1px_rgba(255,255,255,0.08)]" />
         
         {/* Physical side hinge notches */}
-        <div className={`absolute top-1/2 -left-1.5 w-3 h-4 -translate-y-1/2 rounded-r-full ${isLight ? "bg-[#F3E8FF]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-r border-y border-black/40`} />
-        <div className={`absolute top-1/2 -right-1.5 w-3 h-4 -translate-y-1/2 rounded-l-full ${isLight ? "bg-[#F3E8FF]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-l border-y border-black/40`} />
+        <div className={`absolute top-1/2 -left-1.5 sm:-left-2 md:-left-2.5 w-3 sm:w-4 md:w-5 h-4 sm:h-5 md:h-6 -translate-y-1/2 rounded-r-full ${isLight ? "bg-[#F3E8FF]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-r border-y border-black/40`} />
+        <div className={`absolute top-1/2 -right-1.5 sm:-right-2 md:-right-2.5 w-3 sm:w-4 md:w-5 h-4 sm:h-5 md:h-6 -translate-y-1/2 rounded-l-full ${isLight ? "bg-[#F3E8FF]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-l border-y border-black/40`} />
       </div>
 
       {/* Label beneath card */}
-      <span className={`text-[10px] sm:text-xs font-mono font-black uppercase tracking-widest mt-2 sm:mt-3 ${
+      <span className={`${isFullscreen ? "text-xs sm:text-sm md:text-base font-mono font-black uppercase tracking-[0.25em] mt-3 sm:mt-5" : "text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mt-2.5 sm:mt-3.5"} ${
         isLight ? "text-[#7E22CE]" : "text-purple-300/80"
       }`}>
         {label}
@@ -457,8 +457,6 @@ export default function FocusTab({
       setCustomHours(0);
       setCustomMinutes(5);
     }
-
-    onResetFocus?.();
   };
 
   const handleApplyCustomTime = (h: number, m: number) => {
@@ -474,7 +472,6 @@ export default function FocusTab({
     setCustomMinutes(finalMins % 60);
     onDurationChange(finalMins);
     onModeChange?.("work");
-    onResetFocus?.();
   };
 
   // Break down focusTimeRemaining (HH:MM:SS) safely
@@ -568,7 +565,7 @@ export default function FocusTab({
 
               {/* Central Fullscreen Mechanical Flip Clock */}
               <div className="my-auto py-8 flex flex-col items-center justify-center">
-                <div className="flex items-center justify-center gap-3 sm:gap-6 md:gap-8 my-6">
+                <div className="flex items-center justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-10 xl:gap-12 my-6">
                   {/* Hours Flip Card */}
                   <FlipCard 
                     value={hoursStr} 
@@ -580,11 +577,11 @@ export default function FocusTab({
                   />
 
                   {/* Purple Colon Separator 1 */}
-                  <div className="flex flex-col gap-3 sm:gap-4 items-center justify-center pb-6">
-                    <span className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full ${
+                  <div className="flex flex-col gap-3 sm:gap-5 md:gap-7 items-center justify-center pb-6 sm:pb-10 md:pb-14">
+                    <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
                       isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
                     }`} />
-                    <span className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full ${
+                    <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
                       isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
                     }`} />
                   </div>
@@ -600,11 +597,11 @@ export default function FocusTab({
                   />
 
                   {/* Purple Colon Separator 2 */}
-                  <div className="flex flex-col gap-3 sm:gap-4 items-center justify-center pb-6">
-                    <span className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full ${
+                  <div className="flex flex-col gap-3 sm:gap-5 md:gap-7 items-center justify-center pb-6 sm:pb-10 md:pb-14">
+                    <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
                       isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
                     }`} />
-                    <span className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full ${
+                    <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
                       isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
                     }`} />
                   </div>
@@ -677,7 +674,6 @@ export default function FocusTab({
                     onClick={() => {
                       pauseSoundscape();
                       onResetFocus ? onResetFocus() : onStopFocus();
-                      onDurationChange(focusMinutesSelected);
                     }}
                     className={`py-3.5 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
                       isLight
@@ -929,7 +925,7 @@ export default function FocusTab({
             )}
 
             {/* The Three Flip Cards */}
-            <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6 my-2">
+            <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6 lg:gap-8 my-2">
               
               {/* HOURS FLIP CARD */}
               <FlipCard
@@ -941,15 +937,15 @@ export default function FocusTab({
               />
 
               {/* PURPLE COLON SEPARATOR 1 */}
-              <div className="flex flex-col gap-2.5 sm:gap-3.5 items-center justify-center pb-5 sm:pb-6">
-                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+              <div className="flex flex-col gap-2.5 sm:gap-3.5 md:gap-4 items-center justify-center pb-5 sm:pb-7 md:pb-9">
+                <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
                   isPaused 
                     ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
                     : focusModeActive 
                     ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
                     : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
                 }`} />
-                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+                <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
                   isPaused 
                     ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
                     : focusModeActive 
@@ -968,15 +964,15 @@ export default function FocusTab({
               />
 
               {/* PURPLE COLON SEPARATOR 2 */}
-              <div className="flex flex-col gap-2.5 sm:gap-3.5 items-center justify-center pb-5 sm:pb-6">
-                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+              <div className="flex flex-col gap-2.5 sm:gap-3.5 md:gap-4 items-center justify-center pb-5 sm:pb-7 md:pb-9">
+                <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
                   isPaused 
                     ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
                     : focusModeActive 
                     ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
                     : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
                 }`} />
-                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+                <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
                   isPaused 
                     ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
                     : focusModeActive 
@@ -1050,7 +1046,6 @@ export default function FocusTab({
                 onClick={() => {
                   pauseSoundscape();
                   onResetFocus ? onResetFocus() : onStopFocus();
-                  onDurationChange(focusMinutesSelected);
                 }}
                 className={`py-3 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition active:scale-95 ${
                   isLight
