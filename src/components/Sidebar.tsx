@@ -223,7 +223,7 @@ export default function Sidebar({
                     {currentUser.displayName || "Student"}
                   </span>
                   {isFirestoreOffline ? (
-                    <span className="text-[8px] font-mono text-amber-500 uppercase tracking-wider leading-none font-bold" title="Using local browser sandbox (Firestore offline)">
+                    <span className="text-[8px] font-mono text-purple-400 uppercase tracking-wider leading-none font-bold" title="Using local browser sandbox (Firestore offline)">
                       Sandbox
                     </span>
                   ) : (

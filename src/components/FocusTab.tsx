@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { 
   Play, 
@@ -7,14 +7,14 @@ import {
   CheckCircle2, 
   Volume2, 
   VolumeX, 
-  Headphones,
-  CloudRain,
-  Maximize2,
-  Minimize2,
-  Sun,
-  Timer,
-  Clock,
-  Edit3
+  Headphones, 
+  CloudRain, 
+  Maximize2, 
+  Minimize2, 
+  Clock, 
+  Edit3,
+  Coffee,
+  Activity
 } from "lucide-react";
 import {
   SoundscapeType,
@@ -23,9 +23,8 @@ import {
   stopAllSoundscapes,
   pauseSoundscape
 } from "../lib/ambientSoundscapes";
-import { FlipClockTimer } from "./FlipClockTimer";
 
-export type TimerModeType = "p2" | "p4" | "p6" | "math" | "custom";
+export type TimerPresetId = "p2" | "p4" | "p6" | "math" | "custom" | "pomodoro" | "shortBreak";
 
 interface FocusTabProps {
   focusModeActive: boolean;
@@ -37,12 +36,171 @@ interface FocusTabProps {
   onDurationChange: (mins: number) => void;
   focusTimeRemaining: string;
   isPaused?: boolean;
-  pomodoroMode?: "work" | "break" | "long";
-  onModeChange?: (mode: "work" | "break" | "long") => void;
+  pomodoroMode?: "work" | "break";
+  onModeChange?: (mode: "work" | "break") => void;
   pomodoroCount?: number;
   themeMode?: "light" | "dark";
   onFullScreenChange?: (isFullScreen: boolean) => void;
 }
+
+interface FlipCardProps {
+  value: string;
+  label: string;
+  isLight: boolean;
+  isPaused: boolean;
+  isActive: boolean;
+  size?: "default" | "fullscreen";
+}
+
+/**
+ * Authentic 180-degree Mechanical Split-Flap Clock Card
+ * Rotates smoothly in true 3D perspective from 0° to -180° with physical gravity easing.
+ */
+const FlipCard: React.FC<FlipCardProps> = React.memo(({
+  value,
+  label,
+  isLight,
+  isPaused,
+  isActive,
+  size = "default"
+}) => {
+  const [currentVal, setCurrentVal] = useState(value);
+  const [previousVal, setPreviousVal] = useState(value);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [flipKey, setFlipKey] = useState(0);
+
+  useEffect(() => {
+    if (value !== currentVal) {
+      setPreviousVal(currentVal);
+      setCurrentVal(value);
+      setIsFlipping(true);
+      setFlipKey((k) => k + 1);
+
+      const timer = setTimeout(() => {
+        setIsFlipping(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [value, currentVal]);
+
+  const isFullscreen = size === "fullscreen";
+
+  const cardDim = isFullscreen
+    ? "w-28 sm:w-40 md:w-52 h-32 sm:h-44 md:h-56 rounded-2xl sm:rounded-3xl"
+    : "w-24 sm:w-36 md:w-44 lg:w-48 h-28 sm:h-36 md:h-44 lg:h-48 rounded-2xl sm:rounded-3xl";
+
+  const fontDim = isFullscreen
+    ? "text-5xl sm:text-7xl md:text-8xl lg:text-9xl"
+    : "text-4xl sm:text-6xl md:text-7xl lg:text-8xl";
+
+  const cardBgTop = isLight 
+    ? "bg-gradient-to-b from-[#FAF5FF] to-[#F3E8FF] border-[#E9D5FF]" 
+    : "bg-gradient-to-b from-[#1C1838] to-[#14112B] border-white/10";
+
+  const cardBgBottom = isLight 
+    ? "bg-gradient-to-b from-[#EDE9FE] to-[#DDD6FE] border-[#E9D5FF]" 
+    : "bg-gradient-to-b from-[#110E24] to-[#0A0817] border-white/10";
+
+  const textColor = isLight ? "text-[#581C87]" : "text-white";
+
+  const glowBorder = isActive 
+    ? isLight ? "ring-2 ring-[#8B5CF6]/50 shadow-[0_0_20px_rgba(139,92,246,0.25)]" : "ring-1 ring-[#8B5CF6]/60 shadow-[0_0_30px_rgba(139,92,246,0.35)]" 
+    : isPaused 
+    ? "ring-1 ring-[#A855F7]/50 shadow-[0_0_25px_rgba(168,85,247,0.3)]" 
+    : "border border-white/10";
+
+  return (
+    <div className="flex flex-col items-center">
+      {/* 3D PERSPECTIVE CONTAINER */}
+      <div 
+        className={`relative ${cardDim} select-none perspective-1000 preserve-3d ${glowBorder}`}
+        style={{ perspective: "1000px" }}
+      >
+        
+        {/* 1. UPPER STATIC BACKGROUND: Displays the NEW value */}
+        <div className={`absolute top-0 left-0 right-0 h-1/2 overflow-hidden rounded-t-2xl sm:rounded-t-3xl border-t border-x ${cardBgTop} shadow-inner`}>
+          <div className="absolute inset-x-0 top-0 h-[200%] flex items-center justify-center pointer-events-none">
+            <span className={`${fontDim} font-mono font-black tracking-tight leading-none ${textColor} tabular-nums drop-shadow-md select-none`}>
+              {currentVal}
+            </span>
+          </div>
+          <div className="absolute inset-0 bg-white/[0.04] pointer-events-none" />
+        </div>
+
+        {/* 2. LOWER STATIC BACKGROUND: Displays OLD value while flipping, then NEW value */}
+        <div className={`absolute bottom-0 left-0 right-0 h-1/2 overflow-hidden rounded-b-2xl sm:rounded-b-3xl border-b border-x ${cardBgBottom} shadow-2xl`}>
+          <div className="absolute inset-x-0 top-[-100%] h-[200%] flex items-center justify-center pointer-events-none">
+            <span className={`${fontDim} font-mono font-black tracking-tight leading-none ${textColor} tabular-nums drop-shadow-md select-none`}>
+              {isFlipping ? previousVal : currentVal}
+            </span>
+          </div>
+          <div className="absolute inset-0 bg-black/[0.14] pointer-events-none" />
+          {/* Shadow that darkens lower background as leaf falls towards it */}
+          {isFlipping && (
+            <div className="absolute inset-0 bg-black/40 pointer-events-none animate-flip-shadow" />
+          )}
+        </div>
+
+        {/* 3. FLIPPING 180° MECHANICAL LEAF */}
+        {isFlipping && (
+          <div 
+            key={`flip-leaf-${flipKey}`}
+            className="absolute top-0 left-0 right-0 h-1/2 z-20 pointer-events-none animate-flip-down"
+            style={{
+              transformOrigin: "50% 100%",
+              transformStyle: "preserve-3d"
+            }}
+          >
+            {/* FACE A (Front Face): Shows OLD upper half as it folds forward and down */}
+            <div 
+              className={`absolute inset-0 overflow-hidden rounded-t-2xl sm:rounded-t-3xl border-t border-x ${cardBgTop} backface-hidden shadow-lg`}
+              style={{ backfaceVisibility: "hidden" }}
+            >
+              <div className="absolute inset-x-0 top-0 h-[200%] flex items-center justify-center pointer-events-none">
+                <span className={`${fontDim} font-mono font-black tracking-tight leading-none ${textColor} tabular-nums drop-shadow-md select-none`}>
+                  {previousVal}
+                </span>
+              </div>
+              <div className="absolute inset-0 bg-black/15 pointer-events-none" />
+            </div>
+
+            {/* FACE B (Back Face): Shows NEW lower half, right-side up when rotated 180° */}
+            <div 
+              className={`absolute inset-0 overflow-hidden rounded-b-2xl sm:rounded-b-3xl border-b border-x ${cardBgBottom} backface-hidden shadow-2xl`}
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateX(180deg)"
+              }}
+            >
+              <div className="absolute inset-x-0 top-[-100%] h-[200%] flex items-center justify-center pointer-events-none">
+                <span className={`${fontDim} font-mono font-black tracking-tight leading-none ${textColor} tabular-nums drop-shadow-md select-none`}>
+                  {currentVal}
+                </span>
+              </div>
+              <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+            </div>
+          </div>
+        )}
+
+        {/* Midline horizontal seam divider */}
+        <div className="absolute top-1/2 left-0 right-0 h-[2px] -translate-y-1/2 bg-[#090814] z-30 pointer-events-none shadow-[0_1px_1px_rgba(255,255,255,0.08)]" />
+        
+        {/* Physical side hinge notches */}
+        <div className={`absolute top-1/2 -left-1.5 w-3 h-4 -translate-y-1/2 rounded-r-full ${isLight ? "bg-[#F3E8FF]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-r border-y border-black/40`} />
+        <div className={`absolute top-1/2 -right-1.5 w-3 h-4 -translate-y-1/2 rounded-l-full ${isLight ? "bg-[#F3E8FF]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-l border-y border-black/40`} />
+      </div>
+
+      {/* Label beneath card */}
+      <span className={`text-[10px] sm:text-xs font-mono font-black uppercase tracking-widest mt-2 sm:mt-3 ${
+        isLight ? "text-[#7E22CE]" : "text-purple-300/80"
+      }`}>
+        {label}
+      </span>
+    </div>
+  );
+});
+
+FlipCard.displayName = "FlipCard";
 
 export default function FocusTab({
   focusModeActive,
@@ -54,65 +212,78 @@ export default function FocusTab({
   onDurationChange,
   focusTimeRemaining,
   isPaused = false,
+  pomodoroMode = "work",
+  onModeChange,
   pomodoroCount = 0,
   themeMode = "dark",
   onFullScreenChange
 }: FocusTabProps) {
   const isLight = themeMode === "light";
 
-  const determineMode = (mins: number): TimerModeType => {
-    if (mins === 45) return "p2";
-    if (mins === 75) return "p4";
-    if (mins === 60) return "p6";
-    if (mins === 120) return "math";
+  // Active preset determination (Long break removed)
+  const activePreset = useMemo<TimerPresetId>(() => {
+    if (focusMinutesSelected === 45) return "p2";
+    if (focusMinutesSelected === 75) return "p4";
+    if (focusMinutesSelected === 60) return "p6";
+    if (focusMinutesSelected === 120) return "math";
+    if (pomodoroMode === "break" && focusMinutesSelected === 5) return "shortBreak";
+    if (pomodoroMode === "work" && focusMinutesSelected === 25) return "pomodoro";
     return "custom";
-  };
+  }, [focusMinutesSelected, pomodoroMode]);
 
-  const [activeMode, setActiveMode] = useState<TimerModeType>(() => determineMode(focusMinutesSelected));
-  const [isLocked, setIsLocked] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
   const [customHours, setCustomHours] = useState<number>(() => Math.floor(focusMinutesSelected / 60));
   const [customMinutes, setCustomMinutes] = useState<number>(() => focusMinutesSelected % 60);
 
   useEffect(() => {
-    setActiveMode(determineMode(focusMinutesSelected));
     setCustomHours(Math.floor(focusMinutesSelected / 60));
     setCustomMinutes(focusMinutesSelected % 60);
   }, [focusMinutesSelected]);
 
-  // Ambient Soundscapes State
+  // Ambient Soundscapes state
   const [selectedSoundscape, setSelectedSoundscape] = useState<SoundscapeType>(() => {
-    const saved = localStorage.getItem("ENGEZ_SELECTED_SOUNDSCAPE");
-    if (saved === "white_noise" || saved === "silent") {
-      return saved as SoundscapeType;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ENGEZ_SELECTED_SOUNDSCAPE");
+      return (saved === "white_noise" || saved === "silent") ? (saved as SoundscapeType) : "silent";
     }
     return "silent";
   });
 
   const [soundVolume, setSoundVolumeState] = useState<number>(() => {
-    const saved = localStorage.getItem("ENGEZ_SOUND_VOLUME");
-    return saved ? parseFloat(saved) : 0.6;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ENGEZ_SOUND_VOLUME");
+      return saved ? parseFloat(saved) : 0.6;
+    }
+    return 0.6;
   });
 
   const [autoSoundOnStudy, setAutoSoundOnStudy] = useState<boolean>(() => {
-    const saved = localStorage.getItem("ENGEZ_AUTO_SOUND_STUDY");
-    return saved !== null ? saved === "true" : false;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ENGEZ_AUTO_SOUND_STUDY");
+      return saved !== null ? saved === "true" : false;
+    }
+    return false;
   });
 
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [prevFocusActive, setPrevFocusActive] = useState(focusModeActive);
 
   useEffect(() => {
-    localStorage.setItem("ENGEZ_SELECTED_SOUNDSCAPE", selectedSoundscape);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ENGEZ_SELECTED_SOUNDSCAPE", selectedSoundscape);
+    }
   }, [selectedSoundscape]);
 
   useEffect(() => {
-    localStorage.setItem("ENGEZ_SOUND_VOLUME", soundVolume.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ENGEZ_SOUND_VOLUME", soundVolume.toString());
+    }
   }, [soundVolume]);
 
   useEffect(() => {
-    localStorage.setItem("ENGEZ_AUTO_SOUND_STUDY", autoSoundOnStudy.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ENGEZ_AUTO_SOUND_STUDY", autoSoundOnStudy.toString());
+    }
   }, [autoSoundOnStudy]);
 
   useEffect(() => {
@@ -120,13 +291,12 @@ export default function FocusTab({
       stopAllSoundscapes();
       return;
     }
-
     if (isPaused) {
       pauseSoundscape();
     } else if (focusModeActive) {
       setSoundscape(selectedSoundscape, soundVolume);
     }
-  }, [focusModeActive, isPaused, selectedSoundscape]);
+  }, [focusModeActive, isPaused, selectedSoundscape, soundVolume]);
 
   useEffect(() => {
     setSoundscapeVolume(soundVolume);
@@ -158,20 +328,7 @@ export default function FocusTab({
     }
   };
 
-  const handleQuickToggleSound = () => {
-    if (selectedSoundscape !== "silent") {
-      setSelectedSoundscape("silent");
-      stopAllSoundscapes();
-    } else {
-      setSelectedSoundscape("white_noise");
-      if (isPaused) {
-        pauseSoundscape();
-      } else {
-        setSoundscape("white_noise", soundVolume);
-      }
-    }
-  };
-
+  // Fullscreen Handlers
   const handleEnterFullscreen = async () => {
     setIsFullScreen(true);
     onFullScreenChange?.(true);
@@ -180,13 +337,12 @@ export default function FocusTab({
         await document.documentElement.requestFullscreen();
       }
     } catch (e) {
-      console.warn("Fullscreen request not allowed or supported:", e);
+      console.warn("Fullscreen request error:", e);
     }
   };
 
   const handleExitFullscreen = () => {
     setIsFullScreen(false);
-    setIsLocked(false);
     onFullScreenChange?.(false);
     try {
       if (document.fullscreenElement && document.exitFullscreen) {
@@ -209,18 +365,17 @@ export default function FocusTab({
   }, [isFullScreen, onFullScreenChange]);
 
   useEffect(() => {
-    if (isFullScreen || isLocked) {
-      onFullScreenChange?.(true);
+    if (isFullScreen) {
       document.body.style.overflow = "hidden";
     } else {
-      onFullScreenChange?.(false);
       document.body.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isFullScreen, isLocked, onFullScreenChange]);
+  }, [isFullScreen]);
 
+  // Keyboard Shortcuts (Space: Play/Pause, Esc: Exit)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
@@ -231,16 +386,16 @@ export default function FocusTab({
       if (e.key === "Escape") {
         if (showCompletionModal) {
           setShowCompletionModal(false);
-        } else if (isFullScreen || isLocked) {
+        } else if (isFullScreen) {
           handleExitFullscreen();
         }
       } else if (e.key === "f" || e.key === "F") {
-        if (isFullScreen || isLocked) {
+        if (isFullScreen) {
           handleExitFullscreen();
         } else {
           handleEnterFullscreen();
         }
-      } else if (e.code === "Space" && (isFullScreen || isLocked)) {
+      } else if (e.code === "Space") {
         e.preventDefault();
         if (focusModeActive) {
           pauseSoundscape();
@@ -256,7 +411,7 @@ export default function FocusTab({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullScreen, isLocked, focusModeActive, showCompletionModal, onPauseFocus, onStopFocus, onStartFocus, selectedSoundscape, soundVolume]);
+  }, [isFullScreen, focusModeActive, showCompletionModal, onPauseFocus, onStopFocus, onStartFocus, selectedSoundscape, soundVolume]);
 
   useEffect(() => {
     if (prevFocusActive && !focusModeActive && !isPaused) {
@@ -265,29 +420,44 @@ export default function FocusTab({
     setPrevFocusActive(focusModeActive);
   }, [focusModeActive, isPaused]);
 
-  const handleSelectMode = (mode: TimerModeType) => {
+  // Preset Selection Handlers (Long break removed)
+  const handleSelectPreset = (preset: TimerPresetId) => {
     if (focusModeActive) {
       onPauseFocus ? onPauseFocus() : onStopFocus();
     }
-    setActiveMode(mode);
 
-    if (mode === "p2") {
+    if (preset === "p2") {
+      onModeChange?.("work");
       onDurationChange(45);
       setCustomHours(0);
       setCustomMinutes(45);
-    } else if (mode === "p4") {
+    } else if (preset === "p4") {
+      onModeChange?.("work");
       onDurationChange(75);
       setCustomHours(1);
       setCustomMinutes(15);
-    } else if (mode === "p6") {
+    } else if (preset === "p6") {
+      onModeChange?.("work");
       onDurationChange(60);
       setCustomHours(1);
       setCustomMinutes(0);
-    } else if (mode === "math") {
+    } else if (preset === "math") {
+      onModeChange?.("work");
       onDurationChange(120);
       setCustomHours(2);
       setCustomMinutes(0);
+    } else if (preset === "pomodoro") {
+      onModeChange?.("work");
+      onDurationChange(25);
+      setCustomHours(0);
+      setCustomMinutes(25);
+    } else if (preset === "shortBreak") {
+      onModeChange?.("break");
+      onDurationChange(5);
+      setCustomHours(0);
+      setCustomMinutes(5);
     }
+
     onResetFocus?.();
   };
 
@@ -303,114 +473,91 @@ export default function FocusTab({
     setCustomHours(Math.floor(finalMins / 60));
     setCustomMinutes(finalMins % 60);
     onDurationChange(finalMins);
-    setActiveMode(determineMode(finalMins));
+    onModeChange?.("work");
     onResetFocus?.();
   };
 
-  let remainingSeconds = 0;
-  try {
-    const parts = focusTimeRemaining.split(":");
-    if (parts.length === 3) {
-      remainingSeconds = parseInt(parts[0], 10) * 3600 + parseInt(parts[1], 10) * 60 + parseInt(parts[2], 10);
-    } else if (parts.length === 2) {
-      remainingSeconds = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
-    }
-  } catch {
-    remainingSeconds = focusMinutesSelected * 60;
+  // Break down focusTimeRemaining (HH:MM:SS) safely
+  const timeParts = focusTimeRemaining.split(":");
+  let hoursStr = "00";
+  let minsStr = "00";
+  let secsStr = "00";
+
+  if (timeParts.length === 3) {
+    hoursStr = timeParts[0].padStart(2, "0");
+    minsStr = timeParts[1].padStart(2, "0");
+    secsStr = timeParts[2].padStart(2, "0");
+  } else if (timeParts.length === 2) {
+    minsStr = timeParts[0].padStart(2, "0");
+    secsStr = timeParts[1].padStart(2, "0");
   }
 
-  const totalSeconds = focusMinutesSelected * 60;
-  const progressRatio = totalSeconds > 0 ? Math.max(0, Math.min(1, remainingSeconds / totalSeconds)) : 1;
+  const getPresetLabel = () => {
+    if (activePreset === "p2") return "P2 (45 MINUTES)";
+    if (activePreset === "p4") return "P4 (1 HOUR 15 MIN)";
+    if (activePreset === "p6") return "P6 (1 HOUR)";
+    if (activePreset === "math") return "MATH (2 HOURS)";
+    if (activePreset === "pomodoro") return "POMODORO (25 MIN)";
+    if (activePreset === "shortBreak") return "SHORT BREAK (5 MIN)";
+    return `CUSTOM (${focusMinutesSelected} MIN)`;
+  };
 
-  const getModeLabel = () => {
-    if (activeMode === "p2") return "Paper 2 (45 min)";
-    if (activeMode === "p4") return "Paper 4 (1h 15m)";
-    if (activeMode === "p6") return "Paper 6 (1 hour)";
-    if (activeMode === "math") return "Mathematics (2 hours)";
-    return `Custom (${focusMinutesSelected}m)`;
+  const getActiveDurationLabel = () => {
+    const h = Math.floor(focusMinutesSelected / 60);
+    const m = focusMinutesSelected % 60;
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
   };
 
   return (
     <>
-      {/* FULL SCREEN FOCUS OVERLAY */}
+      {/* =========================================================================
+          IMMERSIVE FULL-SCREEN OVERLAY
+          ========================================================================= */}
       {typeof document !== "undefined" &&
         createPortal(
-          (isFullScreen || isLocked) && (
+          isFullScreen && (
             <div
               role="dialog"
               aria-modal="true"
               aria-label="Full screen focus timer"
               className={`fixed inset-0 z-9999 flex flex-col justify-between p-4 sm:p-6 md:p-8 select-none overflow-y-auto ${
-                isLight ? "bg-[#F6F7FA] text-[#18202B]" : "bg-[#10131A] text-[#F1F3F8]"
+                isLight ? "bg-[#FBF9F5] text-[#1A1614]" : "bg-[#090A10] text-[#F8FAFC]"
               }`}
             >
               {/* Fullscreen Header */}
               <div className="w-full flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <Timer size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-                  <span className="text-xs sm:text-sm font-semibold">{getModeLabel()}</span>
+                  <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#8B5CF6]" : "bg-[#8B5CF6]"} ${focusModeActive ? "animate-ping" : ""}`} />
+                  <span className="text-sm font-mono font-black tracking-wide uppercase">{getPresetLabel()}</span>
                 </div>
 
-                {/* Preset Switcher in Full Screen */}
-                <div
-                  className={`hidden md:flex items-center border p-1 rounded-xl gap-1 ${
-                    isLight ? "border-[#E2E6EF] bg-[#FFFFFF]" : "border-[#283040] bg-[#191E28]"
-                  }`}
-                >
-                  {(
-                    [
-                      { id: "p2", label: "P2 · 45m" },
-                      { id: "p6", label: "P6 · 1h" },
-                      { id: "p4", label: "P4 · 1h 15m" },
-                      { id: "math", label: "Math · 2h" },
-                      { id: "custom", label: "Custom" }
-                    ] as const
-                  ).map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => handleSelectMode(m.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                        activeMode === m.id
-                          ? isLight
-                            ? "bg-[#5F55C8] text-white"
-                            : "bg-[#6D5DF6] text-white"
-                          : isLight
-                          ? "text-[#596474] hover:text-[#18202B]"
-                          : "text-[#B7C0CF] hover:text-[#F1F3F8]"
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Sound & Exit */}
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleQuickToggleSound}
-                    className={`py-2 px-3 border rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer ${
+                    onClick={() => handleSelectSoundscape(selectedSoundscape === "silent" ? "white_noise" : "silent")}
+                    className={`py-2 px-3 border rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer ${
                       selectedSoundscape !== "silent"
                         ? isLight
-                          ? "bg-[#F0EEFF] border-[#D8D3F8] text-[#5F55C8]"
-                          : "bg-[#6D5DF6]/20 border-[#6D5DF6]/40 text-[#A99BFF]"
+                          ? "bg-[#FAF5FF] border-[#E9D5FF] text-[#7E22CE]"
+                          : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
                         : isLight
-                        ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#596474]"
-                        : "bg-[#191E28] border-[#283040] text-[#B7C0CF]"
+                        ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#736B63]"
+                        : "bg-[#101322] border-white/10 text-slate-400"
                     }`}
                   >
                     {selectedSoundscape === "silent" ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                    <span>{selectedSoundscape === "silent" ? "Quiet" : "Gentle Rain"}</span>
+                    <span>{selectedSoundscape === "silent" ? "Muted" : "Rain"}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleExitFullscreen}
-                    className={`py-2 px-3.5 border rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer ${
+                    className={`py-2 px-3.5 border rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer ${
                       isLight
-                        ? "bg-[#FFFFFF] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
-                        : "bg-[#191E28] hover:bg-[#222938] border-[#283040] text-[#F1F3F8]"
+                        ? "bg-[#FFFFFF] hover:bg-[#FAF5FF] border-[#EBE4DC] text-[#1A1614]"
+                        : "bg-[#101322] hover:bg-[#161A2B] border-white/10 text-white"
                     }`}
                   >
                     <Minimize2 size={14} />
@@ -419,37 +566,82 @@ export default function FocusTab({
                 </div>
               </div>
 
-              {/* Central Timer Readout */}
+              {/* Central Fullscreen Mechanical Flip Clock */}
               <div className="my-auto py-8 flex flex-col items-center justify-center">
-                <FlipClockTimer
-                  timeRemaining={focusTimeRemaining}
-                  size="xl"
-                  themeMode={themeMode}
-                  isPaused={isPaused}
-                  showLabels
-                />
+                <div className="flex items-center justify-center gap-3 sm:gap-6 md:gap-8 my-6">
+                  {/* Hours Flip Card */}
+                  <FlipCard 
+                    value={hoursStr} 
+                    label="HOURS" 
+                    isLight={isLight} 
+                    isPaused={isPaused} 
+                    isActive={focusModeActive}
+                    size="fullscreen"
+                  />
 
-                {focusModeActive && (
-                  <div className="w-64 sm:w-80 md:w-96 h-2 bg-black/10 dark:bg-white/10 rounded-full mt-8 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        isLight ? "bg-[#5F55C8]" : "bg-[#6D5DF6]"
-                      }`}
-                      style={{ width: `${Math.round((1 - progressRatio) * 100)}%` }}
-                    />
+                  {/* Purple Colon Separator 1 */}
+                  <div className="flex flex-col gap-3 sm:gap-4 items-center justify-center pb-6">
+                    <span className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full ${
+                      isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
+                    }`} />
+                    <span className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full ${
+                      isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
+                    }`} />
                   </div>
-                )}
 
-                <p className={`text-xs font-medium mt-4 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                  {isPaused
-                    ? "Session paused — press Space or Resume to continue"
-                    : focusModeActive
-                    ? `Active study block · ${getModeLabel()}`
-                    : `Ready · ${getModeLabel()}`}
-                </p>
+                  {/* Minutes Flip Card */}
+                  <FlipCard 
+                    value={minsStr} 
+                    label="MINUTES" 
+                    isLight={isLight} 
+                    isPaused={isPaused} 
+                    isActive={focusModeActive}
+                    size="fullscreen"
+                  />
+
+                  {/* Purple Colon Separator 2 */}
+                  <div className="flex flex-col gap-3 sm:gap-4 items-center justify-center pb-6">
+                    <span className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full ${
+                      isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
+                    }`} />
+                    <span className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full ${
+                      isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
+                    }`} />
+                  </div>
+
+                  {/* Seconds Flip Card */}
+                  <FlipCard 
+                    value={secsStr} 
+                    label="SECONDS" 
+                    isLight={isLight} 
+                    isPaused={isPaused} 
+                    isActive={focusModeActive}
+                    size="fullscreen"
+                  />
+                </div>
+
+                {/* Status Pill (All purple, zero yellow) */}
+                <div className="mt-4">
+                  {isPaused ? (
+                    <div className="px-4 py-1.5 rounded-full border border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] font-mono text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.25)]">
+                      <Pause size={12} fill="currentColor" />
+                      <span>PAUSED</span>
+                    </div>
+                  ) : focusModeActive ? (
+                    <div className="px-4 py-1.5 rounded-full border border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] font-mono text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.25)]">
+                      <span className="w-2 h-2 rounded-full bg-[#8B5CF6] animate-ping" />
+                      <span>STUDYING</span>
+                    </div>
+                  ) : (
+                    <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono text-xs font-bold flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                      <span>READY</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Bottom Controls */}
+              {/* Bottom Fullscreen Controls */}
               <div className="w-full flex flex-col items-center gap-3">
                 <div className="flex items-center gap-3">
                   {focusModeActive ? (
@@ -459,14 +651,10 @@ export default function FocusTab({
                         pauseSoundscape();
                         onPauseFocus ? onPauseFocus() : onStopFocus();
                       }}
-                      className={`py-3 px-8 border rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer ${
-                        isLight
-                          ? "bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]"
-                          : "bg-[#F59E0B]/15 border-[#FBBF24]/30 text-[#FBBF24]"
-                      }`}
+                      className="py-3.5 px-8 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
                     >
-                      <Pause size={15} fill="currentColor" />
-                      <span>Pause Session</span>
+                      <Pause size={16} fill="currentColor" />
+                      <span>Pause</span>
                     </button>
                   ) : (
                     <button
@@ -477,12 +665,10 @@ export default function FocusTab({
                         }
                         onStartFocus();
                       }}
-                      className={`py-3 px-8 rounded-xl text-xs font-semibold text-white flex items-center gap-2 cursor-pointer ${
-                        isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
-                      }`}
+                      className="py-3.5 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-xl shadow-[#8B5CF6]/35"
                     >
-                      <Play size={15} fill="currentColor" />
-                      <span>{isPaused ? "Resume Session" : "Start Session"}</span>
+                      <Play size={16} fill="currentColor" />
+                      <span>{isPaused ? "Resume" : "Start"}</span>
                     </button>
                   )}
 
@@ -493,19 +679,19 @@ export default function FocusTab({
                       onResetFocus ? onResetFocus() : onStopFocus();
                       onDurationChange(focusMinutesSelected);
                     }}
-                    className={`py-3 px-5 border rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer ${
+                    className={`py-3.5 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
                       isLight
-                        ? "bg-[#FFFFFF] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
-                        : "bg-[#191E28] hover:bg-[#222938] border-[#283040] text-[#F1F3F8]"
+                        ? "bg-[#FFFFFF] hover:bg-[#FAF5FF] border-[#EBE4DC] text-[#1A1614]"
+                        : "bg-[#101322] hover:bg-[#161A2B] border-white/10 text-white"
                     }`}
                   >
-                    <RotateCcw size={14} />
+                    <RotateCcw size={15} />
                     <span>Reset</span>
                   </button>
                 </div>
 
-                <p className={`text-[11px] font-mono ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                  Keyboard: Space to Play/Pause · Esc to Exit Full Screen
+                <p className={`text-[11px] font-mono ${isLight ? "text-[#7E22CE]" : "text-purple-300/80"}`}>
+                  Space: Play/Pause · Esc: Exit Full Screen
                 </p>
               </div>
             </div>
@@ -513,86 +699,100 @@ export default function FocusTab({
           document.body
         )}
 
-      {/* MAIN TIMER PAGE */}
-      <div className={`space-y-6 ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-inherit">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Focus &amp; Exam Timer</h1>
-            <p className={`text-xs sm:text-sm mt-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              Practice under real exam paper durations or set a custom focus block. ({pomodoroCount} sessions completed)
-            </p>
+      {/* =========================================================================
+          MAIN TIMER VIEW (ACCURATE MECHANICAL FLIP CLOCK WITH ZERO YELLOW)
+          ========================================================================= */}
+      <div className={`space-y-6 ${isLight ? "text-[#1A1614]" : "text-[#F8FAFC]"}`}>
+        
+        {/* Top Header Card */}
+        <div className={`p-5 sm:p-6 rounded-3xl border space-y-6 ${
+          isLight ? "bg-[#FFFFFF] border-[#EBE4DC] shadow-xs" : "bg-[#0C0D17] border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
+        }`}>
+          
+          {/* Top Bar: Mode Indicator + Full Screen Button */}
+          <div className="flex items-center justify-between pb-3 border-b border-inherit">
+            <div className="flex items-center gap-2.5">
+              <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#8B5CF6]" : "bg-[#8B5CF6]"} ${focusModeActive ? "animate-ping" : ""}`} />
+              <span className="text-sm font-mono font-black tracking-wide uppercase">{getPresetLabel()}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleEnterFullscreen}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold text-white flex items-center gap-2 cursor-pointer transition shadow-md active:scale-95 ${
+                isLight ? "bg-[#8B5CF6] hover:bg-[#7C3AED]" : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_16px_rgba(139,92,246,0.35)]"
+              }`}
+            >
+              <Maximize2 size={13} />
+              <span className="uppercase tracking-wider">Full Screen</span>
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleEnterFullscreen}
-            className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-2 cursor-pointer ${
-              isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
-            }`}
-          >
-            <Maximize2 size={14} />
-            <span>Full Screen Mode</span>
-          </button>
-        </div>
-
-        {/* Main Timer Container */}
-        <div
-          className={`p-5 sm:p-7 rounded-2xl border space-y-6 ${
-            isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
-          }`}
-        >
-          {/* 1. Exam Paper Duration Presets */}
+          {/* Preset Mode Selector Section */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold">Select Duration Preset</h2>
-              <span className={`text-xs font-mono font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
-                Active: {getModeLabel()}
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className={`font-bold uppercase tracking-wider ${isLight ? "text-[#7E22CE]" : "text-slate-400"}`}>
+                SELECT MODE OR TYPE TIME
+              </span>
+              <span className={`font-bold ${isLight ? "text-[#8B5CF6]" : "text-[#C084FC]"}`}>
+                Current: {getActiveDurationLabel()}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            {/* 5 Preset Cards (P2, P4, P6, MATH, CUSTOM) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {[
-                { id: "p2" as const, code: "Paper 2", time: "45 min", desc: "Multiple Choice / Short" },
-                { id: "p6" as const, code: "Paper 6", time: "1 hour", desc: "Alternative to Practical" },
-                { id: "p4" as const, code: "Paper 4", time: "1h 15m", desc: "Extended Theory" },
-                { id: "math" as const, code: "Mathematics", time: "2 hours", desc: "Full Extended Paper" },
-                { id: "custom" as const, code: "Custom", time: `${focusMinutesSelected}m`, desc: "Set hours & minutes" }
+                { id: "p2" as const, title: "P2", badge: "45 min", desc: "Paper 2 · 45 minutes" },
+                { id: "p4" as const, title: "P4", badge: "1h 15m", desc: "Paper 4 · 75 minutes" },
+                { id: "p6" as const, title: "P6", badge: "1 hour", desc: "Paper 6 · 60 minutes" },
+                { id: "math" as const, title: "MATH", badge: "2 hours", desc: "Mathematics · 120 minutes" },
+                { id: "custom" as const, title: "CUSTOM", badge: "Type", desc: "Type any time you want", isCustom: true },
               ].map((preset) => {
-                const isSelected = activeMode === preset.id;
+                const isSelected = activePreset === preset.id;
                 return (
                   <button
                     key={preset.id}
                     type="button"
-                    onClick={() => handleSelectMode(preset.id)}
-                    aria-pressed={isSelected}
-                    className={`p-3.5 rounded-xl border text-left transition-colors cursor-pointer flex flex-col justify-between gap-1.5 ${
+                    onClick={() => {
+                      if (preset.isCustom) {
+                        handleApplyCustomTime(customHours, customMinutes);
+                      } else {
+                        handleSelectPreset(preset.id);
+                      }
+                    }}
+                    className={`p-3.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[78px] ${
                       isSelected
                         ? isLight
-                          ? "bg-[#F0EEFF] border-[#5F55C8] text-[#18202B]"
-                          : "bg-[#6D5DF6]/20 border-[#A99BFF] text-[#F1F3F8]"
+                          ? "bg-[#FAF5FF] border-[#8B5CF6] shadow-xs"
+                          : "bg-[#8B5CF6]/15 border-[#8B5CF6] shadow-[0_0_20px_rgba(139,92,246,0.25)]"
                         : isLight
-                        ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
-                        : "bg-[#222938] hover:bg-[#2A3244] border-[#364054] text-[#F1F3F8]"
+                        ? "bg-[#FAF8F5] hover:bg-[#FAF5FF] border-[#EBE4DC]"
+                        : "bg-[#121320] hover:bg-[#18192A] border-white/5"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-bold">{preset.code}</span>
-                      <span
-                        className={`text-[11px] font-mono font-semibold ${
-                          isSelected
-                            ? isLight
-                              ? "text-[#5F55C8]"
-                              : "text-[#A99BFF]"
-                            : isLight
-                            ? "text-[#596474]"
-                            : "text-[#B7C0CF]"
-                        }`}
-                      >
-                        {preset.time}
+                    <div className="flex items-center justify-between w-full">
+                      <span className={`text-xs sm:text-sm font-mono font-black ${
+                        isSelected 
+                          ? isLight ? "text-[#7E22CE]" : "text-white" 
+                          : isLight ? "text-[#1A1614]" : "text-slate-200"
+                      }`}>
+                        {preset.title}
+                      </span>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold flex items-center gap-1 ${
+                        isSelected
+                          ? "bg-[#8B5CF6] text-white shadow-xs"
+                          : isLight ? "bg-[#EDE9FE] text-[#7E22CE]" : "bg-white/10 text-slate-300"
+                      }`}>
+                        {preset.isCustom && <Edit3 size={9} />}
+                        <span>{preset.badge}</span>
                       </span>
                     </div>
-                    <p className={`text-[11px] leading-snug ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+
+                    <p className={`text-[11px] font-sans truncate mt-2 ${
+                      isSelected 
+                        ? isLight ? "text-[#7E22CE] font-semibold" : "text-[#C084FC] font-semibold" 
+                        : isLight ? "text-[#82776E]" : "text-slate-400"
+                    }`}>
                       {preset.desc}
                     </p>
                   </button>
@@ -600,29 +800,55 @@ export default function FocusTab({
               })}
             </div>
 
-            {/* Custom Duration Input Bar */}
-            <div
-              className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#364054]"
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Clock size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-                <div>
-                  <h3 className="text-xs font-bold">Custom Study Duration</h3>
-                  <p className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                    Set exact hours and minutes or adjust by 5/15-minute steps
-                  </p>
-                </div>
-              </div>
+            {/* Pomodoro Mode Secondary Row (Only 25m Pomodoro and 5m Short Break - LONG BREAK REMOVED) */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className={`text-[11px] font-mono ${isLight ? "text-[#82776E]" : "text-slate-400"}`}>
+                Pomodoro Mode:
+              </span>
+              {[
+                { id: "pomodoro" as const, label: "🍅 Pomodoro (25m)" },
+                { id: "shortBreak" as const, label: "☕ Short Break (5m)" }
+              ].map((pomo) => (
+                <button
+                  key={pomo.id}
+                  type="button"
+                  onClick={() => handleSelectPreset(pomo.id)}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold cursor-pointer border transition ${
+                    activePreset === pomo.id
+                      ? "bg-[#8B5CF6] text-white border-[#8B5CF6]"
+                      : isLight ? "bg-[#FAF8F5] text-[#7E22CE] border-[#E9D5FF]" : "bg-white/5 text-slate-400 border-white/5 hover:text-white"
+                  }`}
+                >
+                  {pomo.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <label htmlFor="timer-custom-hours" className="text-[11px] font-medium">
-                    Hrs
-                  </label>
+          {/* Type Your Own Duration Drawer */}
+          <div className={`p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+            isLight ? "bg-[#FAF8F5] border-[#EBE4DC]" : "bg-[#121320] border-white/5"
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                isLight ? "bg-[#FAF5FF] text-[#8B5CF6]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+              }`}>
+                <Clock size={16} />
+              </div>
+              <div>
+                <h3 className="text-xs font-mono font-bold tracking-wide uppercase">TYPE YOUR OWN DURATION</h3>
+                <p className={`text-[11px] font-sans ${isLight ? "text-[#82776E]" : "text-slate-400"}`}>
+                  Enter hours and minutes to set any custom timer duration
+                </p>
+              </div>
+            </div>
+
+            {/* Inputs & Quick Adjustments */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center">
+                  <span className="text-[9px] font-mono font-bold text-slate-400 uppercase mb-0.5">HOURS</span>
                   <input
-                    id="timer-custom-hours"
                     type="number"
                     min={0}
                     max={23}
@@ -632,18 +858,17 @@ export default function FocusTab({
                       setCustomHours(h);
                       handleApplyCustomTime(h, customMinutes);
                     }}
-                    className={`w-14 text-center font-mono font-bold text-xs py-1.5 px-2 rounded-lg border outline-none ${
-                      isLight
-                        ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#18202B]"
-                        : "bg-[#10131A] border-[#364054] text-[#F1F3F8]"
+                    className={`w-14 h-9 text-center font-mono font-black text-sm rounded-xl border outline-none ${
+                      isLight ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614]" : "bg-[#18192A] border-white/10 text-white"
                     }`}
                   />
-                  <span className="font-mono font-bold">:</span>
-                  <label htmlFor="timer-custom-mins" className="text-[11px] font-medium">
-                    Mins
-                  </label>
+                </div>
+
+                <span className="font-mono font-bold text-lg text-slate-400 mt-3">:</span>
+
+                <div className="flex flex-col items-center">
+                  <span className="text-[9px] font-mono font-bold text-slate-400 uppercase mb-0.5">MINUTES</span>
                   <input
-                    id="timer-custom-mins"
                     type="number"
                     min={0}
                     max={59}
@@ -653,76 +878,145 @@ export default function FocusTab({
                       setCustomMinutes(m);
                       handleApplyCustomTime(customHours, m);
                     }}
-                    className={`w-14 text-center font-mono font-bold text-xs py-1.5 px-2 rounded-lg border outline-none ${
-                      isLight
-                        ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#18202B]"
-                        : "bg-[#10131A] border-[#364054] text-[#F1F3F8]"
+                    className={`w-14 h-9 text-center font-mono font-black text-sm rounded-xl border outline-none ${
+                      isLight ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614]" : "bg-[#18192A] border-white/10 text-white"
                     }`}
                   />
                 </div>
+              </div>
 
-                <div className="flex items-center gap-1">
-                  {[
-                    { label: "-5m", delta: -5 },
-                    { label: "+5m", delta: 5 },
-                    { label: "+15m", delta: 15 }
-                  ].map((adj) => (
-                    <button
-                      key={adj.label}
-                      type="button"
-                      onClick={() => {
-                        const newTotal = Math.max(1, focusMinutesSelected + adj.delta);
-                        handleApplyCustomTime(Math.floor(newTotal / 60), newTotal % 60);
-                      }}
-                      className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono font-semibold cursor-pointer ${
-                        isLight
-                          ? "bg-[#FFFFFF] hover:bg-[#E8ECF4] border-[#CBD2E0] text-[#18202B]"
-                          : "bg-[#191E28] hover:bg-[#2A3244] border-[#364054] text-[#F1F3F8]"
-                      }`}
-                    >
-                      {adj.label}
-                    </button>
-                  ))}
-                </div>
+              {/* Quick Adjustment Pills */}
+              <div className="flex items-center gap-1.5 mt-3 sm:mt-0">
+                {[
+                  { label: "-5m", delta: -5 },
+                  { label: "+5m", delta: 5 },
+                  { label: "+15m", delta: 15 },
+                ].map((pill) => (
+                  <button
+                    key={pill.label}
+                    type="button"
+                    onClick={() => {
+                      const newTotal = Math.max(1, focusMinutesSelected + pill.delta);
+                      handleApplyCustomTime(Math.floor(newTotal / 60), newTotal % 60);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold cursor-pointer transition ${
+                      isLight
+                        ? "bg-[#FFFFFF] hover:bg-[#F5EFE9] border-[#EBE4DC] text-[#736B63]"
+                        : "bg-[#18192A] hover:bg-[#202238] border-white/10 text-slate-300 hover:text-white"
+                    }`}
+                  >
+                    {pill.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* 2. Central Timer Display */}
-          <div
-            className={`py-8 px-4 rounded-2xl border flex flex-col items-center justify-center text-center ${
-              isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#10131A] border-[#283040]"
-            }`}
-          >
-            <FlipClockTimer
-              timeRemaining={focusTimeRemaining}
-              size="lg"
-              themeMode={themeMode}
-              isPaused={isPaused}
-              showLabels
-            />
-
-            {focusModeActive && (
-              <div className="w-56 sm:w-72 h-2 bg-black/10 dark:bg-white/10 rounded-full mt-5 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    isLight ? "bg-[#5F55C8]" : "bg-[#6D5DF6]"
-                  }`}
-                  style={{ width: `${Math.round((1 - progressRatio) * 100)}%` }}
-                />
-              </div>
+          {/* =========================================================================
+              MECHANICAL 3D FLIP CLOCK (HOURS : MINUTES : SECONDS)
+              ANIMATES SMOOTHLY ON FLIP WITH ZERO CUT-OFF
+              ========================================================================= */}
+          <div className="py-6 sm:py-10 flex flex-col items-center justify-center relative">
+            
+            {/* Background Ambient Glow */}
+            {!isLight && (
+              <div 
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none -z-10"
+                style={{
+                  background: "radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%)"
+                }}
+              />
             )}
 
-            <p className={`text-xs font-medium mt-4 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              {isPaused
-                ? "Paused — click Resume to continue your study session"
-                : focusModeActive
-                ? `Active countdown · ${getModeLabel()}`
-                : `Ready · ${getModeLabel()}`}
-            </p>
+            {/* The Three Flip Cards */}
+            <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6 my-2">
+              
+              {/* HOURS FLIP CARD */}
+              <FlipCard
+                value={hoursStr}
+                label="HOURS"
+                isLight={isLight}
+                isPaused={isPaused}
+                isActive={focusModeActive}
+              />
 
-            {/* Primary Controls */}
-            <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
+              {/* PURPLE COLON SEPARATOR 1 */}
+              <div className="flex flex-col gap-2.5 sm:gap-3.5 items-center justify-center pb-5 sm:pb-6">
+                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+                  isPaused 
+                    ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
+                    : focusModeActive 
+                    ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
+                    : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
+                }`} />
+                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+                  isPaused 
+                    ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
+                    : focusModeActive 
+                    ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
+                    : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
+                }`} />
+              </div>
+
+              {/* MINUTES FLIP CARD */}
+              <FlipCard
+                value={minsStr}
+                label="MINUTES"
+                isLight={isLight}
+                isPaused={isPaused}
+                isActive={focusModeActive}
+              />
+
+              {/* PURPLE COLON SEPARATOR 2 */}
+              <div className="flex flex-col gap-2.5 sm:gap-3.5 items-center justify-center pb-5 sm:pb-6">
+                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+                  isPaused 
+                    ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
+                    : focusModeActive 
+                    ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
+                    : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
+                }`} />
+                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
+                  isPaused 
+                    ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
+                    : focusModeActive 
+                    ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
+                    : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
+                }`} />
+              </div>
+
+              {/* SECONDS FLIP CARD */}
+              <FlipCard
+                value={secsStr}
+                label="SECONDS"
+                isLight={isLight}
+                isPaused={isPaused}
+                isActive={focusModeActive}
+              />
+            </div>
+
+            {/* Status Indicator Pill (Purple when paused, zero yellow) */}
+            <div className="mt-4">
+              {isPaused ? (
+                <div className="px-4 py-1.5 rounded-full border border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] font-mono text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                  <Pause size={12} fill="currentColor" />
+                  <span>PAUSED</span>
+                </div>
+              ) : focusModeActive ? (
+                <div className="px-4 py-1.5 rounded-full border border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] font-mono text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                  <span className="w-2 h-2 rounded-full bg-[#8B5CF6] animate-ping" />
+                  <span>STUDYING</span>
+                </div>
+              ) : (
+                <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono text-xs font-bold flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span>READY</span>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons: Resume/Start + Reset */}
+            <div className="flex items-center gap-3 mt-6">
               {focusModeActive ? (
                 <button
                   type="button"
@@ -730,14 +1024,10 @@ export default function FocusTab({
                     pauseSoundscape();
                     onPauseFocus ? onPauseFocus() : onStopFocus();
                   }}
-                  className={`min-h-[44px] py-2.5 px-7 rounded-xl border text-xs font-semibold flex items-center gap-2 cursor-pointer ${
-                    isLight
-                      ? "bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]"
-                      : "bg-[#F59E0B]/15 border-[#FBBF24]/30 text-[#FBBF24]"
-                  }`}
+                  className="py-3 px-8 rounded-2xl border text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
                 >
                   <Pause size={15} fill="currentColor" />
-                  <span>Pause</span>
+                  <span>PAUSE</span>
                 </button>
               ) : (
                 <button
@@ -748,12 +1038,10 @@ export default function FocusTab({
                     }
                     onStartFocus();
                   }}
-                  className={`min-h-[44px] py-2.5 px-7 rounded-xl text-xs font-semibold text-white flex items-center gap-2 cursor-pointer ${
-                    isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
-                  }`}
+                  className="py-3 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_24px_rgba(139,92,246,0.45)]"
                 >
                   <Play size={15} fill="currentColor" />
-                  <span>{isPaused ? "Resume Study" : "Start Study"}</span>
+                  <span>{isPaused ? "RESUME" : "START"}</span>
                 </button>
               )}
 
@@ -764,79 +1052,85 @@ export default function FocusTab({
                   onResetFocus ? onResetFocus() : onStopFocus();
                   onDurationChange(focusMinutesSelected);
                 }}
-                className={`min-h-[44px] py-2.5 px-5 rounded-xl border text-xs font-semibold flex items-center gap-2 cursor-pointer ${
+                className={`py-3 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition active:scale-95 ${
                   isLight
-                    ? "bg-[#FFFFFF] hover:bg-[#E8ECF4] border-[#CBD2E0] text-[#18202B]"
-                    : "bg-[#191E28] hover:bg-[#222938] border-[#364054] text-[#F1F3F8]"
+                    ? "bg-[#FFFFFF] hover:bg-[#FAF5FF] border-[#EBE4DC] text-[#1A1614]"
+                    : "bg-[#18192A] hover:bg-[#202238] border-white/10 text-white"
                 }`}
               >
                 <RotateCcw size={14} />
-                <span>Reset</span>
+                <span>RESET</span>
               </button>
             </div>
           </div>
 
-          {/* 3. Ambient Background Audio */}
-          <div className="pt-4 border-t border-inherit space-y-3">
+          {/* Ambient Focus Soundscapes Section */}
+          <div className={`p-4 rounded-2xl border space-y-3 ${
+            isLight ? "bg-[#FAF8F5] border-[#EBE4DC]" : "bg-[#121320] border-white/5"
+          }`}>
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold">Background Audio</h3>
-              <span className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                {selectedSoundscape === "silent" ? "Muted (Quiet)" : "Gentle Rain"}
-              </span>
+              <div className="flex items-center gap-2.5">
+                <Activity size={18} className="text-[#8B5CF6]" />
+                <h3 className="text-xs font-mono font-bold tracking-wide uppercase">
+                  Ambient Focus Soundscapes
+                </h3>
+              </div>
+
+              {/* Status Pill matching user's screenshot with PURPLE when paused */}
+              <div className={`px-2.5 py-0.5 rounded-full border text-[10px] font-mono font-bold flex items-center gap-1.5 ${
+                isPaused
+                  ? "bg-[#8B5CF6]/15 border-[#8B5CF6]/40 text-[#C084FC]"
+                  : focusModeActive && selectedSoundscape !== "silent"
+                  ? isLight ? "bg-[#FAF5FF] border-[#E9D5FF] text-[#7E22CE]" : "bg-purple-500/15 border-purple-500/30 text-purple-400"
+                  : isLight ? "bg-black/5 border-black/10 text-[#82776E]" : "bg-white/5 border-white/10 text-slate-400"
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  isPaused ? "bg-[#A855F7]" : focusModeActive && selectedSoundscape !== "silent" ? "bg-purple-400 animate-ping" : "bg-slate-400"
+                }`} />
+                <span>
+                  {isPaused 
+                    ? "PAUSED WITH TIMER" 
+                    : focusModeActive && selectedSoundscape !== "silent" 
+                    ? "PLAYING NOW" 
+                    : "MUTED"}
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
-              <button
-                type="button"
-                onClick={() => handleSelectSoundscape("silent")}
-                aria-pressed={selectedSoundscape === "silent"}
-                className={`p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer ${
-                  selectedSoundscape === "silent"
-                    ? isLight
-                      ? "bg-[#F0EEFF] border-[#5F55C8] text-[#18202B]"
-                      : "bg-[#6D5DF6]/20 border-[#A99BFF] text-[#F1F3F8]"
-                    : isLight
-                    ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#596474]"
-                    : "bg-[#222938] border-[#364054] text-[#B7C0CF]"
-                }`}
-              >
-                <VolumeX size={18} />
-                <div className="text-left">
-                  <span className="block text-xs font-bold">Silent</span>
-                  <span className="block text-[11px] opacity-80">No background sound</span>
-                </div>
-              </button>
+            {/* Sound Toggles & Volume */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSelectSoundscape("silent")}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition ${
+                    selectedSoundscape === "silent"
+                      ? isLight ? "bg-[#FAF5FF] border-[#8B5CF6] text-[#7E22CE]" : "bg-[#8B5CF6]/20 border-[#8B5CF6] text-[#C084FC]"
+                      : isLight ? "bg-white border-[#EBE4DC] text-[#736B63]" : "bg-[#18192A] border-white/10 text-slate-400"
+                  }`}
+                >
+                  <VolumeX size={13} />
+                  <span>Silent</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => handleSelectSoundscape("white_noise")}
-                aria-pressed={selectedSoundscape === "white_noise"}
-                className={`p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer ${
-                  selectedSoundscape === "white_noise"
-                    ? isLight
-                      ? "bg-[#F0EEFF] border-[#5F55C8] text-[#18202B]"
-                      : "bg-[#6D5DF6]/20 border-[#A99BFF] text-[#F1F3F8]"
-                    : isLight
-                    ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#596474]"
-                    : "bg-[#222938] border-[#364054] text-[#B7C0CF]"
-                }`}
-              >
-                <CloudRain size={18} className="text-sky-500" />
-                <div className="text-left">
-                  <span className="block text-xs font-bold">Gentle Rain</span>
-                  <span className="block text-[11px] opacity-80">Steady ambient rain loop</span>
-                </div>
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => handleSelectSoundscape("white_noise")}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition ${
+                    selectedSoundscape === "white_noise"
+                      ? isLight ? "bg-[#FAF5FF] border-[#8B5CF6] text-[#7E22CE]" : "bg-[#8B5CF6]/20 border-[#8B5CF6] text-[#C084FC]"
+                      : isLight ? "bg-white border-[#EBE4DC] text-[#736B63]" : "bg-[#18192A] border-white/10 text-slate-400"
+                  }`}
+                >
+                  <CloudRain size={13} />
+                  <span>Gentle Rain</span>
+                </button>
+              </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 text-xs">
-              <div className="flex items-center gap-3 w-full sm:w-64">
-                <label htmlFor="sound-volume-slider" className="flex items-center gap-1.5 font-medium shrink-0">
-                  <Headphones size={13} />
-                  <span>Volume</span>
-                </label>
+              {/* Volume Slider */}
+              <div className="flex items-center gap-2.5 w-full sm:w-60">
+                <Headphones size={13} className="text-slate-400 shrink-0" />
                 <input
-                  id="sound-volume-slider"
                   type="range"
                   min="0"
                   max="1"
@@ -847,60 +1141,70 @@ export default function FocusTab({
                     setSoundVolumeState(newVol);
                     setSoundscapeVolume(newVol);
                   }}
-                  className="flex-1 h-1.5 rounded-lg cursor-pointer accent-[#5F55C8]"
+                  className="flex-1 h-1.5 rounded-lg cursor-pointer accent-[#8B5CF6]"
                 />
-                <span className="font-mono text-xs w-9 text-right">{Math.round(soundVolume * 100)}%</span>
+                <span className="font-mono text-xs w-9 text-right font-bold text-slate-400">
+                  {Math.round(soundVolume * 100)}%
+                </span>
               </div>
-
-              <label className="flex items-center gap-2 cursor-pointer text-xs">
-                <input
-                  type="checkbox"
-                  checked={autoSoundOnStudy}
-                  onChange={(e) => setAutoSoundOnStudy(e.target.checked)}
-                  className="w-4 h-4 rounded accent-[#5F55C8] cursor-pointer"
-                />
-                <span>Start audio automatically with timer</span>
-              </label>
             </div>
           </div>
         </div>
       </div>
 
-      {/* COMPLETION DIALOG */}
+      {/* =========================================================================
+          SESSION COMPLETION CELEBRATION MODAL
+          ========================================================================= */}
       {showCompletionModal && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="session-complete-title"
-          className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
         >
-          <div
-            className={`max-w-md w-full p-6 rounded-2xl border shadow-xl text-center space-y-4 ${
-              isLight
-                ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
-                : "bg-[#191E28] border-[#364054] text-[#F1F3F8]"
-            }`}
-          >
-            <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center bg-emerald-500/15 text-emerald-500">
-              <CheckCircle2 size={26} />
+          <div className={`max-w-md w-full p-6 sm:p-7 rounded-3xl border shadow-2xl text-center space-y-4 ${
+            isLight ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614]" : "bg-[#101322] border-white/10 text-white"
+          }`}>
+            <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-[#8B5CF6]/20 text-[#C084FC]">
+              <CheckCircle2 size={30} />
             </div>
+            
             <div className="space-y-1">
-              <h2 id="session-complete-title" className="text-lg font-bold">
-                Focus Session Complete
+              <span className="text-[10px] font-mono uppercase tracking-widest font-black text-[#C084FC]">
+                STUDY BLOCK COMPLETED
+              </span>
+              <h2 className="text-xl font-black font-sans">
+                Session Complete! 🎉
               </h2>
-              <p className={`text-xs leading-relaxed ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                You completed your {getModeLabel()} study block. Take a short break before starting your next session.
+              <p className={`text-xs ${isLight ? "text-[#82776E]" : "text-slate-400"} leading-relaxed font-sans`}>
+                Great job! You finished your {getPresetLabel()} study block. Take a well-deserved recovery break.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowCompletionModal(false)}
-              className={`px-6 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer ${
-                isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
-              }`}
-            >
-              Done
-            </button>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCompletionModal(false);
+                  handleSelectPreset("shortBreak");
+                  onStartFocus();
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-white cursor-pointer bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-md shadow-[#8B5CF6]/30"
+              >
+                Take 5m Break
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowCompletionModal(false)}
+                className={`flex-1 py-2.5 px-4 rounded-xl border text-xs font-mono font-bold uppercase tracking-wider cursor-pointer ${
+                  isLight
+                    ? "bg-[#FAF8F5] border-[#EBE4DC] text-[#1A1614] hover:bg-[#F5EFE9]"
+                    : "bg-[#161A2B] border-white/10 text-white hover:bg-[#1E2338]"
+                }`}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

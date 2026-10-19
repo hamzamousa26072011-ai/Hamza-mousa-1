@@ -1980,14 +1980,14 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   className={`p-4 ${
                     settings.themeMode === "light"
-                      ? "bg-[#FFF9F5] border-[#E8D7C9]"
-                      : "bg-amber-950/25 border-amber-500/25"
+                      ? "bg-[#FAF5FF] border-[#E9D5FF]"
+                      : "bg-purple-950/25 border-purple-500/25"
                   } border rounded-2xl text-left space-y-3.5 shadow-xs`}
                 >
                   <div className="flex items-start gap-2.5">
-                    <Globe className="text-[#C96F55] shrink-0 mt-0.5" size={16} />
+                    <Globe className="text-[#8B5CF6] shrink-0 mt-0.5" size={16} />
                     <div className="space-y-1">
-                      <h4 className="text-xs font-bold font-mono text-[#C96F55] uppercase tracking-wider">
+                      <h4 className="text-xs font-bold font-mono text-[#8B5CF6] uppercase tracking-wider">
                         Custom DNS Domain Authorization Required
                       </h4>
                       <p className={`text-xs ${settings.themeMode === "light" ? "text-[#1D1D1B]" : "text-slate-200"} leading-relaxed font-sans`}>
@@ -1998,15 +1998,15 @@ export default function App() {
 
                   {/* 1-CLICK FAST PASS FOR HAMZA MOUSA */}
                   <div className="p-3 bg-[#FAF9F5] dark:bg-black/40 border border-[#E8D7C9] dark:border-white/10 rounded-xl space-y-2">
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-[#C96F55] block font-bold">
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-[#8B5CF6] block font-bold">
                       Instant Access (Bypass Domain Restriction)
                     </span>
                     <button
                       type="button"
                       onClick={handleInstantHamzaLogin}
-                      className="w-full py-2.5 px-3 bg-[#C96F55] hover:bg-[#B85F48] text-white font-sans font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99]"
+                      className="w-full py-2.5 px-3 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-sans font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99]"
                     >
-                      <Zap size={14} className="text-amber-200 fill-amber-200 shrink-0" />
+                      <Zap size={14} className="text-purple-200 fill-purple-200 shrink-0" />
                       <span>Continue as Hamza Mousa (hamzamousa26072011@gmail.com)</span>
                     </button>
                     <p className="text-[10px] text-[#77736B] dark:text-slate-400 font-sans text-center">

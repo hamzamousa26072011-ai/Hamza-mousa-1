@@ -25,7 +25,6 @@ import {
   Timer
 } from "lucide-react";
 import { Task } from "../types";
-import { FlipClockTimer } from "./FlipClockTimer";
 
 interface DashboardTabProps {
   tasks: Task[];
@@ -390,34 +389,33 @@ export default function DashboardTab({
                 ? focusModeActive
                   ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]"
                   : isPaused
-                  ? "bg-[#F4E9D0] border-[#B98A4A]/30 text-[#B98A4A]"
+                  ? "bg-[#F3EEFF] border-[#8B5CF6]/30 text-[#8B5CF6]"
                   : "bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B]"
                 : focusModeActive
                 ? "bg-[#8B5CF6]/25 border-[#8B5CF6]/45 text-[#C084FC]"
                 : isPaused
-                ? "bg-amber-900/40 border-amber-500/40 text-amber-200 animate-pulse"
+                ? "bg-[#8B5CF6]/20 border-[#8B5CF6]/50 text-[#C084FC] animate-pulse"
                 : "bg-white/5 border-white/10 text-[#C4B5FD]/75"
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${
                 focusModeActive 
                   ? "bg-[#8B5CF6] animate-ping" 
                   : isPaused 
-                  ? "bg-amber-400" 
+                  ? "bg-[#A855F7]" 
                   : isLight ? "bg-[#77736B]" : "bg-slate-400"
               }`} />
               <span>{focusModeActive ? "STUDYING" : isPaused ? "PAUSED" : "READY"}</span>
             </div>
           </div>
 
-          {/* Centered digits show with Flip Number Timer */}
-          <div className="my-3 text-center">
-            <FlipClockTimer 
-              timeRemaining={focusTimeRemaining} 
-              size="md" 
-              themeMode={themeMode} 
-              isPaused={isPaused} 
-            />
-            <p className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase tracking-widest font-bold mt-2`}>
+          {/* Clean, high-performance digital timer display */}
+          <div className="my-4 text-center">
+            <div className={`text-4xl sm:text-5xl font-mono font-black tracking-tight ${
+              isLight ? "text-[#1A1614]" : "text-white"
+            } tabular-nums drop-shadow-sm`}>
+              {focusTimeRemaining}
+            </div>
+            <p className={`text-[9.5px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase tracking-widest font-bold mt-2`}>
               {focusModeActive 
                 ? (pomodoroMode === "work" ? "Deep focus interval active" : "Recovery interval active") 
                 : isPaused 

@@ -4,7 +4,7 @@ interface CyberWaveBackgroundProps {
   isLight?: boolean;
 }
 
-export const CyberWaveBackground: React.FC<CyberWaveBackgroundProps> = ({ isLight = false }) => {
+export const CyberWaveBackground: React.FC<CyberWaveBackgroundProps> = React.memo(({ isLight = false }) => {
   if (isLight) {
     return (
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-[#FBF9F5] transform-gpu will-change-transform">
@@ -123,4 +123,6 @@ export const CyberWaveBackground: React.FC<CyberWaveBackgroundProps> = ({ isLigh
       />
     </div>
   );
-};
+});
+
+CyberWaveBackground.displayName = "CyberWaveBackground";
