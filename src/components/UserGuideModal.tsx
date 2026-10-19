@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Sparkles, 
@@ -10,13 +10,7 @@ import {
   ArrowLeft, 
   CheckCircle2, 
   X, 
-  Compass, 
-  Volume2, 
-  Maximize2,
-  Clock,
-  BookOpen,
-  HelpCircle,
-  Play
+  Volume2
 } from "lucide-react";
 import { EngezBrandLogo } from "./EngezBrandLogo";
 
@@ -43,8 +37,7 @@ export default function UserGuideModal({
   isOpen,
   onClose,
   onSkip,
-  themeMode = "dark",
-  onNavigateTab
+  themeMode = "dark"
 }: UserGuideModalProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const isLight = themeMode === "light";
@@ -57,221 +50,178 @@ export default function UserGuideModal({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
+
   const steps: GuideStep[] = [
     {
       id: "welcome",
-      badge: "GETTING STARTED",
-      title: "Welcome to Engez Nafsak",
-      subtitle: "Your complete high-yield academic workstation for IGCSE, Cambridge & top grades.",
+      badge: "Welcome",
+      title: "Welcome to Engez Nafsak (إنجز نفسك)",
+      subtitle: "A calm, focused academic workspace for planning exams, study habits, and timed revision sessions.",
       icon: Sparkles,
-      accentColor: "#C96F55",
+      accentColor: "#5F55C8",
       points: [
         {
-          title: "All-in-One Study Hub",
-          desc: "Centralize your exams, study timers, AI tutor, habits, and past papers in one distraction-free platform."
+          title: "Today View & Tasks",
+          desc: "Organize daily study tasks, see your next upcoming exam, and launch a timed study session from one clean view."
         },
         {
-          title: "Built for Retention",
-          desc: "Targeted countdowns and intervals structured specifically around real Cambridge & IGCSE paper durations."
+          title: "Exam Countdowns & Urgency",
+          desc: "Track exam papers with clear status indicators: On Track (>10 days), Approaching (4–10 days), and Imminent (≤3 days)."
         },
         {
-          title: "Sync Across Devices",
-          desc: "Sign in with Google or Email to automatically backup your exam dates and revision logs to the cloud."
+          title: "Local or Signed-In Storage",
+          desc: "Use Guest mode to store data locally in this browser, or sign in to link your workspace to your account."
         }
       ],
       preview: (
-        <div className={`p-4 rounded-2xl border ${isLight ? "bg-[#F5EFE9] border-[#EBE4DC]" : "bg-[#161A2B] border-white/10"} flex flex-col items-center justify-center text-center space-y-3`}>
-          <div className="w-16 h-16 shrink-0">
-            <EngezBrandLogo themeMode={isLight ? "light" : "dark"} withContainer={true} className="w-full h-full object-contain drop-shadow-md" />
+        <div className={`p-4 rounded-2xl border ${isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"} flex flex-col items-center justify-center text-center space-y-3`}>
+          <div className="w-14 h-14 shrink-0">
+            <EngezBrandLogo themeMode={isLight ? "light" : "dark"} withContainer={true} className="w-full h-full object-contain" />
           </div>
           <div>
-            <h4 className="font-sans font-black text-base">إنجز نفسك • Engez Nafsak</h4>
-            <p className={`text-[11px] font-mono ${isLight ? "text-[#82776E]" : "text-slate-400"} mt-0.5`}>
-              High-Speed Revision & Exam Preparation
+            <h4 className={`font-sans font-bold text-base ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+              Engez Nafsak • <span lang="ar" dir="rtl" className="font-arabic">إنجز نفسك</span>
+            </h4>
+            <p className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"} mt-0.5`}>
+              Focused Academic & Exam Preparation Workspace
             </p>
-          </div>
-          <div className="flex gap-2">
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/15 text-[#C084FC]"}`}>
-              ✓ Offline & Cloud Sync
-            </span>
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${isLight ? "bg-[#EBF4ED] text-[#4D7C5B]" : "bg-emerald-500/15 text-emerald-300"}`}>
-              ✓ Zero Distractions
-            </span>
           </div>
         </div>
       )
     },
     {
       id: "countdown",
-      badge: "STEP 1 OF 4",
-      title: "Exam Countdown & Subjects",
-      subtitle: "Track every paper with real-time countdowns and urgency alerts.",
+      badge: "Step 1 of 4",
+      title: "Exam Countdowns & Study Circle",
+      subtitle: "Keep track of every upcoming exam paper and stay accountable with classmates.",
       icon: CalendarClock,
-      accentColor: "#3B82F6",
+      accentColor: "#1F7A4C",
       points: [
         {
-          title: "Live Exam Timers",
-          desc: "Add your Cambridge / Pearson exams with subject codes (e.g., 0620 Chemistry, 0580 Math) to see days, hours, and minutes remaining."
+          title: "Clear Paper Schedule",
+          desc: "Add your exams with paper code, exam board, target grade, and exact date and time."
         },
         {
-          title: "Urgency Alerts",
-          desc: "Color-coded indicators warn you when an exam is imminent so you can prioritize critical revision blocks."
+          title: "Accessible Urgency Status",
+          desc: "Exams more than 10 days away are shown in a calm green 'On Track' theme, shifting to amber and red as exam day approaches."
         },
         {
-          title: "Study with Friends",
-          desc: "Invite friends via email or invite codes to share countdowns and stay accountable together."
+          title: "Study Circle Leaderboard",
+          desc: "Compare weekly focus minutes with invited study partners."
         }
       ],
       preview: (
-        <div className={`p-3.5 rounded-2xl border ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"} space-y-2.5`}>
+        <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#E9F7EF] border-[#B7E4C7]" : "bg-[#143024] border-[#1F7A4C]/50"} space-y-2`}>
           <div className="flex justify-between items-center">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-500">
-              Cambridge IGCSE
+            <span className={`text-xs font-semibold ${isLight ? "text-[#1F7A4C]" : "text-[#4ADE80]"}`}>
+              Cambridge IGCSE • 0580
             </span>
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 font-bold">
-              🔥 14 Days Left
+            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-md ${isLight ? "bg-white text-[#1F7A4C]" : "bg-[#191E28] text-[#4ADE80]"}`}>
+              On Track • 18 Days Left
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-500 flex items-center justify-center font-bold text-xs font-mono">
-              0580
-            </div>
-            <div>
-              <h5 className="font-bold text-xs">Mathematics (Extended) - Paper 4</h5>
-              <p className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>May 08 • 09:00 AM</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 gap-1.5 text-center font-mono">
-            {["14d", "06h", "42m", "15s"].map((t, idx) => (
-              <div key={idx} className={`py-1 rounded-lg ${isLight ? "bg-white border border-[#E8D7C9]" : "bg-white/5"} text-[10px] font-bold`}>
-                {t}
-              </div>
-            ))}
+          <div className={`font-bold text-sm ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+            Mathematics (Extended) — Paper 4
           </div>
         </div>
       )
     },
     {
       id: "timer",
-      badge: "STEP 2 OF 4",
-      title: "Exam-Tuned Countdown Timer",
-      subtitle: "Pre-configured for P2, P4, P6, Math, or any custom duration.",
+      badge: "Step 2 of 4",
+      title: "Focus Timer & Exam Paper Presets",
+      subtitle: "Practice under real paper durations or run structured Pomodoro study intervals.",
       icon: Timer,
-      accentColor: "#C96F55",
+      accentColor: "#5F55C8",
       points: [
         {
-          title: "Official Exam Presets",
-          desc: "Instant one-click presets for Paper 2 (45m), Paper 4 (1h 15m), Paper 6 (1h), and Math (2h)."
+          title: "Exam Paper Presets",
+          desc: "Switch between Pomodoro (25m), Paper 2 (45m), Paper 6 (60m), Paper 4 (75m), or Full Math (120m)."
         },
         {
-          title: "Type Any Custom Time",
-          desc: "Type exact hours and minutes directly into the input bar to create any custom study duration."
+          title: "Custom Duration & Fullscreen",
+          desc: "Set any custom hours and minutes or open distraction-free fullscreen mode."
         },
         {
-          title: "Gentle Rain White Noise & Full Screen",
-          desc: "Enjoy soothing procedural rain ambience to block out noise, and press 'F' for immersive full screen with automatic screen wake lock."
+          title: "Optional Rain Ambience",
+          desc: "Toggle gentle synthesized rain audio with a mute and volume control whenever you want background focus sound."
         }
       ],
       preview: (
-        <div className={`p-3.5 rounded-2xl border ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"} space-y-2.5`}>
-          <div className="flex items-center justify-between">
-            <span className={`text-[9px] font-mono font-bold uppercase ${isLight ? "text-[#C96F55]" : "text-indigo-400"}`}>
-              Timer Presets
-            </span>
-            <span className="text-[9px] font-mono flex items-center gap-1 text-amber-400">
-              <Volume2 size={10} />
-              <span>White Noise Rain</span>
+        <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"} space-y-2`}>
+          <div className="flex items-center justify-between text-xs">
+            <span className={`font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>Paper 2 Preset (45m)</span>
+            <span className={`flex items-center gap-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              <Volume2 size={12} /> Rain Ambience
             </span>
           </div>
-          <div className="grid grid-cols-4 gap-1 text-center font-mono text-[9px] font-bold">
-            <div className={`py-1 rounded-lg ${isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#C96F55]" : "bg-indigo-600 text-white"}`}>P2 (45m)</div>
-            <div className={`py-1 rounded-lg ${isLight ? "bg-white border border-[#E8D7C9]" : "bg-white/5 text-slate-300"}`}>P4 (1h 15m)</div>
-            <div className={`py-1 rounded-lg ${isLight ? "bg-white border border-[#E8D7C9]" : "bg-white/5 text-slate-300"}`}>P6 (1h)</div>
-            <div className={`py-1 rounded-lg ${isLight ? "bg-white border border-[#E8D7C9]" : "bg-white/5 text-slate-300"}`}>Math (2h)</div>
-          </div>
-          <div className="flex items-center justify-center py-2 font-mono text-xl font-black tracking-widest text-[#C96F55]">
+          <div className={`text-center py-2 font-mono text-2xl font-bold tracking-wider ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
             00:45:00
           </div>
         </div>
       )
     },
     {
-      id: "scholar",
-      badge: "STEP 3 OF 4",
-      title: "AI Tutor & Exam Checker",
-      subtitle: "Instant syllabus explanations and step-by-step past paper guidance.",
-      icon: GraduationCap,
-      accentColor: "#8B5CF6",
+      id: "habits",
+      badge: "Step 3 of 4",
+      title: "Habit Tracker & Daily Routine",
+      subtitle: "Build steady daily study habits and log rest and mood.",
+      icon: Flame,
+      accentColor: "#B86E00",
       points: [
         {
-          title: "Ask Anything 24/7",
-          desc: "Stuck on tricky Physics equations, Organic Chemistry mechanisms, or Biology mark schemes? The AI tutor provides step-by-step breakdowns."
+          title: "Daily Checklist & Multi-Day Grid",
+          desc: "Use the compact Daily Checklist on phones or switch to the 7/14/21/30-day matrix on larger screens."
         },
         {
-          title: "Interactive AI Worksheet Checker",
-          desc: "Upload or type exam question solutions and get immediate feedback mapped against Cambridge grading criteria."
-        },
-        {
-          title: "Math & Formula Support",
-          desc: "Mathematical equations and LaTeX formulas render crystal clear directly in the chat responses."
+          title: "Mood & Sleep Logging",
+          desc: "Record your daily wellbeing (1–10) and sleep quality to see how rest affects your consistency."
         }
       ],
       preview: (
-        <div className={`p-3.5 rounded-2xl border ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"} space-y-2`}>
-          <div className="flex items-center gap-1.5 text-xs font-bold text-violet-400">
-            <Sparkles size={13} />
-            <span>AI Tutor Response</span>
-          </div>
-          <div className={`p-2.5 rounded-xl ${isLight ? "bg-white border border-[#E8D7C9]" : "bg-white/5"} text-[10px] space-y-1 font-mono`}>
-            <p className="font-bold text-[#C96F55]">Q: Explain Le Chatelier's Principle for pressure increase?</p>
-            <p className={isLight ? "text-[#1D1D1B]" : "text-slate-300"}>
-              ✓ Equilibrium shifts toward the side with fewer gas moles.<br/>
-              ✓ Maximizes yield according to standard Cambridge mark scheme.
-            </p>
-          </div>
+        <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"} space-y-1.5`}>
+          {["Complete 1 Past Paper", "Review Formula Sheet"].map((h, i) => (
+            <div key={i} className={`flex items-center gap-2 p-2 rounded-lg border text-xs font-medium ${isLight ? "bg-white border-[#E2E6EE] text-[#18202B]" : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8]"}`}>
+              <CheckCircle2 size={14} className="text-[#1F7A4C] shrink-0" />
+              <span className="truncate">{h}</span>
+            </div>
+          ))}
         </div>
       )
     },
     {
-      id: "habits",
-      badge: "STEP 4 OF 4",
-      title: "Habit Tracker & Daily Streaks",
-      subtitle: "Consistency creates top performers. Build your non-negotiable routine.",
-      icon: Flame,
-      accentColor: "#EA580C",
+      id: "scholar",
+      badge: "Step 4 of 4",
+      title: "AI Tutor & Mark Scheme Assistant",
+      subtitle: "Upload past paper questions or notes for step-by-step explanations.",
+      icon: GraduationCap,
+      accentColor: "#5F55C8",
       points: [
         {
-          title: "Daily Habit Streaks",
-          desc: "Log daily past paper practice, flashcard reviews, and study blocks to build and protect your streak."
+          title: "Attach Questions or Working",
+          desc: "Upload PDFs, text notes, or photos of your handwritten answers to review concepts."
         },
         {
-          title: "Interactive Visual Grid",
-          desc: "View your monthly calendar grid and celebrate milestones with motivational streak counters."
-        },
-        {
-          title: "Customizable Themes",
-          desc: "Toggle between Dark Theme and White Theme in Settings to match your study aesthetic day or night."
+          title: "Syllabus Breakdown",
+          desc: "Ask for step-by-step derivations and mark scheme keyword checks."
         }
       ],
       preview: (
-        <div className={`p-3.5 rounded-2xl border ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"} space-y-2.5`}>
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#C96F55]">
-              <Flame size={14} className="fill-current text-[#C96F55]" />
-              <span>Current Streak: 7 Days</span>
-            </div>
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold">
-              100% Today
-            </span>
+        <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"} space-y-1.5 text-xs`}>
+          <div className={`font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
+            Example Prompt
           </div>
-          <div className="space-y-1.5">
-            {["Complete 1 Chemistry Past Paper", "Revise Physics Formula Sheet", "45m Deep Study Session"].map((h, i) => (
-              <div key={i} className={`flex items-center gap-2 p-1.5 rounded-lg ${isLight ? "bg-white border border-[#E8D7C9]" : "bg-white/5"} text-[10px] font-mono`}>
-                <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
-                <span className="truncate">{h}</span>
-              </div>
-            ))}
-          </div>
+          <p className={isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}>
+            "Explain Le Chatelier's Principle when pressure increases and list key mark scheme terms."
+          </p>
         </div>
       )
     }
@@ -301,102 +251,96 @@ export default function UserGuideModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-9999 flex items-center justify-center p-3 sm:p-5 bg-black/70 backdrop-blur-sm overflow-y-auto">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="guide-modal-title"
+        onClick={onClose}
+      >
         <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 15 }}
+          initial={{ opacity: 0, scale: 0.96, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 15 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className={`relative max-w-xl w-full rounded-3xl border shadow-2xl overflow-hidden my-auto ${
-            isLight ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614]" : "bg-[#101322] border-white/10 text-[#F8FAFC]"
+          exit={{ opacity: 0, scale: 0.96, y: 10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          onClick={(e) => e.stopPropagation()}
+          className={`relative max-w-xl w-full rounded-2xl border shadow-2xl overflow-hidden my-auto ${
+            isLight
+              ? "bg-[#FFFFFF] border-[#E2E6EE] text-[#18202B]"
+              : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8]"
           }`}
         >
-          {/* Top Decorative Header Accent */}
-          <div className="h-1.5 w-full bg-gradient-to-r from-[#C25E42] via-[#8B5CF6] to-[#10B981]" />
-
           {/* Top Actions: Skip Guide & Close */}
-          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-            <button
-              type="button"
-              onClick={handleSkip}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition cursor-pointer flex items-center gap-1 border ${
-                isLight
-                  ? "bg-[#FAF8F5] hover:bg-[#F5EFE9] border-[#EBE4DC] text-[#82776E] hover:text-[#1A1614]"
-                  : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300 hover:text-white"
-              }`}
-              title="Skip guide and start using app"
-            >
-              <span>Skip Guide</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className={`p-1.5 rounded-xl border transition cursor-pointer ${
-                isLight
-                  ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]"
-                  : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-400 hover:text-white"
-              }`}
-              title="Close Guide"
-            >
-              <X size={15} />
-            </button>
+          <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-inherit">
+            <span className={`text-xs font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
+              {currentStep.badge}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSkip}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer border ${
+                  isLight
+                    ? "bg-[#F6F7FA] hover:bg-[#ECEFF5] border-[#D0D7E2] text-[#596474] hover:text-[#18202B]"
+                    : "bg-[#222938] hover:bg-[#2B3344] border-[#2B3344] text-[#B7C0CF] hover:text-[#F1F3F8]"
+                }`}
+              >
+                Skip Guide
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close guide"
+                className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                  isLight
+                    ? "bg-[#F6F7FA] hover:bg-[#ECEFF5] border-[#D0D7E2] text-[#596474]"
+                    : "bg-[#222938] hover:bg-[#2B3344] border-[#2B3344] text-[#B7C0CF]"
+                }`}
+              >
+                <X size={15} />
+              </button>
+            </div>
           </div>
 
-          {/* Slide Content with Smooth AnimatePresence */}
-          <div className="p-5 sm:p-7">
+          {/* Slide Content */}
+          <div className="p-6">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep.id}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 15 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.22, ease: "easeOut" }}
-                className="space-y-5"
+                exit={{ opacity: 0, x: -15 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="space-y-4"
               >
-                {/* Step Header Badge & Icon */}
-                <div className="flex items-center gap-2.5">
-                  <div 
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
-                    style={{ backgroundColor: `${currentStep.accentColor}20`, color: currentStep.accentColor }}
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                      isLight ? "bg-[#EFEEFA] text-[#5F55C8]" : "bg-[#222938] text-[#A99BFF]"
+                    }`}
                   >
                     <StepIcon size={20} />
                   </div>
-                  <div>
-                    <span 
-                      className="text-[9px] font-mono uppercase tracking-widest font-black block"
-                      style={{ color: currentStep.accentColor }}
-                    >
-                      {currentStep.badge}
-                    </span>
-                    <h3 className="text-lg sm:text-xl font-bold font-sans leading-tight">
-                      {currentStep.title}
-                    </h3>
-                  </div>
+                  <h2 id="guide-modal-title" className="text-lg sm:text-xl font-bold leading-tight">
+                    {currentStep.title}
+                  </h2>
                 </div>
 
-                <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} font-sans leading-relaxed`}>
+                <p className={`text-xs sm:text-sm leading-relaxed ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
                   {currentStep.subtitle}
                 </p>
 
-                {/* Step Interactive Visual Preview Card */}
                 {currentStep.preview}
 
-                {/* Key Guidance Points */}
                 <div className="space-y-2.5 pt-1">
                   {currentStep.points.map((pt, idx) => (
                     <div key={idx} className="flex items-start gap-2.5">
-                      <div 
-                        className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[9px] font-mono font-bold"
-                        style={{ backgroundColor: `${currentStep.accentColor}25`, color: currentStep.accentColor }}
-                      >
-                        ✓
-                      </div>
-                      <div>
-                        <span className={`text-xs font-bold font-sans ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>
+                      <CheckCircle2 size={15} className={`shrink-0 mt-0.5 ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`} />
+                      <div className="text-xs leading-relaxed">
+                        <span className={`font-bold ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
                           {pt.title}:{" "}
                         </span>
-                        <span className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} font-sans`}>
+                        <span className={isLight ? "text-[#596474]" : "text-[#B7C0CF]"}>
                           {pt.desc}
                         </span>
                       </div>
@@ -407,73 +351,56 @@ export default function UserGuideModal({
             </AnimatePresence>
           </div>
 
-          {/* Bottom Bar: Indicators & Navigation Controls */}
-          <div className={`p-4 sm:px-7 border-t ${
-            isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#070A14] border-white/10"
-          } flex items-center justify-between gap-3`}>
-            {/* Step indicator dots */}
+          {/* Bottom Bar */}
+          <div
+            className={`px-6 py-4 border-t flex items-center justify-between gap-3 ${
+              isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#10131A] border-[#2B3344]"
+            }`}
+          >
             <div className="flex items-center gap-1.5">
               {steps.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
+                  aria-label={`Go to step ${idx + 1}`}
                   onClick={() => setCurrentStepIndex(idx)}
                   className={`h-2 rounded-full transition-all cursor-pointer ${
                     currentStepIndex === idx
-                      ? "w-6 bg-[#C96F55]"
-                      : isLight ? "w-2 bg-[#E8D7C9] hover:bg-[#D5C2B1]" : "w-2 bg-white/20 hover:bg-white/40"
+                      ? "w-6 bg-[#5F55C8]"
+                      : isLight
+                      ? "w-2 bg-[#D0D7E2]"
+                      : "w-2 bg-[#2B3344]"
                   }`}
-                  title={`Jump to step ${idx + 1}`}
                 />
               ))}
-              <span className={`text-[10px] font-mono ml-2 ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
+              <span className={`text-xs font-mono ml-2 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
                 {currentStepIndex + 1}/{steps.length}
               </span>
             </div>
 
-            {/* Prev & Next / Finish buttons */}
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleSkip}
-                className={`px-3 py-2 rounded-xl text-xs font-mono font-medium transition cursor-pointer ${
-                  isLight 
-                    ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F0EEE8]" 
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                }`}
-                title="Skip entire guide"
-              >
-                Skip Guide
-              </button>
-
               {!isFirstStep && (
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className={`px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer flex items-center gap-1 border ${
-                    isLight 
-                      ? "bg-white hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" 
-                      : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
+                  className={`min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1 border ${
+                    isLight
+                      ? "bg-white hover:bg-[#ECEFF5] border-[#D0D7E2] text-[#18202B]"
+                      : "bg-[#222938] hover:bg-[#2B3344] border-[#2B3344] text-[#F1F3F8]"
                   }`}
                 >
                   <ArrowLeft size={13} />
-                  <span className="hidden sm:inline">Back</span>
+                  <span>Back</span>
                 </button>
               )}
 
               <button
                 type="button"
                 onClick={handleNext}
-                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer flex items-center gap-1.5 shadow-md ${
-                  isLastStep
-                    ? "bg-[#C96F55] hover:bg-[#B85F48] text-white"
-                    : isLight
-                    ? "bg-[#C96F55] hover:bg-[#B85F48] text-white"
-                    : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30"
-                }`}
+                className="min-h-[38px] px-4 py-1.5 rounded-xl text-xs font-semibold bg-[#5F55C8] hover:bg-[#4E45B0] text-white transition cursor-pointer flex items-center gap-1.5"
               >
-                <span>{isLastStep ? "Start Studying" : "Next"}</span>
-                {isLastStep ? <CheckCircle2 size={13} /> : <ArrowRight size={13} />}
+                <span>{isLastStep ? "Open Workspace" : "Next"}</span>
+                {isLastStep ? <CheckCircle2 size={14} /> : <ArrowRight size={14} />}
               </button>
             </div>
           </div>

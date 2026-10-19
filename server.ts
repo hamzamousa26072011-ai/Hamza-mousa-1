@@ -17,14 +17,39 @@ import {
 
 dotenv.config();
 
-// Initialize server-side Google Gemini API client
+// Initialize server-side Google Gemini API client for Engez AI Scholar & Tutor
 const getGenAI = (customKey?: string): GoogleGenAI | null => {
-  const apiKey = (typeof customKey === "string" && customKey.trim().length > 10) 
-    ? customKey.trim() 
-    : process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+  // 1. Check if caller supplied explicit key via header
+  if (typeof customKey === "string" && customKey.trim().length > 10) {
+    return new GoogleGenAI({
+      apiKey: customKey.trim(),
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+
+  // 2. Read from process.env.GEMINI_API_KEY (or local runtime dev config)
+  let apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.trim().length < 10) {
+    try {
+      if (fs.existsSync("/app/.dev.env.json")) {
+        const raw = fs.readFileSync("/app/.dev.env.json", "utf-8");
+        const parsed = JSON.parse(raw);
+        if (parsed?.GEMINI_API_KEY && typeof parsed.GEMINI_API_KEY === "string") {
+          apiKey = parsed.GEMINI_API_KEY;
+        }
+      }
+    } catch {
+      // Safe fallback ignore
+    }
+  }
+
+  if (!apiKey || apiKey.trim().length < 10) return null;
   return new GoogleGenAI({
-    apiKey,
+    apiKey: apiKey.trim(),
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
@@ -909,7 +934,9 @@ app.post(["/api/gemini/prioritize", "/api/ai/prioritize"], async (req, res) => {
     return res.json(cached.data);
   }
 
-  const ai = getGenAI();
+  const customKeyHeader = req.headers["x-gemini-key"] || req.headers["x-api-key"];
+  const customKey = typeof customKeyHeader === "string" ? customKeyHeader : undefined;
+  const ai = getGenAI(customKey);
   if (ai) {
     try {
       const response = await ai.models.generateContent({
@@ -1175,8 +1202,8 @@ const handleScholarGrading = async (req: Request, res: Response) => {
 
       parts.push({ text: promptBuilder });
 
-      // Intelligent model cascade: try gemini-3.8-flash first, gracefully fallback to gemini-3.1-flash-lite if 429 quota or 503 spike occurs
-      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
+      // Intelligent model cascade: try gemini-3.8-flash first, gracefully fallback to gemini-3.1-flash-lite or gemini-flash-latest
+      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
       let generatedText: string | null = null;
       let usedModel: string = "gemini-3.8-flash";
 
@@ -1272,7 +1299,9 @@ const handlePaperCorrection = async (req: Request, res: Response) => {
   const totalFiles = (Array.isArray(answerImages) ? answerImages.length : 0) + 
                      (Array.isArray(answerFiles) ? answerFiles.length : 0);
 
-  const ai = getGenAI();
+  const customKeyHeader = req.headers["x-gemini-key"] || req.headers["x-api-key"];
+  const customKey = typeof customKeyHeader === "string" ? customKeyHeader : undefined;
+  const ai = getGenAI(customKey);
   if (ai && Array.isArray(questions) && questions.length > 0) {
     try {
       const parts: any[] = [];
@@ -1321,7 +1350,7 @@ Output JSON adhering to:
 
       parts.push({ text: prompt });
 
-      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
+      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
       let reportJson: any = null;
       let usedModel = "gemini-3.8-flash";
 
@@ -1437,7 +1466,7 @@ Respond in JSON with schema:
 
       parts.push({ text: prompt });
 
-      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
+      const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
       let parsedJson: any = null;
 
       for (const m of candidateModels) {

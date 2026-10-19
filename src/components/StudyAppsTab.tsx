@@ -1,26 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   Compass, 
   ExternalLink, 
-  Check, 
-  FolderCheck, 
-  Layers, 
-  Sparkles, 
   Plus, 
   Trash2, 
-  Globe, 
-  Bookmark, 
+  Search, 
   X, 
-  HelpCircle, 
+  AlertCircle,
+  Check,
   RotateCcw,
-  Pencil,
-  Save
+  Globe,
+  CheckCircle2
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { StudyApp } from "../types";
 
 interface StudyAppsTabProps {
-  apps: StudyApp[];
+  apps?: StudyApp[];
+  customApps?: StudyApp[];
   onAddApp: (newApp: Omit<StudyApp, "id">) => void;
   onEditApp?: (updatedApp: StudyApp) => void;
   onDeleteApp: (id: string) => void;
@@ -31,584 +27,692 @@ interface StudyAppsTabProps {
   onOpenLoginModal?: () => void;
 }
 
-export default function StudyAppsTab({ 
-  apps, 
-  onAddApp, 
-  onEditApp,
+interface CuratedApp extends Omit<StudyApp, "logoColor"> {
+  category: "Notes & Revision" | "Flashcards" | "Past Papers" | "Planning" | "Reference" | "Custom";
+  badge?: string;
+  desc: string;
+  logo?: string;
+  logoColor?: string;
+  isCustom?: boolean;
+}
+
+const CURATED_APPS: CuratedApp[] = [
+  {
+    id: "pmt",
+    name: "Physics & Maths Tutor",
+    desc: "Past papers by topic, revision notes, mark schemes, and flashcards for IGCSE and A-Level.",
+    url: "https://www.physicsandmathstutor.com",
+    logo: "https://www.google.com/s2/favicons?domain=physicsandmathstutor.com&sz=128",
+    isCustom: false,
+    category: "Past Papers",
+    badge: "Past Papers"
+  },
+  {
+    id: "savemyexams",
+    name: "Save My Exams",
+    desc: "Syllabus-specific revision notes, topic questions, and model answers for Cambridge & Edexcel.",
+    url: "https://www.savemyexams.com",
+    logo: "https://www.google.com/s2/favicons?domain=savemyexams.com&sz=128",
+    isCustom: false,
+    category: "Notes & Revision",
+    badge: "Syllabus Notes"
+  },
+  {
+    id: "papacambridge",
+    name: "PapaCambridge",
+    desc: "Complete archive of Cambridge IGCSE, O-Level, and AS/A-Level question papers and mark schemes.",
+    url: "https://papacambridge.com",
+    logo: "https://www.google.com/s2/favicons?domain=papacambridge.com&sz=128",
+    isCustom: false,
+    category: "Past Papers",
+    badge: "Exam Archive"
+  },
+  {
+    id: "znotes",
+    name: "ZNotes",
+    desc: "Concise, student-written revision summaries and topical notes for Cambridge IGCSE exams.",
+    url: "https://znotes.org",
+    logo: "https://www.google.com/s2/favicons?domain=znotes.org&sz=128",
+    isCustom: false,
+    category: "Notes & Revision",
+    badge: "Concise Notes"
+  },
+  {
+    id: "anki",
+    name: "AnkiWeb",
+    desc: "Spaced repetition flashcard system for long-term retention of formulas, definitions, and vocabulary.",
+    url: "https://ankiweb.net",
+    logo: "https://www.google.com/s2/favicons?domain=ankiweb.net&sz=128",
+    isCustom: false,
+    category: "Flashcards",
+    badge: "Active Recall"
+  },
+  {
+    id: "quizlet",
+    name: "Quizlet",
+    desc: "Study sets, interactive flashcards, and practice tests for languages and sciences.",
+    url: "https://quizlet.com",
+    logo: "https://www.google.com/s2/favicons?domain=quizlet.com&sz=128",
+    isCustom: false,
+    category: "Flashcards",
+    badge: "Flashcards"
+  },
+  {
+    id: "desmos",
+    name: "Desmos Graphing Calculator",
+    desc: "Interactive function plotting and coordinate geometry visualizer for Mathematics.",
+    url: "https://www.desmos.com/calculator",
+    logo: "https://www.google.com/s2/favicons?domain=desmos.com&sz=128",
+    isCustom: false,
+    category: "Reference",
+    badge: "Mathematics"
+  },
+  {
+    id: "notion",
+    name: "Notion",
+    desc: "Structured workspace for organizing syllabus checklists, lecture notes, and revision timetables.",
+    url: "https://www.notion.so",
+    logo: "https://www.google.com/s2/favicons?domain=notion.so&sz=128",
+    isCustom: false,
+    category: "Planning",
+    badge: "Organization"
+  }
+];
+
+const CATEGORIES = ["All", "Past Papers", "Notes & Revision", "Flashcards", "Reference", "Planning", "Custom"] as const;
+
+export default function StudyAppsTab({
+  apps = [],
+  customApps = [],
+  onAddApp,
   onDeleteApp,
   themeMode = "dark",
-  currentUser,
-  appSavedNotice,
-  onResetDefaults,
-  onOpenLoginModal
+  appSavedNotice
 }: StudyAppsTabProps) {
   const isLight = themeMode === "light";
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
-  const [logoColor, setLogoColor] = useState("#C96F55");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newAppName, setNewAppName] = useState("");
+  const [newAppUrl, setNewAppUrl] = useState("");
+  const [newAppDesc, setNewAppDesc] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [confirmDeleteApp, setConfirmDeleteApp] = useState<CuratedApp | null>(null);
 
-  // Portal editing state
-  const [editingApp, setEditingApp] = useState<StudyApp | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editUrl, setEditUrl] = useState("");
-  const [editLogoColor, setEditLogoColor] = useState("#C96F55");
+  const userSavedApps = apps.length > 0 ? apps : customApps;
 
-  // Preset Colors
-  const accentColors = [
-    { name: "Terracotta", value: "#C96F55" },
-    { name: "Sage Slate", value: "#66856D" },
-    { name: "Muted Ocean", value: "#587B8C" },
-    { name: "Indigo Hub", value: "#4F46E5" },
-    { name: "Crimson Spark", value: "#EF4444" },
-    { name: "Sun Amber", value: "#F59E0B" }
-  ];
+  const allApps: CuratedApp[] = useMemo(() => {
+    const customMapped: CuratedApp[] = userSavedApps.map((app) => {
+      let domain = "";
+      try {
+        const u = new URL(/^https?:\/\//i.test(app.url) ? app.url : `https://${app.url}`);
+        domain = u.hostname;
+      } catch {}
+      return {
+        ...app,
+        desc: (app as any).desc || `External bookmark (${domain || app.url})`,
+        logo: (app as any).logo || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : ""),
+        isCustom: true,
+        category: "Custom" as const,
+        badge: "Saved Bookmark"
+      };
+    });
+    return [...customMapped, ...CURATED_APPS];
+  }, [userSavedApps]);
 
-  // Quick platform suggestion seeds
-  const suggestions = [
-    { name: "Khan Academy", url: "https://www.khanacademy.org", color: "#587B8C" },
-    { name: "Desmos Graphing", url: "https://www.desmos.com/calculator", color: "#C96F55" },
-    { name: "Quizlet Flashcards", url: "https://quizlet.com", color: "#A855F7" },
-    { name: "Physics & Maths Tutor", url: "https://www.physicsandmathstutor.com", color: "#66856D" }
-  ];
+  const filteredApps = useMemo(() => {
+    return allApps.filter((app) => {
+      const matchesCategory =
+        selectedCategory === "All" ||
+        app.category === selectedCategory ||
+        (selectedCategory === "Custom" && app.isCustom);
 
-  const handleSubmit = (e: React.FormEvent) => {
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        app.name.toLowerCase().includes(q) ||
+        app.desc.toLowerCase().includes(q) ||
+        app.category.toLowerCase().includes(q);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [allApps, selectedCategory, searchQuery]);
+
+  const validateAndSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !url.trim()) return;
+    setFormError(null);
 
-    let cleanUrl = url.trim();
-    if (!/^https?:\/\//i.test(cleanUrl)) {
-      cleanUrl = "https://" + cleanUrl;
+    const trimmedName = newAppName.trim();
+    let trimmedUrl = newAppUrl.trim();
+
+    if (!trimmedName) {
+      setFormError("Please enter a resource name.");
+      return;
+    }
+
+    if (!trimmedUrl) {
+      setFormError("Please enter a valid website URL.");
+      return;
+    }
+
+    if (!/^https?:\/\//i.test(trimmedUrl)) {
+      trimmedUrl = `https://${trimmedUrl}`;
+    }
+
+    try {
+      const parsed = new URL(trimmedUrl);
+      if (!parsed.hostname.includes(".")) {
+        setFormError("Please enter a complete web address (e.g., https://savemyexams.com).");
+        return;
+      }
+    } catch {
+      setFormError("Please enter a valid web address (e.g., https://savemyexams.com).");
+      return;
     }
 
     onAddApp({
-      name: name.trim(),
-      url: cleanUrl,
-      logoColor
-    });
+      name: trimmedName,
+      url: trimmedUrl,
+      logoColor: "#5F55C8",
+      ...(newAppDesc.trim() ? { desc: newAppDesc.trim() } : {})
+    } as any);
 
-    setName("");
-    setUrl("");
-    setShowAddForm(false);
+    setNewAppName("");
+    setNewAppUrl("");
+    setNewAppDesc("");
+    setIsAddModalOpen(false);
   };
 
-  const handleStartEdit = (app: StudyApp) => {
-    setEditingApp(app);
-    setEditName(app.name);
-    setEditUrl(app.url);
-    setEditLogoColor(app.logoColor || "#C96F55");
-    setShowAddForm(false);
-  };
-
-  const handleSaveEdit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingApp || !editName.trim() || !editUrl.trim()) return;
-
-    let cleanUrl = editUrl.trim();
-    if (!/^https?:\/\//i.test(cleanUrl)) {
-      cleanUrl = "https://" + cleanUrl;
+  const getSafeHref = (rawUrl: string): string | null => {
+    try {
+      const normalized = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+      const u = new URL(normalized);
+      if (u.protocol === "http:" || u.protocol === "https:") {
+        return u.toString();
+      }
+      return null;
+    } catch {
+      return null;
     }
-
-    if (onEditApp) {
-      onEditApp({
-        ...editingApp,
-        name: editName.trim(),
-        url: cleanUrl,
-        logoColor: editLogoColor
-      });
-    }
-
-    setEditingApp(null);
-  };
-
-  const applySuggestion = (sug: typeof suggestions[0]) => {
-    setName(sug.name);
-    setUrl(sug.url);
-    setLogoColor(sug.color);
   };
 
   return (
-    <div className="space-y-6 select-none md:space-y-8">
-      
-      {/* Launchpad Header */}
-      <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b ${
-        isLight ? "border-[#E8D7C9]" : "border-white/5"
-      } pb-5 shrink-0`}>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-[10px] font-mono ${
-              isLight ? "text-[#C96F55]" : "text-indigo-400"
-            } font-bold uppercase tracking-widest`}>
-              My Apps &amp; Study Portals
-            </span>
-
-            {/* Live Account Cloud Status Indicator */}
-            {currentUser?.uid ? (
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold ${
-                isLight 
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
-                  : "bg-emerald-950/50 text-emerald-400 border border-emerald-800/40"
-              }`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Saved to {currentUser.displayName || currentUser.email || "Account"}</span>
+    <div className="space-y-6 pb-10">
+      {/* Page Header */}
+      <header
+        className={`rounded-2xl border p-6 ${
+          isLight
+            ? "bg-[#FFFFFF] border-[#E2E6EE] shadow-[0_1px_3px_rgba(24,32,43,0.04)]"
+            : "bg-[#191E28] border-[#2B3344]"
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-medium mb-1">
+              <Compass size={14} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+              <span className={isLight ? "text-[#596474]" : "text-[#B7C0CF]"}>
+                Academic Directory
               </span>
-            ) : (
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono ${
-                isLight 
-                  ? "bg-amber-50 text-amber-700 border border-amber-200" 
-                  : "bg-amber-950/40 text-amber-300 border border-amber-800/30"
-              }`}>
-                <span>Guest mode • Saved on this device</span>
-                {onOpenLoginModal && (
-                  <button 
-                    onClick={onOpenLoginModal} 
-                    className="underline font-bold hover:opacity-80 cursor-pointer ml-1"
-                  >
-                    Sign in to sync
-                  </button>
-                )}
-              </span>
-            )}
+            </div>
+            <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+              Study Resources & Links
+            </h1>
+            <p className={`text-sm mt-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              Curated past paper archives, syllabus revision notes, and your personal study bookmarks.
+            </p>
           </div>
 
-          <h1 className={`text-2xl md:text-3xl font-black ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>
-            Accelerated Academic Applications
-          </h1>
-          <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} max-w-xl`}>
-            {currentUser?.uid 
-              ? "Your connected websites and revision tools are saved directly to your account. They will always be here whenever you sign in." 
-              : "Quick-launch revision portals, classroom assignments, and graphing tools. Sign in to keep them saved to your account forever."}
-          </p>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-2">
-          {onResetDefaults && apps.length > 1 && (
-            <button
-              onClick={onResetDefaults}
-              className={`py-2 px-3 ${
-                isLight 
-                  ? "bg-[#FAF8F5] hover:bg-[#EFECE6] border-[#E8D7C9] text-[#77736B]" 
-                  : "bg-white/5 hover:bg-white/10 border-white/5 text-slate-400 hover:text-white"
-              } border rounded-xl text-xs font-mono font-medium transition flex items-center gap-1.5 cursor-pointer`}
-              title="Reset apps to standard defaults"
-            >
-              <RotateCcw size={12} />
-              <span>Reset</span>
-            </button>
-          )}
-
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className={`py-2.5 px-5 ${
-              isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500"
-            } text-white rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-2xs`}
-          >
-            {showAddForm ? <X size={14} /> : <Plus size={14} />}
-            <span>{showAddForm ? "Cancel Form" : "Add Website"}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Floating Instant Account Save Notice */}
-      <AnimatePresence>
-        {appSavedNotice && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            className={`p-3.5 rounded-xl border flex items-center gap-2.5 text-xs font-mono font-medium shadow-sm ${
-              isLight 
-                ? "bg-emerald-50/90 border-emerald-200 text-emerald-800" 
-                : "bg-emerald-950/40 border-emerald-700/50 text-emerald-300"
+            type="button"
+            onClick={() => {
+              setFormError(null);
+              setIsAddModalOpen(true);
+            }}
+            className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition cursor-pointer shrink-0 ${
+              isLight
+                ? "bg-[#5F55C8] hover:bg-[#4E45B0] text-white shadow-xs"
+                : "bg-[#5F55C8] hover:bg-[#7066D8] text-white"
             }`}
           >
-            <Check size={15} className="text-emerald-500 shrink-0" />
-            <div className="flex-1">
-              <span>{appSavedNotice}</span>
-              {currentUser?.uid && (
-                <span className="ml-2 opacity-80 text-[10px]">
-                  (Cloud synced to your account)
-                </span>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Dynamic Animated Form Entry Card */}
-      <AnimatePresence>
-        {showAddForm && (
-          <motion.div
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.24, ease: "easeOut" }}
-            className={`p-6 ${
-              isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" : "bg-[#0E1322] border-white/10 text-white shadow-2xl"
-            } border rounded-2xl relative space-y-5`}
-          >
-            <div className="flex justify-between items-center pb-3 border-b border-inherit">
-              <h3 className={`text-sm font-bold ${isLight ? "text-[#1D1D1B]" : "text-slate-100"} font-mono tracking-wider uppercase flex items-center gap-2`}>
-                <Globe size={15} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
-                <span>Link Custom Studying Platform</span>
-              </h3>
-              <span className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-500"}`}>
-                Auto HTTPS protocol formatting enabled
-              </span>
-            </div>
-
-            {/* Suggestions Quick Buttons */}
-            <div className="space-y-2">
-              <span className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} font-bold uppercase tracking-wider block`}>
-                ⚡ Quick Suggestions seeds:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {suggestions.map((sug) => (
-                  <button
-                    key={sug.name}
-                    type="button"
-                    onClick={() => applySuggestion(sug)}
-                    className={`px-2.5 py-1 ${
-                      isLight 
-                        ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border-[#E8D7C9] text-[#1D1D1B]" 
-                        : "bg-white/5 hover:bg-indigo-600/10 border-white/5 text-slate-300 hover:text-indigo-400"
-                    } border rounded-lg text-[10px] font-mono font-medium transition cursor-pointer`}
-                  >
-                    + {sug.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
-              {/* Field 1: Name */}
-              <div>
-                <label className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold`}>
-                  Platform / Website Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Physics and Maths Tutor"
-                  className={`w-full mt-1.5 px-4 py-2 ${
-                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" : "bg-[#12192B] border-white/10 text-white focus:border-indigo-500"
-                  } border rounded-xl text-xs placeholder:text-[#9B9890] focus:outline-none transition shadow-inner`}
-                  required
-                />
-              </div>
-
-              {/* Field 2: URL */}
-              <div>
-                <label className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold`}>
-                  Direct Entry URL
-                </label>
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="e.g. www.physicsandmathstutor.com"
-                  className={`w-full mt-1.5 px-4 py-2 ${
-                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" : "bg-[#12192B] border-white/10 text-white focus:border-indigo-500"
-                  } border rounded-xl text-xs placeholder:text-[#9B9890] focus:outline-none transition shadow-inner`}
-                  required
-                />
-              </div>
-
-              {/* Display Accent Colors design selection */}
-              <div className="md:col-span-2">
-                <label className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold mb-2`}>
-                  Display Accent Color
-                </label>
-                <div className={`flex flex-wrap gap-3 p-3 ${isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#111626]/60 border-white/5"} border rounded-xl`}>
-                  {accentColors.map((col) => (
-                    <button
-                      key={col.value}
-                      type="button"
-                      onClick={() => setLogoColor(col.value)}
-                      className={`px-3 py-1.5 rounded-lg text-[9px] font-mono font-bold flex items-center gap-2 transition cursor-pointer border ${
-                        logoColor === col.value 
-                          ? isLight ? "bg-[#FFFFFF] border-[#C96F55] text-[#1D1D1B] shadow-2xs" : "bg-white/10 border-indigo-500/50 text-white" 
-                          : isLight ? "bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B]" : "bg-black/20 border-white/5 text-slate-400 hover:text-slate-200"
-                      }`}
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: col.value }} />
-                      <span>{col.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Submit handler */}
-              <div className="md:col-span-2 flex justify-end gap-3.5 pt-2">
-                <button
-                  type="submit"
-                  className={`py-2.5 px-6 ${
-                    isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500"
-                  } text-white rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-2xs`}
-                >
-                  <Sparkles size={14} />
-                  <span>Connect Website</span>
-                </button>
-              </div>
-
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Dynamic Animated Edit Portal Modal */}
-      <AnimatePresence>
-        {editingApp && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.2 }}
-            className={`p-6 ${
-              isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] shadow-lg" : "bg-[#0E1322] border-white/10 text-white shadow-2xl"
-            } border rounded-2xl relative space-y-5`}
-          >
-            <div className="flex justify-between items-center pb-3 border-b border-inherit">
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: editLogoColor }}
-                />
-                <h3 className={`text-sm font-bold ${isLight ? "text-[#1D1D1B]" : "text-slate-100"} font-mono tracking-wider uppercase flex items-center gap-2`}>
-                  <Pencil size={15} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
-                  <span>Edit Studying Portal</span>
-                </h3>
-              </div>
-              <button
-                onClick={() => setEditingApp(null)}
-                className={`p-1.5 rounded-lg transition cursor-pointer ${
-                  isLight ? "hover:bg-[#F0EEE8] text-[#77736B]" : "hover:bg-white/10 text-slate-400"
-                }`}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveEdit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold`}>
-                  Portal Name
-                </label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="e.g. Khan Academy"
-                  className={`mt-1.5 w-full py-2 px-3 text-xs font-mono rounded-xl border outline-none transition ${
-                    isLight 
-                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
-                      : "bg-[#111626] border-white/10 text-white focus:border-indigo-500"
-                  }`}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold`}>
-                  Portal URL / Website Link
-                </label>
-                <input
-                  type="text"
-                  value={editUrl}
-                  onChange={(e) => setEditUrl(e.target.value)}
-                  placeholder="e.g. khanacademy.org"
-                  className={`mt-1.5 w-full py-2 px-3 text-xs font-mono rounded-xl border outline-none transition ${
-                    isLight 
-                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
-                      : "bg-[#111626] border-white/10 text-white focus:border-indigo-500"
-                  }`}
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold mb-2`}>
-                  Theme Accent Color
-                </label>
-                <div className="flex flex-wrap gap-2 items-center">
-                  {accentColors.map((c) => (
-                    <button
-                      key={c.name}
-                      type="button"
-                      onClick={() => setEditLogoColor(c.value)}
-                      className={`px-3 py-1.5 rounded-xl border text-[10px] font-mono font-medium flex items-center gap-2 cursor-pointer transition ${
-                        editLogoColor === c.value
-                          ? isLight ? "border-[#1D1D1B] bg-[#FFF1EC] font-bold" : "border-white bg-white/10 font-bold"
-                          : isLight ? "border-[#E8D7C9] bg-[#FAF8F5]" : "border-white/5 bg-[#111626]"
-                      }`}
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.value }} />
-                      <span>{c.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="md:col-span-2 flex justify-between items-center pt-3 border-t border-inherit">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (editingApp) {
-                      onDeleteApp(editingApp.id);
-                      setEditingApp(null);
-                    }
-                  }}
-                  className={`py-2 px-3.5 rounded-xl text-xs font-mono font-medium transition flex items-center gap-1.5 cursor-pointer ${
-                    isLight 
-                      ? "text-red-600 hover:bg-red-50 border border-red-200" 
-                      : "text-red-400 hover:bg-red-950/30 border border-red-800/40"
-                  }`}
-                >
-                  <Trash2 size={13} />
-                  <span>Remove Portal</span>
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingApp(null)}
-                    className={`py-2 px-4 rounded-xl text-xs font-mono font-medium transition cursor-pointer ${
-                      isLight 
-                        ? "bg-[#FAF8F5] hover:bg-[#EFECE6] text-[#77736B] border border-[#E8D7C9]" 
-                        : "bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5"
-                    }`}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className={`py-2 px-5 ${
-                      isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500"
-                    } text-white rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-2xs`}
-                  >
-                    <Save size={13} />
-                    <span>Save Changes</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Bento Layout deck of portal cards */}
-      {apps.length === 0 ? (
-        <div className={`p-12 text-center ${
-          isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0E1322] border-white/10 text-white"
-        } border border-dashed rounded-3xl space-y-3`}>
-          <Globe className={`mx-auto ${isLight ? "text-[#77736B]" : "text-slate-600"} animate-pulse`} size={32} />
-          <h3 className={`text-md font-bold ${isLight ? "text-[#1D1D1B]" : "text-slate-300"}`}>No Web Portals Connected</h3>
-          <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-500"} max-w-sm mx-auto`}>
-            Get started by adding custom revision links like Khan Academy, Desmos, or Google Classroom.
-          </p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className={`mt-3 py-2 px-4 ${
-              isLight ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]" : "bg-indigo-600/20 border-indigo-500/30 text-indigo-400"
-            } border text-xs font-mono font-bold uppercase rounded-lg transition cursor-pointer`}
-          >
-            Create first link
+            <Plus size={16} />
+            <span>Add Custom Link</span>
           </button>
         </div>
+
+        {appSavedNotice && (
+          <div
+            role="status"
+            className={`mt-4 p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
+              isLight
+                ? "bg-[#E9F7EF] border-[#B7E4C7] text-[#1F7A4C]"
+                : "bg-[#143024] border-[#1F7A4C]/40 text-[#4ADE80]"
+            }`}
+          >
+            <CheckCircle2 size={15} className="shrink-0" />
+            <span>{appSavedNotice}</span>
+          </div>
+        )}
+
+        {/* Filter & Search Bar */}
+        <div className={`mt-6 pt-5 border-t flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 ${
+          isLight ? "border-[#EDF0F5]" : "border-[#2B3344]"
+        }`}>
+          {/* Category Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" role="tablist" aria-label="Resource categories">
+            {CATEGORIES.map((cat) => {
+              const active = selectedCategory === cat;
+              const count = cat === "All"
+                ? allApps.length
+                : cat === "Custom"
+                ? userSavedApps.length
+                : allApps.filter((a) => a.category === cat).length;
+
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
+                    active
+                      ? isLight
+                        ? "bg-[#5F55C8] text-white shadow-2xs"
+                        : "bg-[#A99BFF] text-[#10131A]"
+                      : isLight
+                      ? "bg-[#F6F7FA] text-[#596474] hover:text-[#18202B] hover:bg-[#ECEFF5]"
+                      : "bg-[#222938] text-[#B7C0CF] hover:text-[#F1F3F8]"
+                  }`}
+                >
+                  <span>{cat}</span>
+                  <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded ${
+                    active
+                      ? isLight ? "bg-white/20 text-white" : "bg-black/15 text-[#10131A]"
+                      : isLight ? "bg-[#E2E6EE] text-[#596474]" : "bg-[#191E28] text-[#8590A2]"
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search Box */}
+          <div className="relative min-w-[240px]">
+            <Search size={15} className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`} />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search resources..."
+              aria-label="Search study resources"
+              className={`w-full min-h-[40px] pl-9 pr-8 py-2 rounded-xl border text-sm transition focus:outline-none ${
+                isLight
+                  ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] placeholder-[#7A8699] focus:bg-white focus:border-[#5F55C8]"
+                  : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] placeholder-[#8590A2] focus:border-[#A99BFF]"
+              }`}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear search"
+                className={`absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md cursor-pointer ${
+                  isLight ? "text-[#596474] hover:bg-[#E2E6EE]" : "text-[#8590A2] hover:bg-[#222938]"
+                }`}
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Resource Cards Grid */}
+      {filteredApps.length === 0 ? (
+        <div
+          className={`rounded-2xl border p-10 text-center ${
+            isLight ? "bg-[#FFFFFF] border-[#E2E6EE]" : "bg-[#191E28] border-[#2B3344]"
+          }`}
+        >
+          <Compass size={32} className={`mx-auto mb-3 ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`} />
+          <h2 className={`text-base font-bold ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+            No study resources match your filter
+          </h2>
+          <p className={`text-sm mt-1 max-w-md mx-auto ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+            {selectedCategory === "Custom"
+              ? "You haven't added any custom links yet. Add your school portal, syllabus PDF, or favorite study site."
+              : "Try clearing your search query or switching to All categories."}
+          </p>
+          <div className="mt-5 flex items-center justify-center gap-3">
+            {selectedCategory === "Custom" ? (
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(true)}
+                className="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold bg-[#5F55C8] hover:bg-[#4E45B0] text-white transition cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <Plus size={14} />
+                <span>Add Custom Link</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory("All");
+                  setSearchQuery("");
+                }}
+                className={`min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer inline-flex items-center gap-1.5 ${
+                  isLight
+                    ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] hover:bg-[#ECEFF5]"
+                    : "bg-[#222938] border-[#2B3344] text-[#F1F3F8] hover:bg-[#2B3344]"
+                }`}
+              >
+                <RotateCcw size={14} />
+                <span>Show All Resources</span>
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {apps.map((app) => (
-            <div 
-              key={app.id} 
-              className={`p-6 ${
-                isLight 
-                  ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs hover:border-[#C96F55]/40" 
-                  : "bg-[#0E1322]/80 border border-white/10 hover:border-[#1E233E]/90 shadow-lg"
-              } rounded-3xl flex flex-col justify-between relative group transition-all duration-300 min-h-[150px] hover:-translate-y-0.5`}
-            >
-              <div>
-                {/* Header Row */}
-                <div className="flex justify-between items-center mb-1">
-                  
-                  {/* Left vertical color pill */}
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-2.5 h-2.5 rounded-full shrink-0" 
-                      style={{ backgroundColor: app.logoColor }}
-                    />
-                    <span className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-500"} font-bold uppercase tracking-wider`}>
-                      Studying Portal
-                    </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredApps.map((app) => {
+            const safeHref = getSafeHref(app.url);
+            let hostname = "";
+            try {
+              if (safeHref) hostname = new URL(safeHref).hostname.replace(/^www\./, "");
+            } catch {}
+
+            return (
+              <article
+                key={app.id}
+                className={`rounded-2xl border p-5 flex flex-col justify-between transition ${
+                  isLight
+                    ? "bg-[#FFFFFF] border-[#E2E6EE] hover:border-[#5F55C8]/50 shadow-[0_1px_2px_rgba(24,32,43,0.03)]"
+                    : "bg-[#191E28] border-[#2B3344] hover:border-[#A99BFF]/40"
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 overflow-hidden ${
+                          isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"
+                        }`}
+                      >
+                        {(app as any).logo ? (
+                          <img
+                            src={(app as any).logo}
+                            alt=""
+                            className="w-6 h-6 object-contain"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <Globe size={18} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className={`text-base font-bold truncate ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+                          {app.name}
+                        </h3>
+                        {hostname && (
+                          <p className={`text-xs font-mono truncate ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`}>
+                            {hostname}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border ${
+                          app.isCustom
+                            ? isLight
+                              ? "bg-[#EFEEFA] border-[#D6D2F6] text-[#5F55C8]"
+                              : "bg-[#5F55C8]/15 border-[#A99BFF]/30 text-[#A99BFF]"
+                            : isLight
+                            ? "bg-[#F6F7FA] border-[#E2E6EE] text-[#596474]"
+                            : "bg-[#222938] border-[#2B3344] text-[#B7C0CF]"
+                        }`}
+                      >
+                        {app.badge || app.category}
+                      </span>
+
+                      {app.isCustom && (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteApp(app)}
+                          aria-label={`Remove ${app.name}`}
+                          title={`Remove ${app.name}`}
+                          className={`p-1.5 rounded-lg transition cursor-pointer ${
+                            isLight
+                              ? "text-[#7A8699] hover:text-[#C93B3B] hover:bg-[#FDECEC]"
+                              : "text-[#8590A2] hover:text-[#F87171] hover:bg-[#3A1D24]"
+                          }`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Top Indicators Row: Edit & Remove actions */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleStartEdit(app)}
-                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                        isLight 
-                          ? "text-[#77736B] hover:text-[#C96F55] hover:bg-[#FFF1EC]" 
-                          : "text-slate-400 hover:text-indigo-400 hover:bg-white/10"
-                      }`}
-                      title="Edit portal"
-                    >
-                      <Pencil size={12} />
-                    </button>
-                    <button
-                      onClick={() => onDeleteApp(app.id)}
-                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                        isLight 
-                          ? "text-[#77736B] hover:text-[#B85C5C] hover:bg-red-50" 
-                          : "text-slate-400 hover:text-red-400 hover:bg-red-950/40"
-                      }`}
-                      title="Remove portal"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
+                  <p className={`text-sm mt-3 leading-relaxed line-clamp-2 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                    {app.desc || "Personal study bookmark."}
+                  </p>
                 </div>
 
-                {/* Application Name */}
-                <h3 className={`text-sm font-black ${isLight ? "text-[#1D1D1B]" : "text-slate-200 group-hover:text-white"} mt-3 truncate duration-250`}>
-                  {app.name}
-                </h3>
-              </div>
+                <div className={`mt-5 pt-3.5 border-t flex items-center justify-between ${
+                  isLight ? "border-[#EDF0F5]" : "border-[#2B3344]"
+                }`}>
+                  <span className={`text-xs ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`}>
+                    Opens in new tab
+                  </span>
 
-              {/* Launches Portal */}
-              <div className={`mt-4 pt-4 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/5"} flex gap-2 w-full`}>
-                <a
-                  href={app.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`flex-1 py-2 px-4 rounded-xl text-[10px] font-mono font-bold tracking-widest uppercase border ${
-                    isLight 
-                      ? "bg-[#FAF8F5] hover:bg-[#C96F55] hover:text-white hover:border-[#C96F55] text-[#1D1D1B] border-[#E8D7C9]" 
-                      : "bg-[#12192B] hover:bg-indigo-600 hover:border-indigo-500 hover:text-white text-slate-300 border-white/5"
-                  } transition duration-250 cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs`}
-                >
-                  <span>Connect Portal</span>
-                  <ExternalLink size={11} />
-                </a>
-              </div>
-
-            </div>
-          ))}
+                  {safeHref ? (
+                    <a
+                      href={safeHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition ${
+                        isLight
+                          ? "bg-[#F6F7FA] hover:bg-[#5F55C8] text-[#18202B] hover:text-white border border-[#D0D7E2] hover:border-[#5F55C8]"
+                          : "bg-[#222938] hover:bg-[#5F55C8] text-[#F1F3F8] hover:text-white border border-[#2B3344]"
+                      }`}
+                    >
+                      <span>Open Resource</span>
+                      <ExternalLink size={13} />
+                    </a>
+                  ) : (
+                    <span className={`text-xs font-medium ${isLight ? "text-[#C93B3B]" : "text-[#F87171]"}`}>
+                      Invalid URL
+                    </span>
+                  )}
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
 
-      {/* Footer info box */}
-      <div className={`p-6 ${
-        isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#77736B]" : "bg-[#111626]/40 border-white/5 text-slate-500"
-      } border border-dashed rounded-3xl text-center select-none max-w-lg mx-auto`}>
-        <Sparkles className={`mx-auto ${isLight ? "text-[#C96F55]" : "text-indigo-400/40"} mb-2`} size={18} />
-        <p className="text-[10px] font-mono uppercase tracking-widest">
-          Syllabus calibration locks active • Grade boundaries up-to-date
-        </p>
-      </div>
+      {/* Add Custom Link Modal */}
+      {isAddModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-resource-modal-title"
+          onClick={() => setIsAddModalOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-md rounded-2xl border p-6 shadow-xl ${
+              isLight
+                ? "bg-[#FFFFFF] border-[#E2E6EE] text-[#18202B]"
+                : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8]"
+            }`}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-inherit">
+              <h2 id="add-resource-modal-title" className="text-lg font-bold">
+                Add Custom Study Link
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                aria-label="Close modal"
+                className={`p-1.5 rounded-lg cursor-pointer ${
+                  isLight ? "text-[#596474] hover:bg-[#F0F2F7]" : "text-[#B7C0CF] hover:bg-[#222938]"
+                }`}
+              >
+                <X size={18} />
+              </button>
+            </div>
 
+            <form onSubmit={validateAndSubmit} className="mt-4 space-y-4">
+              {formError && (
+                <div
+                  role="alert"
+                  className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
+                    isLight
+                      ? "bg-[#FDECEC] border-[#F7C6C6] text-[#C93B3B]"
+                      : "bg-[#3A1D24] border-[#C93B3B]/40 text-[#FCA5A5]"
+                  }`}
+                >
+                  <AlertCircle size={15} className="shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="custom-app-name" className="block text-xs font-semibold mb-1.5">
+                  Resource Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  id="custom-app-name"
+                  type="text"
+                  value={newAppName}
+                  onChange={(e) => setNewAppName(e.target.value)}
+                  placeholder="e.g., Cambridge Chemistry Syllabus PDF"
+                  required
+                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-xl border text-sm focus:outline-none ${
+                    isLight
+                      ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] focus:bg-white focus:border-[#5F55C8]"
+                      : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="custom-app-url" className="block text-xs font-semibold mb-1.5">
+                  Website URL <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  id="custom-app-url"
+                  type="text"
+                  value={newAppUrl}
+                  onChange={(e) => setNewAppUrl(e.target.value)}
+                  placeholder="https://www.cambridgeinternational.org"
+                  required
+                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-xl border text-sm font-mono focus:outline-none ${
+                    isLight
+                      ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] focus:bg-white focus:border-[#5F55C8]"
+                      : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="custom-app-desc" className="block text-xs font-semibold mb-1.5">
+                  Short Description <span className={`font-normal ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`}>(optional)</span>
+                </label>
+                <input
+                  id="custom-app-desc"
+                  type="text"
+                  value={newAppDesc}
+                  onChange={(e) => setNewAppDesc(e.target.value)}
+                  placeholder="e.g., Topic checklists and specimen papers"
+                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-xl border text-sm focus:outline-none ${
+                    isLight
+                      ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] focus:bg-white focus:border-[#5F55C8]"
+                      : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                  }`}
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className={`min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                    isLight
+                      ? "bg-white border-[#D0D7E2] text-[#596474] hover:text-[#18202B]"
+                      : "bg-[#222938] border-[#2B3344] text-[#B7C0CF] hover:text-[#F1F3F8]"
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="min-h-[42px] px-5 py-2 rounded-xl text-xs font-semibold bg-[#5F55C8] hover:bg-[#4E45B0] text-white transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Check size={14} />
+                  <span>Save Link</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteApp && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-resource-title"
+          onClick={() => setConfirmDeleteApp(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-sm rounded-2xl border p-6 shadow-xl ${
+              isLight
+                ? "bg-[#FFFFFF] border-[#E2E6EE] text-[#18202B]"
+                : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8]"
+            }`}
+          >
+            <h3 id="delete-resource-title" className="text-base font-bold">
+              Remove Custom Link?
+            </h3>
+            <p className={`text-sm mt-2 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              Are you sure you want to remove <strong>{confirmDeleteApp.name}</strong> from your study resources?
+            </p>
+            <div className="mt-5 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteApp(null)}
+                className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold border cursor-pointer ${
+                  isLight
+                    ? "bg-white border-[#D0D7E2] text-[#596474]"
+                    : "bg-[#222938] border-[#2B3344] text-[#B7C0CF]"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onDeleteApp(confirmDeleteApp.id);
+                  setConfirmDeleteApp(null);
+                }}
+                className="min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold bg-[#C93B3B] hover:bg-[#B02E2E] text-white cursor-pointer"
+              >
+                Remove Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

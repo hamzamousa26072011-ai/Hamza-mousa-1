@@ -86,6 +86,12 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
+  // Ensure vertical mouse wheel scrolling is never locked when switching tabs
+  useEffect(() => {
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+  }, [currentTab]);
+
 
 
   // Security Lockdown State
@@ -174,12 +180,15 @@ export default function App() {
         setDismissedOnboarding(true);
       }
     } catch (err: any) {
-      console.error("Google sign-in error:", err);
       const code = err?.code || "";
       const msg = err?.message || String(err);
 
-      if (code === "auth/popup-closed-by-user" || msg.includes("popup-closed-by-user")) {
-        setAuthError("Google Sign-In window was closed. Please try again when ready.");
+      if (
+        code === "auth/popup-closed-by-user" ||
+        code === "auth/cancelled-popup-request" ||
+        msg.includes("popup-closed-by-user")
+      ) {
+        setAuthError("Google Sign-In window was closed before completing sign-in. Please try again when ready.");
       } else if (code === "auth/popup-blocked" || msg.includes("popup-blocked")) {
         setAuthError("Popups were blocked by your browser. Please allow popups for this site, or sign in using Email below.");
       } else if (code === "auth/unauthorized-domain" || msg.includes("unauthorized-domain")) {
@@ -1548,17 +1557,23 @@ export default function App() {
   };
 
   return (
-    <div className={`flex min-h-screen ${
-      settings.themeMode === "light" ? "bg-[#FBF9F5] text-[#1A1614]" : "bg-[#090A10] text-[#F8FAFC]"
-    } overflow-x-hidden relative transition-colors duration-300 font-sans`}>
-      
-      {/* CYBER WAVE PERSPECTIVE GRID & CELESTIAL GLOWING SPHERES */}
+    <div
+      className={`flex min-h-screen w-full ${
+        settings.themeMode === "light"
+          ? "bg-[#F6F7FA] text-[#18202B]"
+          : "bg-[#10131A] text-[#F1F3F8]"
+      } relative transition-colors duration-200 font-sans`}
+    >
+      {/* Calm Academic Backdrop */}
       <CyberWaveBackground isLight={settings.themeMode === "light"} />
 
-      {/* SLEEK COLLAPSIBLE NAVIGATION SIDEBAR */}
+      {/* Desktop Navigation Sidebar */}
       <Sidebar
         currentTab={currentTab}
-        onTabChange={(tab) => setCurrentTab(tab)}
+        onTabChange={(tab) => {
+          setCurrentTab(tab);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
         focusModeActive={focusModeActive}
         focusTimeRemaining={formatFocusTime()}
         currentUser={currentUser}
@@ -1569,113 +1584,180 @@ export default function App() {
         themeMode={settings.themeMode}
       />
 
-      {/* CORE FRAMEWORK STAGE */}
-      <main className="flex-1 min-w-0 p-3 sm:p-4 md:p-6 lg:p-8 pb-28 md:pb-8 space-y-5 md:space-y-6 flex flex-col justify-between max-w-7xl mx-auto w-full smooth-scroll">
-        
-        {/* TOP STATUS & PROFILE HEADER BAR */}
-        <header className={`flex flex-row items-center justify-between gap-3 ${
-          settings.themeMode === "light" 
-            ? "bg-[#FFFFFF]/90 border-[#EBE4DC] text-[#1A1614] shadow-xs" 
-            : "bg-[#101322]/90 border-white/[0.08] text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)]"
-        } border rounded-2xl p-3 sm:p-4 md:px-6 backdrop-blur-2xl transition-all duration-300`}>
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${
-              settings.themeMode === "light" 
-                ? "bg-[#FAF8F5] border-[#EBE4DC] shadow-2xs" 
-                : "bg-[#101322] border-[#8B5CF6]/35 shadow-[0_4px_14px_rgba(139,92,246,0.25)]"
-            } border p-0.5 flex items-center justify-center shrink-0 overflow-hidden hover:scale-105 transition-transform`}>
-              <EngezBrandLogo themeMode={settings.themeMode} withContainer={false} className="w-full h-full object-contain" />
+      {/* Primary Content Area */}
+      <main className="flex-1 min-w-0 p-3 sm:p-5 md:p-6 lg:p-8 pb-28 md:pb-10 space-y-5 md:space-y-6 flex flex-col justify-between max-w-7xl mx-auto w-full relative z-10">
+        {/* Top Workspace Bar */}
+        <header
+          className={`flex flex-row items-center justify-between gap-3 border rounded-2xl p-3 sm:p-4 md:px-5 transition-colors ${
+            settings.themeMode === "light"
+              ? "bg-[#FFFFFF] border-[#E2E6EE] text-[#18202B] shadow-[0_1px_2px_rgba(24,32,43,0.04)]"
+              : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8]"
+          }`}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border p-1 flex items-center justify-center shrink-0 overflow-hidden ${
+                settings.themeMode === "light"
+                  ? "bg-[#F6F7FA] border-[#E2E6EE]"
+                  : "bg-[#222938] border-[#2B3344]"
+              }`}
+            >
+              <EngezBrandLogo
+                themeMode={settings.themeMode}
+                withContainer={false}
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className={`font-extrabold ${settings.themeMode === "light" ? "text-[#1A1614]" : "text-[#F8FAFC]"} text-sm sm:text-base tracking-tight truncate font-sans`}>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`font-bold text-sm sm:text-base tracking-tight truncate ${
+                    settings.themeMode === "light" ? "text-[#18202B]" : "text-[#F1F3F8]"
+                  }`}
+                >
                   Engez Nafsak
                 </span>
-                <span className={`text-[9px] sm:text-[10px] font-sans font-bold ${
-                  settings.themeMode === "light" 
-                    ? "bg-[#FFF2ED] border-[#F2D5CA] text-[#C25E42]" 
-                    : "bg-[#8B5CF6]/15 border-[#8B5CF6]/35 text-[#C084FC]"
-                } border px-1.5 sm:px-2 py-0.5 rounded-md uppercase shrink-0`}>
+                <span
+                  lang="ar"
+                  dir="rtl"
+                  className={`text-xs font-arabic font-semibold px-2 py-0.5 rounded-md border shrink-0 ${
+                    settings.themeMode === "light"
+                      ? "bg-[#EFEEFA] border-[#D6D2F6] text-[#5F55C8]"
+                      : "bg-[#5F55C8]/15 border-[#A99BFF]/30 text-[#A99BFF]"
+                  }`}
+                >
                   إنجز نفسك
                 </span>
               </div>
-              <p className={`text-[10px] sm:text-[11px] ${settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} font-sans truncate`}>
-                {subjects.length} Subjects Active • {tasks.filter(t => !t.completed).length} Tasks Left
+              <p
+                className={`text-xs truncate mt-0.5 ${
+                  settings.themeMode === "light" ? "text-[#596474]" : "text-[#B7C0CF]"
+                }`}
+              >
+                {tasks.filter((t) => !t.completed).length} open{" "}
+                {tasks.filter((t) => !t.completed).length === 1 ? "task" : "tasks"} •{" "}
+                {exams.length} {exams.length === 1 ? "exam" : "exams"} scheduled
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Live Focus Widget */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Live Focus Timer Pill */}
             <button
+              type="button"
               onClick={() => setCurrentTab("focus")}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 sm:gap-2 transition cursor-pointer min-h-[38px] ${
+              className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold flex items-center gap-1.5 transition cursor-pointer min-h-[38px] ${
                 focusModeActive
                   ? settings.themeMode === "light"
-                    ? "bg-[#FFF2ED] border-[#F2D5CA] text-[#C25E42] animate-pulse"
-                    : "bg-[#8B5CF6]/25 border-[#8B5CF6]/50 text-[#C084FC] shadow-xs animate-pulse"
+                    ? "bg-[#EFEEFA] border-[#5F55C8] text-[#5F55C8]"
+                    : "bg-[#5F55C8]/25 border-[#A99BFF] text-[#A99BFF]"
                   : settings.themeMode === "light"
-                  ? "bg-[#F5EFE9] border-[#EBE4DC] text-[#1A1614] hover:bg-[#EDE4DC]"
-                  : "bg-[#161A2B] border-white/[0.08] text-white hover:bg-[#1E2338]"
+                  ? "bg-[#F6F7FA] border-[#E2E6EE] text-[#18202B] hover:bg-[#ECEFF5]"
+                  : "bg-[#222938] border-[#2B3344] text-[#F1F3F8] hover:bg-[#2B3344]"
               }`}
-              title="Timer"
+              title="Open Focus Timer"
             >
-              <Clock size={13} className={focusModeActive ? (settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]") : settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} />
-              <span className="text-[11px] sm:text-xs">{formatFocusTime()}</span>
-              {focusModeActive && <span className={`w-1.5 h-1.5 ${settings.themeMode === "light" ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} rounded-full animate-ping`} />}
+              <Clock
+                size={13}
+                className={
+                  focusModeActive
+                    ? settings.themeMode === "light"
+                      ? "text-[#5F55C8]"
+                      : "text-[#A99BFF]"
+                    : settings.themeMode === "light"
+                    ? "text-[#596474]"
+                    : "text-[#B7C0CF]"
+                }
+              />
+              <span className="tabular-nums">{formatFocusTime()}</span>
+              {focusModeActive && (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                    settings.themeMode === "light" ? "bg-[#5F55C8]" : "bg-[#A99BFF]"
+                  }`}
+                />
+              )}
             </button>
 
             {/* User Guide Button */}
             <button
+              type="button"
               onClick={() => setIsGuideOpen(true)}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer min-h-[38px] ${
+              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer min-h-[38px] ${
                 settings.themeMode === "light"
-                  ? "bg-[#F5EFE9] hover:bg-[#EDE4DC] border-[#EBE4DC] text-[#1A1614]"
-                  : "bg-[#161A2B] hover:bg-[#1E2338] border-white/[0.08] text-white"
+                  ? "bg-[#F6F7FA] hover:bg-[#ECEFF5] border-[#E2E6EE] text-[#18202B]"
+                  : "bg-[#222938] hover:bg-[#2B3344] border-[#2B3344] text-[#F1F3F8]"
               }`}
-              title="How to Use Website / User Guide"
+              title="Open Workspace Guide"
             >
-              <HelpCircle size={14} className={settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]"} />
+              <HelpCircle
+                size={14}
+                className={settings.themeMode === "light" ? "text-[#5F55C8]" : "text-[#A99BFF]"}
+              />
               <span className="hidden sm:inline">Guide</span>
             </button>
 
-            {/* Streak Badge */}
-            <div className={`px-2.5 sm:px-3 py-1.5 rounded-xl ${
-              settings.themeMode === "light"
-                ? "bg-[#FFF2ED] border-[#F2D5CA] text-[#C25E42]"
-                : "bg-[#8B5CF6]/15 border-[#8B5CF6]/35 text-[#C084FC]"
-            } border text-[11px] sm:text-xs font-mono font-bold flex items-center gap-1 sm:gap-1.5 shadow-2xs min-h-[38px]`}>
-              <Flame size={13} className={`fill-current ${settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]"}`} />
+            {/* Streak Indicator */}
+            <div
+              className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold flex items-center gap-1.5 min-h-[38px] ${
+                settings.themeMode === "light"
+                  ? "bg-[#F6F7FA] border-[#E2E6EE] text-[#18202B]"
+                  : "bg-[#222938] border-[#2B3344] text-[#F1F3F8]"
+              }`}
+              title={`Current study streak: ${streak} ${streak === 1 ? "day" : "days"}`}
+            >
+              <Flame
+                size={13}
+                className={
+                  streak > 0
+                    ? "text-[#B86E00] fill-[#B86E00]"
+                    : settings.themeMode === "light"
+                    ? "text-[#7A8699]"
+                    : "text-[#8590A2]"
+                }
+              />
               <span>{streak}d</span>
             </div>
 
-            {/* User Profile Pill */}
+            {/* User Account Pill */}
             {currentUser ? (
-              <div className={`flex items-center gap-1.5 sm:gap-2 ${
-                settings.themeMode === "light"
-                  ? "bg-[#F5EFE9] border-[#EBE4DC] text-[#1A1614]"
-                  : "bg-[#161A2B] border-white/[0.08] text-[#F8FAFC]"
-              } border px-2 sm:px-3 py-1.5 rounded-xl min-h-[38px]`}>
+              <div
+                className={`flex items-center gap-2 border px-2.5 sm:px-3 py-1.5 rounded-xl min-h-[38px] ${
+                  settings.themeMode === "light"
+                    ? "bg-[#F6F7FA] border-[#E2E6EE] text-[#18202B]"
+                    : "bg-[#222938] border-[#2B3344] text-[#F1F3F8]"
+                }`}
+              >
                 {currentUser.photoURL ? (
                   <img
                     src={currentUser.photoURL}
-                    alt={currentUser.displayName || "User"}
-                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg object-cover border border-[#C96F55]/40"
+                    alt={currentUser.displayName || "Student"}
+                    className="w-5 h-5 rounded-full object-cover"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg ${
-                    settings.themeMode === "light" ? "bg-[#FFF1EC] text-[#C96F55]" : "bg-[#C96F55]/20 text-[#DE7A5E] border border-[#C96F55]/30"
-                  } flex items-center justify-center text-xs font-bold`}>
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                      settings.themeMode === "light"
+                        ? "bg-[#EFEEFA] text-[#5F55C8]"
+                        : "bg-[#5F55C8]/25 text-[#A99BFF]"
+                    }`}
+                  >
                     <UserIcon size={12} />
                   </div>
                 )}
-                <span className={`text-xs font-bold ${settings.themeMode === "light" ? "text-[#1D1D1B]" : "text-[#FAF8F5]"} max-w-[90px] truncate hidden md:inline font-sans`}>
-                  {currentUser.displayName || currentUser.email?.split("@")[0] || "Scholar"}
+                <span className="text-xs font-semibold max-w-[96px] truncate hidden md:inline">
+                  {currentUser.displayName || currentUser.email?.split("@")[0] || "Student"}
                 </span>
                 <button
+                  type="button"
                   onClick={handleLogout}
-                  className={`p-1 ${settings.themeMode === "light" ? "text-[#77736B] hover:text-[#B85C5C]" : "text-[#B8AFA6] hover:text-rose-400"} transition cursor-pointer`}
+                  aria-label="Sign out"
+                  className={`p-1 rounded transition cursor-pointer ${
+                    settings.themeMode === "light"
+                      ? "text-[#596474] hover:text-[#C93B3B]"
+                      : "text-[#B7C0CF] hover:text-[#F87171]"
+                  }`}
                   title="Sign Out"
                 >
                   <LogOut size={13} />
@@ -1683,12 +1765,9 @@ export default function App() {
               </div>
             ) : (
               <button
+                type="button"
                 onClick={handleOpenAuthModal}
-                className={`px-3 sm:px-4 py-1.5 ${
-                  settings.themeMode === "light"
-                    ? "bg-[#C96F55] hover:bg-[#B85F48]"
-                    : "bg-[#3B82F6] hover:bg-[#2563EB] shadow-md shadow-blue-500/25"
-                } text-white rounded-xl text-[11px] sm:text-xs font-sans font-bold transition cursor-pointer flex items-center gap-1.5 min-h-[38px]`}
+                className="px-3.5 py-1.5 bg-[#5F55C8] hover:bg-[#4E45B0] text-white rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 min-h-[38px]"
               >
                 <LogIn size={13} />
                 <span className="hidden sm:inline">Sign In</span>
@@ -1697,20 +1776,27 @@ export default function App() {
           </div>
         </header>
 
-        {/* Main tabs routing switch */}
+        {/* Main View Router */}
         <div className="flex-1 flex flex-col">
           <AnimatePresence mode="wait">
             {currentTab === "dashboard" && (
               <motion.div
                 key="dashboard"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full flex-1 flex flex-col"
               >
                 <DashboardTab
                   tasks={tasks}
+                  exams={exams}
+                  habits={habits}
+                  habitLogs={habitLogs}
+                  subjects={subjects}
+                  onAddTask={handleAddTask}
+                  onToggleTask={handleToggleTask}
+                  onDeleteTask={handleDeleteTask}
                   focusModeActive={focusModeActive}
                   focusTimeRemaining={formatFocusTime()}
                   focusMinutesSelected={focusMinutesSelected}
@@ -1718,12 +1804,16 @@ export default function App() {
                   onPauseFocus={handlePauseFocus}
                   onResetFocus={handleResetFocus}
                   onStopFocus={handleStopFocus}
-                  onNavigateTab={(tab) => setCurrentTab(tab)}
+                  onNavigateTab={(tab) => {
+                    setCurrentTab(tab);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                   streak={streak}
                   pomodoroMode={pomodoroMode}
                   isPaused={isTimerPaused}
                   pomodoroCount={pomodoroCompletedCount}
                   themeMode={settings.themeMode}
+                  currentUser={currentUser}
                 />
               </motion.div>
             )}
@@ -1731,10 +1821,10 @@ export default function App() {
             {currentTab === "countdown" && (
               <motion.div
                 key="countdown"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full flex-1 flex flex-col"
               >
                 <ExamCountdownTab
@@ -1747,7 +1837,10 @@ export default function App() {
                   setFriendUsername={setFriendUsername}
                   inviteCode={inviteCode}
                   setInviteCode={setInviteCode}
-                  totalFocusMinutes={Math.floor((50 * 60 - focusSecondsRemaining) / 60) + pomodoroCompletedCount * 25}
+                  totalFocusMinutes={
+                    Math.floor((focusMinutesSelected * 60 - focusSecondsRemaining) / 60) +
+                    pomodoroCompletedCount * 25
+                  }
                   userStreak={streak}
                   themeMode={settings.themeMode}
                 />
@@ -1757,10 +1850,10 @@ export default function App() {
             {currentTab === "habits" && (
               <motion.div
                 key="habits"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full flex-1 flex flex-col"
               >
                 <HabitTrackerTab
@@ -1780,10 +1873,10 @@ export default function App() {
             {currentTab === "scholar" && (
               <motion.div
                 key="scholar"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full flex-1 flex flex-col"
               >
                 <AiScholarTab
@@ -1802,10 +1895,10 @@ export default function App() {
             {currentTab === "focus" && (
               <motion.div
                 key="focus"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full flex-1 flex flex-col"
               >
                 <FocusTab
@@ -1830,10 +1923,10 @@ export default function App() {
             {currentTab === "apps" && (
               <motion.div
                 key="apps"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full flex-1 flex flex-col"
               >
                 <StudyAppsTab
@@ -1853,10 +1946,10 @@ export default function App() {
             {currentTab === "settings" && (
               <motion.div
                 key="settings"
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full flex-1 flex flex-col"
               >
                 <SettingsTab
@@ -1869,9 +1962,19 @@ export default function App() {
                   onLogout={handleLogout}
                   onLogin={handleOpenAuthModal}
                   onGoogleLogin={handleGoogleLogin}
+                  offlineMode={offlineMode}
+                  focusMinutesSelected={focusMinutesSelected}
+                  onDurationChange={handleDurationChange}
+                  tasksCount={tasks.length}
+                  onClearWorkspace={() => {
+                    setTasks([]);
+                    setStreak(0);
+                    localStorage.setItem("ENGEZ_TASKS_V3", "[]");
+                    localStorage.setItem("ENGEZ_STREAK_V4", "0");
+                  }}
                   onOpenPrivacyPolicy={() => setIsPrivacyModalOpen(true)}
                   onOpenDnsModal={() => setShowDnsModal(true)}
-                  onOpenUserGuide={!currentUser ? () => setIsGuideOpen(true) : undefined}
+                  onOpenUserGuide={() => setIsGuideOpen(true)}
                   isGoogleLoading={isGoogleLoading}
                   themeMode={settings.themeMode}
                 />
@@ -1880,380 +1983,252 @@ export default function App() {
           </AnimatePresence>
         </div>
 
-        {/* Unified sleek footer */}
-        <footer className={`border-t ${
-          settings.themeMode === "light" ? "border-[#E8D7C9] text-[#77736B]" : "border-white/5 text-slate-400"
-        } pt-5 flex flex-col sm:flex-row items-center justify-between text-xs font-sans gap-3.5 mt-8 shrink-0`}>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <span>Engez Nafsak (إنجز نفسك) • Engineered for Elite Academic Success</span>
+        {/* Truthful Workspace Footer */}
+        <footer
+          className={`border-t pt-5 flex flex-col sm:flex-row items-center justify-between text-xs gap-3 mt-8 shrink-0 ${
+            settings.themeMode === "light"
+              ? "border-[#E2E6EE] text-[#596474]"
+              : "border-[#2B3344] text-[#B7C0CF]"
+          }`}
+        >
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="font-medium">
+              Engez Nafsak (<span lang="ar" dir="rtl" className="font-arabic">إنجز نفسك</span>) • Academic Study Workspace
+            </span>
             <span className="hidden sm:inline">•</span>
             <button
               type="button"
               onClick={() => setIsPrivacyModalOpen(true)}
-              className="underline hover:text-[#C96F55] transition cursor-pointer font-medium"
+              className={`underline transition cursor-pointer font-medium ${
+                settings.themeMode === "light" ? "hover:text-[#5F55C8]" : "hover:text-[#A99BFF]"
+              }`}
             >
-              Privacy Policy
+              Privacy & Data Policy
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#66856D] animate-ping" />
-            <span>Cambridge, Edexcel, SAT & College Specs • Real-time Cloud Sync</span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                currentUser && !currentUser.isAnonymous && !offlineMode && !currentUser.uid?.startsWith("local-")
+                  ? "bg-[#1F7A4C]"
+                  : "bg-[#B86E00]"
+              }`}
+            />
+            <span>
+              {currentUser && !currentUser.isAnonymous && !offlineMode && !currentUser.uid?.startsWith("local-")
+                ? "Signed in • Cloud & local persistence active"
+                : "Local browser storage active"}
+            </span>
           </div>
         </footer>
       </main>
 
-      {/* MOTIVATION CARD CELEBRATION POPUP */}
+      {/* Focus Session Celebration Modal */}
       <Celebration
         isVisible={celebrationVisible}
         onClose={() => setCelebrationVisible(false)}
       />
 
-      {/* UPGRADED MODERN AUTHENTICATION MODAL */}
+      {/* Authentication & Guest Access Modal */}
       <AnimatePresence>
         {!isAuthLoading && !currentUser && !dismissedOnboarding && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`fixed inset-0 ${
-              settings.themeMode === "light" ? "bg-black/40 backdrop-blur-md" : "bg-black/65 backdrop-blur-2xl"
-            } z-50 flex items-center justify-center p-4 overflow-y-auto`}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-heading"
           >
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.96 }}
-              transition={{ type: "spring", damping: 25, stiffness: 240 }}
-              className={`w-full max-w-md ${
+              exit={{ opacity: 0, y: -12, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className={`w-full max-w-md border rounded-2xl p-6 sm:p-7 space-y-5 relative overflow-hidden text-center my-auto ${
                 settings.themeMode === "light"
-                  ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614] shadow-2xl"
-                  : "bg-[#101322] border-white/10 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl"
-              } border rounded-3xl p-6 md:p-8 space-y-6 relative overflow-hidden text-center`}
+                  ? "bg-[#FFFFFF] border-[#E2E6EE] text-[#18202B] shadow-2xl"
+                  : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8] shadow-2xl"
+              }`}
             >
-              {/* Decorative top ambient glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-36 bg-gradient-to-b from-[#8B5CF6]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-              {/* Logo & Header */}
-              <div className="flex flex-col items-center gap-3.5 relative z-10">
-                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl ${
-                  settings.themeMode === "light" 
-                    ? "bg-[#FAF8F5] border-[#EBE4DC] shadow-md" 
-                    : "bg-[#101322] border-[#8B5CF6]/35 shadow-[0_8px_30px_rgba(139,92,246,0.3)]"
-                } border p-1.5 flex items-center justify-center overflow-hidden shrink-0 transform hover:scale-105 transition-transform`}>
-                  <EngezBrandLogo themeMode={settings.themeMode} withContainer={false} className="w-full h-full object-contain" />
+              {/* Brand Emblem & Heading */}
+              <div className="flex flex-col items-center gap-3">
+                <div
+                  className={`w-16 h-16 rounded-2xl border p-1.5 flex items-center justify-center overflow-hidden shrink-0 ${
+                    settings.themeMode === "light"
+                      ? "bg-[#F6F7FA] border-[#E2E6EE]"
+                      : "bg-[#222938] border-[#2B3344]"
+                  }`}
+                >
+                  <EngezBrandLogo
+                    themeMode={settings.themeMode}
+                    withContainer={false}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-                
+
                 <div className="space-y-1">
-                  <h2 className={`text-2xl font-black ${settings.themeMode === "light" ? "text-[#1A1614]" : "text-[#F8FAFC]"} font-sans tracking-tight`}>
-                    Engez Nafsak • <span className={settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]"}>إنجز نفسك</span>
+                  <h2
+                    id="auth-modal-heading"
+                    className={`text-xl sm:text-2xl font-bold tracking-tight ${
+                      settings.themeMode === "light" ? "text-[#18202B]" : "text-[#F1F3F8]"
+                    }`}
+                  >
+                    Engez Nafsak •{" "}
+                    <span
+                      lang="ar"
+                      dir="rtl"
+                      className={`font-arabic ${
+                        settings.themeMode === "light" ? "text-[#5F55C8]" : "text-[#A99BFF]"
+                      }`}
+                    >
+                      إنجز نفسك
+                    </span>
                   </h2>
-                  <p className={`text-xs ${settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} font-sans font-medium`}>
-                    Your Dedicated Exam Planner & Academic Suite
+                  <p
+                    className={`text-xs ${
+                      settings.themeMode === "light" ? "text-[#596474]" : "text-[#B7C0CF]"
+                    }`}
+                  >
+                    Sign in to link your study workspace, or continue with local browser storage.
                   </p>
                 </div>
               </div>
 
               {/* Error Notice */}
               {(authError || authFormError) && !unauthorizedDomain && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-3.5 bg-[#FFF1EC] border border-[#E8D7C9] rounded-2xl text-left flex items-start gap-3 shadow-2xs"
-                >
-                  <AlertTriangle className="text-[#B85C5C] shrink-0 mt-0.5" size={16} />
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-bold text-[#B85C5C] font-mono uppercase tracking-wider">
-                      Sign-In Notice
-                    </h4>
-                    <p className="text-[11px] text-[#1D1D1B] leading-relaxed font-sans">
-                      {authError || authFormError}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* CUSTOM DNS AUTHORIZATION REQUIRED BANNER */}
-              {unauthorizedDomain && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`p-4 ${
+                <div
+                  role="alert"
+                  className={`p-3.5 rounded-xl border text-left flex items-start gap-2.5 ${
                     settings.themeMode === "light"
-                      ? "bg-[#FFF9F5] border-[#E8D7C9]"
-                      : "bg-amber-950/25 border-amber-500/25"
-                  } border rounded-2xl text-left space-y-3.5 shadow-xs`}
+                      ? "bg-[#FDECEC] border-[#F7C6C6] text-[#C93B3B]"
+                      : "bg-[#3A1D24] border-[#C93B3B]/40 text-[#FCA5A5]"
+                  }`}
                 >
-                  <div className="flex items-start gap-2.5">
-                    <Globe className="text-[#C96F55] shrink-0 mt-0.5" size={16} />
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-bold font-mono text-[#C96F55] uppercase tracking-wider">
-                        Custom DNS Domain Authorization Required
-                      </h4>
-                      <p className={`text-xs ${settings.themeMode === "light" ? "text-[#1D1D1B]" : "text-slate-200"} leading-relaxed font-sans`}>
-                        Google OAuth requires your custom DNS domain to be whitelisted in your Firebase Console.
-                      </p>
-                    </div>
+                  <AlertTriangle className="shrink-0 mt-0.5" size={16} />
+                  <div className="space-y-0.5 text-xs">
+                    <div className="font-bold">Sign-In Notice</div>
+                    <p className="leading-relaxed">{authError || authFormError}</p>
                   </div>
-
-                  {/* 1-CLICK FAST PASS FOR HAMZA MOUSA */}
-                  <div className="p-3 bg-[#FAF9F5] dark:bg-black/40 border border-[#E8D7C9] dark:border-white/10 rounded-xl space-y-2">
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-[#C96F55] block font-bold">
-                      Instant Access (Bypass Domain Restriction)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleInstantHamzaLogin}
-                      className="w-full py-2.5 px-3 bg-[#C96F55] hover:bg-[#B85F48] text-white font-sans font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99]"
-                    >
-                      <Zap size={14} className="text-amber-200 fill-amber-200 shrink-0" />
-                      <span>Continue as Hamza Mousa (hamzamousa26072011@gmail.com)</span>
-                    </button>
-                    <p className="text-[10px] text-[#77736B] dark:text-slate-400 font-sans text-center">
-                      Enters your full workspace instantly with persistent local storage.
-                    </p>
-                  </div>
-
-                  <div className={`p-2.5 ${settings.themeMode === "light" ? "bg-white border-[#E8D7C9]" : "bg-black/40 border-white/10"} border rounded-xl flex items-center justify-between gap-2`}>
-                    <div className="truncate">
-                      <span className="text-[10px] uppercase font-mono tracking-wider text-[#77736B] block">Your Custom Domain</span>
-                      <span className="font-mono text-xs font-bold text-[#1D1D1B] dark:text-white truncate">{unauthorizedDomain}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(unauthorizedDomain);
-                        setIsDomainCopied(true);
-                        setTimeout(() => setIsDomainCopied(false), 2000);
-                      }}
-                      className={`px-3 py-1.5 ${
-                        isDomainCopied 
-                          ? "bg-[#EAF3EC] text-[#66856D] border-[#D1E6D6]" 
-                          : "bg-[#FAF9F5] hover:bg-[#F0EEE8] text-[#1D1D1B] border-[#E8D7C9]"
-                      } border rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0`}
-                    >
-                      {isDomainCopied ? <Check size={12} /> : <Copy size={12} />}
-                      <span>{isDomainCopied ? "Copied!" : "Copy Domain"}</span>
-                    </button>
-                  </div>
-
-                  <div className="text-[11px] space-y-1.5 text-[#77736B] font-sans">
-                    <p>
-                      1. Open <a href="https://console.firebase.google.com/project/engez-nafsak/authentication/settings" target="_blank" rel="noopener noreferrer" className="font-bold underline text-[#C96F55]">Engez Nafsak Firebase Settings ↗</a> (Make sure the top-left says <strong>engez nafsak</strong>, not <em>abiding-ratio-g224x</em>).
-                    </p>
-                    <p>2. Scroll down to <strong>Authorized domains</strong> and click <strong>Add Domain</strong>.</p>
-                    <p>3. Paste <code className="font-mono text-[10px] bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded text-[#1D1D1B] dark:text-white font-bold">{unauthorizedDomain}</code>, and save.</p>
-                    <p>4. Once saved, click <strong>Continue with Google</strong> again.</p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#E8D7C9] dark:border-white/10">
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowDnsModal(true)}
-                        className="text-[11px] font-mono font-bold text-[#C96F55] hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <Globe size={12} />
-                        <span>DNS & Domain Hub</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowProjectModal(true)}
-                        className="text-[11px] font-mono font-bold text-[#77736B] dark:text-[#ADA59B] hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <Key size={12} />
-                        <span>Firebase Keys</span>
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUnauthorizedDomain(null);
-                        setAuthError(null);
-                        setAuthMethod("email_login");
-                      }}
-                      className="text-[11px] font-sans font-semibold text-[#1D1D1B] dark:text-slate-300 hover:underline cursor-pointer"
-                    >
-                      Or Use Email Sign-In
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* PROJECT CONNECTION MODAL OVERLAY ON SIGN-IN */}
-              {showProjectModal && (
-                <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={`w-full max-w-sm ${settings.themeMode === "light" ? "bg-white border-[#E8D7C9]" : "bg-[#0f1528] border-white/15"} border rounded-3xl p-5 space-y-4 text-left shadow-2xl`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Key size={16} className="text-[#C96F55]" />
-                        <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-[#1D1D1B] dark:text-white">
-                          Connect Engez Nafsak Project
-                        </h4>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowProjectModal(false)}
-                        className="text-[#77736B] hover:text-[#1D1D1B] dark:hover:text-white cursor-pointer p-1"
-                      >
-                        <X size={15} />
-                      </button>
-                    </div>
-
-                    <p className="text-[11px] text-[#77736B] dark:text-slate-300 font-sans leading-relaxed">
-                      Connect your Firebase project from Firebase Console (*Project settings &gt; General &gt; Your apps*).
-                    </p>
-
-                    {modalError && (
-                      <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-mono">
-                        {modalError}
-                      </div>
-                    )}
-                    {modalSuccess && (
-                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl font-mono">
-                        {modalSuccess}
-                      </div>
-                    )}
-
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-[10px] font-mono uppercase tracking-wider text-[#77736B] block font-bold mb-1">
-                          Firebase Project ID *
-                        </label>
-                        <input
-                          type="text"
-                          value={modalProjectId}
-                          onChange={(e) => setModalProjectId(e.target.value)}
-                          placeholder="e.g. engez-nafsak"
-                          className={`w-full px-3 py-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none focus:border-[#C96F55]`}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-mono uppercase tracking-wider text-[#77736B] block font-bold mb-1">
-                          Web API Key *
-                        </label>
-                        <input
-                          type="text"
-                          value={modalApiKey}
-                          onChange={(e) => setModalApiKey(e.target.value)}
-                          placeholder="e.g. AIzaSy..."
-                          className={`w-full px-3 py-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none focus:border-[#C96F55]`}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-mono uppercase tracking-wider text-[#77736B] block font-bold mb-1">
-                          Or Paste Config Snippet
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={modalSnippet}
-                          onChange={(e) => setModalSnippet(e.target.value)}
-                          placeholder="const firebaseConfig = { ... };"
-                          className={`w-full p-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none focus:border-[#C96F55] resize-none`}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowProjectModal(false)}
-                        className="px-3 py-1.5 text-xs font-mono text-[#77736B] hover:text-[#1D1D1B] cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleModalSaveProject}
-                        className="px-4 py-2 bg-[#C96F55] hover:bg-[#B85F48] text-white font-mono text-xs font-bold rounded-xl cursor-pointer shadow-xs"
-                      >
-                        Connect &amp; Reload
-                      </button>
-                    </div>
-                  </motion.div>
                 </div>
               )}
 
-              {/* AUTH OPTIONS */}
-              <div className="space-y-3.5 relative z-10">
+              {/* Unauthorized Domain Notice */}
+              {unauthorizedDomain && (
+                <div
+                  role="alert"
+                  className={`p-4 rounded-xl border text-left space-y-2.5 text-xs ${
+                    settings.themeMode === "light"
+                      ? "bg-[#FEF5E7] border-[#F8D9A0] text-[#18202B]"
+                      : "bg-[#332714] border-[#B86E00]/40 text-[#F1F3F8]"
+                  }`}
+                >
+                  <div className="font-bold text-[#B86E00] flex items-center gap-1.5">
+                    <Globe size={14} />
+                    <span>Google Sign-In Domain Not Authorized</span>
+                  </div>
+                  <p className={settings.themeMode === "light" ? "text-[#596474]" : "text-[#B7C0CF]"}>
+                    The current domain (<code className="font-mono font-semibold">{unauthorizedDomain}</code>) is not yet listed in Firebase Authorized Domains. You can sign in with Email below or continue as a Guest.
+                  </p>
+                </div>
+              )}
 
-                {/* 1. SECURE GOOGLE SIGN-IN BUTTON */}
+              {/* Auth Options */}
+              <div className="space-y-3.5">
+                {/* Google Sign-In Button */}
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
                   disabled={isGoogleLoading || isAuthSubmitLoading}
-                  className={`w-full py-3 px-4 ${
+                  className={`w-full min-h-[44px] py-2.5 px-4 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2.5 disabled:opacity-60 ${
                     settings.themeMode === "light"
-                      ? "bg-[#FFFFFF] hover:bg-[#FAF9F5] text-[#1D1D1B] border-[#E8D7C9] shadow-xs"
-                      : "bg-[#2D2824] hover:bg-[#36302B] text-[#F6F3EE] border-[#3D3833] shadow-md"
-                  } disabled:opacity-60 disabled:cursor-not-allowed font-sans font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-3 border active:scale-[0.99]`}
+                      ? "bg-[#FFFFFF] hover:bg-[#F6F7FA] text-[#18202B] border-[#D0D7E2]"
+                      : "bg-[#222938] hover:bg-[#2B3344] text-[#F1F3F8] border-[#2B3344]"
+                  }`}
                 >
                   {isGoogleLoading ? (
                     <>
-                      <Loader2 className="animate-spin text-[#C96F55]" size={16} />
-                      <span className="font-sans normal-case text-xs font-semibold">Connecting securely with Google...</span>
+                      <Loader2 className="animate-spin text-[#5F55C8]" size={16} />
+                      <span>Connecting with Google...</span>
                     </>
                   ) : (
                     <>
-                      {/* Official Google Brand Vector Icon */}
-                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          fill="#4285F4"
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                        />
                       </svg>
-                      <span className="font-sans normal-case text-xs font-semibold">Continue with Google</span>
+                      <span>Continue with Google</span>
                     </>
                   )}
                 </button>
 
-                {/* DIVIDER */}
+                {/* Divider */}
                 <div className="flex items-center gap-3">
-                  <div className={`h-px ${settings.themeMode === "light" ? "bg-[#E8D7C9]" : "bg-white/10"} flex-1`} />
-                  <span className={`text-[10px] font-sans uppercase tracking-widest ${settings.themeMode === "light" ? "text-[#77736B]" : "text-slate-400"} font-medium`}>
+                  <div
+                    className={`h-px flex-1 ${
+                      settings.themeMode === "light" ? "bg-[#E2E6EE]" : "bg-[#2B3344]"
+                    }`}
+                  />
+                  <span
+                    className={`text-xs ${
+                      settings.themeMode === "light" ? "text-[#596474]" : "text-[#B7C0CF]"
+                    }`}
+                  >
                     or with email
                   </span>
-                  <div className={`h-px ${settings.themeMode === "light" ? "bg-[#E8D7C9]" : "bg-white/10"} flex-1`} />
+                  <div
+                    className={`h-px flex-1 ${
+                      settings.themeMode === "light" ? "bg-[#E2E6EE]" : "bg-[#2B3344]"
+                    }`}
+                  />
                 </div>
 
-                {/* EMAIL AUTH PORTAL (Interactive Tabbed Card) */}
-                <div className={`${
-                  settings.themeMode === "light"
-                    ? "bg-[#FAF8F5] border-[#E8D7C9]"
-                    : "bg-[#120E22] border-white/10 text-white"
-                } border rounded-2xl p-4 text-left space-y-4`}>
-                  
-                  {/* Mode Selector Tabs: Log In vs Sign Up */}
-                  <div className={`grid grid-cols-2 p-1 ${
-                    settings.themeMode === "light" ? "bg-[#F0EEE8] border-[#E8D7C9]" : "bg-[#0A0714] border-white/10"
-                  } rounded-xl border`}>
+                {/* Email Sign-In / Sign-Up Card */}
+                <div
+                  className={`border rounded-xl p-4 text-left space-y-3.5 ${
+                    settings.themeMode === "light"
+                      ? "bg-[#F6F7FA] border-[#E2E6EE]"
+                      : "bg-[#10131A] border-[#2B3344]"
+                  }`}
+                >
+                  <div
+                    className={`grid grid-cols-2 p-1 rounded-lg border ${
+                      settings.themeMode === "light"
+                        ? "bg-white border-[#E2E6EE]"
+                        : "bg-[#191E28] border-[#2B3344]"
+                    }`}
+                  >
                     <button
                       type="button"
                       onClick={() => {
                         setAuthFormError(null);
                         setAuthMethod("email_login");
                       }}
-                      className={`py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-lg transition cursor-pointer text-center ${
+                      className={`py-1.5 text-xs font-semibold rounded-md transition cursor-pointer text-center ${
                         authMethod === "email_login" || authMethod === "options"
-                          ? "bg-[#C96F55] text-white shadow-xs"
+                          ? "bg-[#5F55C8] text-white"
                           : settings.themeMode === "light"
-                          ? "text-[#77736B] hover:text-[#1D1D1B]"
-                          : "text-slate-400 hover:text-white"
+                          ? "text-[#596474] hover:text-[#18202B]"
+                          : "text-[#B7C0CF] hover:text-[#F1F3F8]"
                       }`}
                     >
-                      Log In
+                      Sign In
                     </button>
                     <button
                       type="button"
@@ -2261,89 +2236,106 @@ export default function App() {
                         setAuthFormError(null);
                         setAuthMethod("email_signup");
                       }}
-                      className={`py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-lg transition cursor-pointer text-center ${
+                      className={`py-1.5 text-xs font-semibold rounded-md transition cursor-pointer text-center ${
                         authMethod === "email_signup"
-                          ? "bg-[#C96F55] text-white shadow-xs"
+                          ? "bg-[#5F55C8] text-white"
                           : settings.themeMode === "light"
-                          ? "text-[#77736B] hover:text-[#1D1D1B]"
-                          : "text-slate-400 hover:text-white"
+                          ? "text-[#596474] hover:text-[#18202B]"
+                          : "text-[#B7C0CF] hover:text-[#F1F3F8]"
                       }`}
                     >
                       Create Account
                     </button>
                   </div>
 
-                  {/* FORM FIELDS */}
                   <form
                     onSubmit={authMethod === "email_signup" ? handleEmailSignUp : handleEmailSignIn}
                     className="space-y-3"
                   >
                     {authMethod === "email_signup" && (
-                      <div className="space-y-1">
-                        <label className={`text-[10px] font-sans font-bold uppercase ${settings.themeMode === "light" ? "text-[#77736B]" : "text-slate-400"} tracking-wider`}>
+                      <div>
+                        <label
+                          htmlFor="auth-full-name"
+                          className={`block text-xs font-semibold mb-1 ${
+                            settings.themeMode === "light" ? "text-[#18202B]" : "text-[#F1F3F8]"
+                          }`}
+                        >
                           Full Name
                         </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            required
-                            value={displayName}
-                            onChange={(e) => setDisplayName(e.target.value)}
-                            placeholder="Student Name"
-                            className={`w-full px-3.5 py-2.5 ${
-                              settings.themeMode === "light"
-                                ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
-                                : "bg-[#0b0f1d] border-white/10 focus:border-indigo-500 text-white placeholder:text-slate-500"
-                            } border rounded-xl text-xs focus:outline-none transition font-sans`}
-                          />
-                        </div>
+                        <input
+                          id="auth-full-name"
+                          type="text"
+                          required
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          placeholder="Your name"
+                          className={`w-full min-h-[40px] px-3.5 py-2 border rounded-xl text-xs focus:outline-none ${
+                            settings.themeMode === "light"
+                              ? "bg-white border-[#D0D7E2] text-[#18202B] focus:border-[#5F55C8]"
+                              : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                          }`}
+                        />
                       </div>
                     )}
 
-                    <div className="space-y-1">
-                      <label className={`text-[10px] font-sans font-bold uppercase ${settings.themeMode === "light" ? "text-[#77736B]" : "text-slate-400"} tracking-wider`}>
+                    <div>
+                      <label
+                        htmlFor="auth-email"
+                        className={`block text-xs font-semibold mb-1 ${
+                          settings.themeMode === "light" ? "text-[#18202B]" : "text-[#F1F3F8]"
+                        }`}
+                      >
                         Email Address
                       </label>
-                      <div className="relative">
-                        <input
-                          type="email"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="student@example.com"
-                          className={`w-full px-3.5 py-2.5 ${
-                            settings.themeMode === "light"
-                              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
-                              : "bg-[#0b0f1d] border-white/10 focus:border-indigo-500 text-white placeholder:text-slate-500"
-                          } border rounded-xl text-xs focus:outline-none transition font-sans`}
-                        />
-                      </div>
+                      <input
+                        id="auth-email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="student@example.com"
+                        className={`w-full min-h-[40px] px-3.5 py-2 border rounded-xl text-xs focus:outline-none ${
+                          settings.themeMode === "light"
+                            ? "bg-white border-[#D0D7E2] text-[#18202B] focus:border-[#5F55C8]"
+                            : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                        }`}
+                      />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className={`text-[10px] font-sans font-bold uppercase ${settings.themeMode === "light" ? "text-[#77736B]" : "text-slate-400"} tracking-wider flex justify-between items-center`}>
+                    <div>
+                      <label
+                        htmlFor="auth-password"
+                        className={`flex justify-between items-center text-xs font-semibold mb-1 ${
+                          settings.themeMode === "light" ? "text-[#18202B]" : "text-[#F1F3F8]"
+                        }`}
+                      >
                         <span>Password</span>
-                        {authMethod === "email_signup" && <span className="text-[9px] text-[#9B9890]">Min. 6 chars</span>}
+                        {authMethod === "email_signup" && (
+                          <span className="font-normal opacity-75">At least 6 characters</span>
+                        )}
                       </label>
                       <div className="relative">
                         <input
+                          id="auth-password"
                           type={showPassword ? "text" : "password"}
                           required
                           minLength={authMethod === "email_signup" ? 6 : undefined}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Enter password"
-                          className={`w-full px-3.5 py-2.5 pr-10 ${
+                          className={`w-full min-h-[40px] px-3.5 py-2 pr-10 border rounded-xl text-xs focus:outline-none ${
                             settings.themeMode === "light"
-                              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] placeholder:text-[#9B9890]"
-                              : "bg-[#0b0f1d] border-white/10 focus:border-indigo-500 text-white placeholder:text-slate-500"
-                          } border rounded-xl text-xs focus:outline-none transition font-sans`}
+                              ? "bg-white border-[#D0D7E2] text-[#18202B] focus:border-[#5F55C8]"
+                              : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                          }`}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className={`absolute right-3 top-1/2 -translate-y-1/2 ${settings.themeMode === "light" ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-white"} transition cursor-pointer p-0.5 bg-transparent border-0`}
-                          title={showPassword ? "Hide password" : "Show password"}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 cursor-pointer ${
+                            settings.themeMode === "light" ? "text-[#596474]" : "text-[#B7C0CF]"
+                          }`}
                         >
                           {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
@@ -2353,49 +2345,44 @@ export default function App() {
                     <button
                       type="submit"
                       disabled={isAuthSubmitLoading}
-                      className="w-full py-3 bg-[#C96F55] hover:bg-[#B85F48] disabled:opacity-50 disabled:cursor-not-allowed text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 mt-4 shadow-xs"
+                      className="w-full min-h-[42px] py-2.5 bg-[#5F55C8] hover:bg-[#4E45B0] disabled:opacity-50 text-white font-semibold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-2 mt-2"
                     >
                       {isAuthSubmitLoading ? (
                         <>
-                          <Loader2 className="animate-spin text-white" size={14} />
-                          <span>Processing...</span>
+                          <Loader2 className="animate-spin" size={14} />
+                          <span>Signing in...</span>
                         </>
                       ) : (
                         <>
                           <LogIn size={14} />
-                          <span>{authMethod === "email_signup" ? "Create Account & Sync" : "Sign In with Email"}</span>
+                          <span>
+                            {authMethod === "email_signup" ? "Create Account" : "Sign In with Email"}
+                          </span>
                         </>
                       )}
                     </button>
                   </form>
                 </div>
 
-                {/* GUEST EXPLORE OPTION */}
+                {/* Guest Access Option */}
                 <button
                   type="button"
                   onClick={handleGuestAccess}
-                  className={`w-full py-2.5 px-4 text-xs font-sans font-medium transition rounded-xl cursor-pointer flex items-center justify-center gap-2 ${
+                  className={`w-full min-h-[42px] py-2.5 px-4 text-xs font-semibold transition rounded-xl border cursor-pointer flex items-center justify-center gap-2 ${
                     settings.themeMode === "light"
-                      ? "text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F0EEE8]"
-                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                      ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] hover:bg-[#ECEFF5]"
+                      : "bg-[#222938] border-[#2B3344] text-[#F1F3F8] hover:bg-[#2B3344]"
                   }`}
                 >
-                  <span>Continue as Guest / Explore Workspace</span>
-                  <span className="text-[10px] font-mono opacity-70">→</span>
+                  <span>Continue as Guest (Saved on This Device)</span>
                 </button>
-              </div>
-
-              {/* Balanced Footer Inspiration */}
-              <div className={`pt-2 text-center text-[10px] ${settings.themeMode === "light" ? "text-[#77736B] border-[#E8D7C9]" : "text-slate-500 border-white/5"} font-sans border-t flex items-center justify-center gap-1.5`}>
-                <ShieldCheck size={13} className="text-[#C96F55]" />
-                <span>Protected with Google OAuth 2.0 & Firebase Cloud Security</span>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ZERO-TRUST CYBERSECURITY LOCKDOWN & THREAT QUARANTINE MODAL */}
+      {/* Security Lockdown Modal */}
       <SecurityLockdownModal
         isOpen={securityLockdown.isOpen}
         incidentId={securityLockdown.incidentId}
@@ -2403,7 +2390,7 @@ export default function App() {
         onUnlocked={() => setSecurityLockdown((prev) => ({ ...prev, isOpen: false }))}
       />
 
-      {/* MOBILE NATIVE BOTTOM NAVIGATION DOCK */}
+      {/* Mobile Bottom Navigation */}
       {!isFocusFullscreen && (
         <MobileBottomNav
           currentTab={currentTab}
@@ -2411,14 +2398,14 @@ export default function App() {
             setCurrentTab(tab);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          pendingTasksCount={tasks.filter(t => !t.completed).length}
+          pendingTasksCount={tasks.filter((t) => !t.completed).length}
           focusModeActive={focusModeActive}
           focusTimeRemaining={formatFocusTime()}
           themeMode={settings.themeMode}
         />
       )}
 
-      {/* STUDENT DATA PRIVACY & COMPLIANCE MODAL */}
+      {/* Privacy & Data Policy Modal */}
       <PrivacyPolicyModal
         isOpen={isPrivacyModalOpen}
         onClose={() => setIsPrivacyModalOpen(false)}
@@ -2426,27 +2413,24 @@ export default function App() {
         currentUser={currentUser}
       />
 
-      {/* CUSTOM DNS & DOMAIN HUB MODAL (engeznafsak.com) */}
+      {/* Custom Domain & DNS Modal */}
       <DomainDnsModal
         isOpen={showDnsModal}
         onClose={() => setShowDnsModal(false)}
         themeMode={settings.themeMode}
       />
 
-      {/* INTERACTIVE SMOOTH-ANIMATED USER GUIDE (Only for users who aren't signed in) */}
-      {!currentUser && (
-        <UserGuideModal
-          isOpen={isGuideOpen}
-          onClose={handleCloseGuide}
-          onSkip={handleSkipGuide}
-          themeMode={settings.themeMode}
-          onNavigateTab={(tab) => {
-            setCurrentTab(tab);
-            handleCloseGuide();
-          }}
-        />
-      )}
-
+      {/* Workspace User Guide Modal */}
+      <UserGuideModal
+        isOpen={isGuideOpen}
+        onClose={handleCloseGuide}
+        onSkip={handleSkipGuide}
+        themeMode={settings.themeMode}
+        onNavigateTab={(tab) => {
+          setCurrentTab(tab);
+          handleCloseGuide();
+        }}
+      />
     </div>
   );
 }

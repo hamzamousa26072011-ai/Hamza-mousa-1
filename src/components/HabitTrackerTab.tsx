@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   Plus, 
   Check, 
@@ -7,22 +7,18 @@ import {
   Calendar, 
   ChevronLeft, 
   ChevronRight, 
-  Sparkles, 
-  Flame, 
   CheckCircle2, 
-  Cloud, 
-  CloudCheck,
   TrendingUp, 
   Moon, 
   Smile, 
   X, 
-  AlertCircle,
-  HelpCircle,
   BarChart3,
-  CalendarDays,
-  Target
+  Target,
+  LayoutList,
+  Table2,
+  Cloud,
+  HardDrive
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import { HabitItem, HabitDayLog } from "../types";
 
 interface HabitTrackerTabProps {
@@ -51,38 +47,60 @@ export default function HabitTrackerTab({
   const isLight = themeMode === "light";
 
   // Duration range preset: 7, 14, 21, or 30 days
-  const [rangeDays, setRangeDays] = useState<7 | 14 | 21 | 30>(30);
-  const [activeDateIndex, setActiveDateIndex] = useState<number>(0);
+  const [rangeDays, setRangeDays] = useState<7 | 14 | 21 | 30>(14);
+  // Presentation mode: "auto" uses compact on mobile & matrix on desktop, or user can explicitly pick
+  const [viewMode, setViewMode] = useState<"matrix" | "daily">("matrix");
+  const [selectedDayStr, setSelectedDayStr] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [habitPendingDelete, setHabitPendingDelete] = useState<HabitItem | null>(null);
+  const [undoSnapshot, setUndoSnapshot] = useState<{
+    label: string;
+    habits: HabitItem[];
+    logs: Record<string, HabitDayLog>;
+  } | null>(null);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
 
   // New Habit form state
   const [newHabitName, setNewHabitName] = useState("");
-  const [newHabitEmoji, setNewHabitEmoji] = useState("⚡");
-  const [newHabitColor, setNewHabitColor] = useState("#C96F55");
+  const [newHabitEmoji, setNewHabitEmoji] = useState("📖");
+  const [newHabitColor, setNewHabitColor] = useState("#5F55C8");
 
-  // Rating popover state for Mood & Sleep
-  const [ratingPopover, setRatingPopover] = useState<{
+  // Accessible Rating Modal state for Mood & Sleep
+  const [ratingModal, setRatingModal] = useState<{
     type: "mood" | "sleep";
     dateStr: string;
-    dayNum: number;
-    x: number;
-    y: number;
+    dayLabel: string;
   } | null>(null);
 
-  // Quick emoji options
-  const emojiOptions = ["💪", "📖", "🗓️", "🎯", "⚡", "🧠", "💧", "🧘", "🏃", "☕", "📝", "🚀"];
+  const emojiOptions = ["📖", "✍️", "🧠", "🎯", "📐", "🧪", "💧", "🧘", "🏃", "⚡"];
   const colorOptions = [
-    { name: "Terracotta", hex: "#C96F55" },
-    { name: "Sage", hex: "#66856D" },
-    { name: "Ocean", hex: "#587B8C" },
-    { name: "Amber", hex: "#D97706" },
-    { name: "Indigo", hex: "#4F46E5" },
-    { name: "Crimson", hex: "#EF4444" },
+    { name: "Violet", hex: "#5F55C8" },
+    { name: "Emerald", hex: "#10B981" },
+    { name: "Sky", hex: "#0EA5E9" },
+    { name: "Amber", hex: "#F59E0B" },
+    { name: "Rose", hex: "#F43F5E" },
+    { name: "Slate", hex: "#64748B" }
   ];
 
-  // Helper to format date strings YYYY-MM-DD
+  // Close modals on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (ratingModal) setRatingModal(null);
+        if (showAddModal) setShowAddModal(false);
+        if (showClearConfirm) setShowClearConfirm(false);
+        if (habitPendingDelete) setHabitPendingDelete(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [ratingModal, showAddModal, showClearConfirm, habitPendingDelete]);
+
   const formatYMD = (date: Date): string => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -90,10 +108,9 @@ export default function HabitTrackerTab({
     return `${y}-${m}-${d}`;
   };
 
-  // Compute today's date string
   const todayStr = useMemo(() => formatYMD(new Date()), []);
 
-  // Compute the array of dates for the selected view
+  // Compute the array of dates for the selected period
   const daysList = useMemo(() => {
     const list: {
       date: Date;
@@ -101,11 +118,11 @@ export default function HabitTrackerTab({
       dayIndex: number;
       dayOfWeek: string;
       dayNum: number;
+      monthShort: string;
       isToday: boolean;
       weekNum: number;
     }[] = [];
 
-    // Parse anchor start date or fallback to today
     const anchor = startDate ? new Date(startDate + "T00:00:00") : new Date();
     if (isNaN(anchor.getTime())) {
       anchor.setTime(Date.now());
@@ -126,6 +143,7 @@ export default function HabitTrackerTab({
         dayIndex: i + 1,
         dayOfWeek: weekDays[d.getDay()],
         dayNum: d.getDate(),
+        monthShort: d.toLocaleDateString("en-US", { month: "short" }),
         isToday,
         weekNum
       });
@@ -134,7 +152,15 @@ export default function HabitTrackerTab({
     return list;
   }, [startDate, rangeDays, todayStr]);
 
-  // Weeks breakdown for the header grouping
+  // Ensure selectedDayStr is within daysList when switching to daily view
+  useEffect(() => {
+    if (daysList.length > 0 && !daysList.some((d) => d.dateStr === selectedDayStr)) {
+      const todayEntry = daysList.find((d) => d.isToday) || daysList[0];
+      setSelectedDayStr(todayEntry.dateStr);
+    }
+  }, [daysList, selectedDayStr]);
+
+  // Weeks breakdown for header grouping
   const weeksGrouped = useMemo(() => {
     const groups: { weekNum: number; count: number; startIdx: number }[] = [];
     let currentWeek = -1;
@@ -161,14 +187,23 @@ export default function HabitTrackerTab({
     return groups;
   }, [daysList]);
 
-  // Calculate high-impact metrics
+  // Mathematically consistent period metrics
   const stats = useMemo(() => {
     const totalPossible = habits.length * daysList.length;
     let completedCount = 0;
     let todayCompleted = 0;
-    let todayTotal = habits.length;
+    const todayTotal = habits.length;
+    let loggedWellnessDays = 0;
 
-    const dailyCompletions: { dateStr: string; dayIndex: number; count: number; percentage: number; mood?: number; sleep?: number }[] = [];
+    const dailyCompletions: {
+      dateStr: string;
+      dayIndex: number;
+      count: number;
+      percentage: number;
+      isToday: boolean;
+      mood?: number;
+      sleep?: number;
+    }[] = [];
 
     daysList.forEach((d) => {
       const log = habitLogs[d.dateStr];
@@ -181,8 +216,11 @@ export default function HabitTrackerTab({
         });
       }
 
-      completedCount += dayCompleted;
+      if (log?.mood !== undefined || log?.sleep !== undefined) {
+        loggedWellnessDays++;
+      }
 
+      completedCount += dayCompleted;
       if (d.isToday) {
         todayCompleted = dayCompleted;
       }
@@ -192,6 +230,7 @@ export default function HabitTrackerTab({
         dayIndex: d.dayIndex,
         count: dayCompleted,
         percentage: habits.length > 0 ? Math.round((dayCompleted / habits.length) * 100) : 0,
+        isToday: d.isToday,
         mood: log?.mood,
         sleep: log?.sleep
       });
@@ -207,20 +246,20 @@ export default function HabitTrackerTab({
       completionRate,
       todayCompleted,
       todayTotal,
+      loggedWellnessDays,
       dailyCompletions
     };
   }, [habits, habitLogs, daysList]);
 
-  // Helper to trigger save confirmation notice
-  const notifySaved = () => {
+  const notifySaved = (msg?: string) => {
     setSaveStatus("saving");
     setTimeout(() => {
       setSaveStatus("saved");
-      if (onSaveNotice) onSaveNotice("Habit data synchronized securely.");
-    }, 300);
+      if (onSaveNotice && msg) onSaveNotice(msg);
+    }, 250);
   };
 
-  // Toggle habit checkbox for a given day
+  // Toggle habit checkbox for a specific date
   const handleToggleHabit = (habitId: string, dateStr: string) => {
     const currentLog = habitLogs[dateStr] || { completedHabits: {} };
     const currentlyChecked = !!currentLog.completedHabits?.[habitId];
@@ -233,45 +272,52 @@ export default function HabitTrackerTab({
       }
     };
 
-    const newLogs = {
+    onUpdateLogs({
       ...habitLogs,
       [dateStr]: updatedLog
-    };
-
-    onUpdateLogs(newLogs);
+    });
     notifySaved();
   };
 
-  // Batch mark all habits done for today
+  // Mark all habits completed for today
   const handleCheckToday = () => {
+    if (habits.length === 0) return;
+    setUndoSnapshot({
+      label: "Marked all of today's habits complete",
+      habits: [...habits],
+      logs: JSON.parse(JSON.stringify(habitLogs))
+    });
+
     const currentLog = habitLogs[todayStr] || { completedHabits: {} };
     const allChecked: Record<string, boolean> = { ...(currentLog.completedHabits || {}) };
-
     habits.forEach((h) => {
       allChecked[h.id] = true;
     });
 
-    const updatedLog: HabitDayLog = {
-      ...currentLog,
-      completedHabits: allChecked
-    };
-
     onUpdateLogs({
       ...habitLogs,
-      [todayStr]: updatedLog
+      [todayStr]: {
+        ...currentLog,
+        completedHabits: allChecked
+      }
     });
-
-    notifySaved();
+    notifySaved("All habits for today marked complete.");
   };
 
   // Set anchor start date to today
   const handleStartFromToday = () => {
     onUpdateStartDate(todayStr);
-    notifySaved();
+    notifySaved("Tracking period anchored to today.");
   };
 
-  // Clear all checks for the active duration
+  // Clear all checks for the active duration (with Undo snapshot)
   const handleClearData = () => {
+    setUndoSnapshot({
+      label: `Cleared checkmarks for the ${rangeDays}-day period`,
+      habits: [...habits],
+      logs: JSON.parse(JSON.stringify(habitLogs))
+    });
+
     const newLogs = { ...habitLogs };
     daysList.forEach((d) => {
       delete newLogs[d.dateStr];
@@ -289,41 +335,53 @@ export default function HabitTrackerTab({
     const newHabit: HabitItem = {
       id: `habit_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       name: newHabitName.trim(),
-      emoji: newHabitEmoji || "⚡",
-      color: newHabitColor || "#C96F55",
+      emoji: newHabitEmoji || "📖",
+      color: newHabitColor || "#5F55C8",
       createdAt: new Date().toISOString()
     };
 
     onUpdateHabits([...habits, newHabit]);
     setNewHabitName("");
     setShowAddModal(false);
+    notifySaved(`Added habit "${newHabit.name}".`);
+  };
+
+  // Confirm delete habit (with Undo snapshot)
+  const handleConfirmDeleteHabit = () => {
+    if (!habitPendingDelete) return;
+    setUndoSnapshot({
+      label: `Deleted habit "${habitPendingDelete.name}"`,
+      habits: [...habits],
+      logs: JSON.parse(JSON.stringify(habitLogs))
+    });
+    onUpdateHabits(habits.filter((h) => h.id !== habitPendingDelete.id));
+    setHabitPendingDelete(null);
     notifySaved();
   };
 
-  // Delete a habit
-  const handleDeleteHabit = (habitId: string) => {
-    onUpdateHabits(habits.filter((h) => h.id !== habitId));
-    notifySaved();
+  const handleUndoLastAction = () => {
+    if (!undoSnapshot) return;
+    onUpdateHabits(undoSnapshot.habits);
+    onUpdateLogs(undoSnapshot.logs);
+    setUndoSnapshot(null);
+    notifySaved("Restored previous habit state.");
   };
 
-  // Update Mood or Sleep rating
-  const handleSetRating = (type: "mood" | "sleep", dateStr: string, val: number) => {
+  // Update Mood or Sleep rating (1–10)
+  const handleSetRating = (type: "mood" | "sleep", dateStr: string, val: number | undefined) => {
     const currentLog = habitLogs[dateStr] || { completedHabits: {} };
     const updatedLog: HabitDayLog = {
       ...currentLog,
       [type]: val
     };
-
     onUpdateLogs({
       ...habitLogs,
       [dateStr]: updatedLog
     });
-
-    setRatingPopover(null);
+    setRatingModal(null);
     notifySaved();
   };
 
-  // Date jump helpers
   const handlePrevDay = () => {
     const cur = startDate ? new Date(startDate + "T00:00:00") : new Date();
     cur.setDate(cur.getDate() - 1);
@@ -336,29 +394,22 @@ export default function HabitTrackerTab({
     onUpdateStartDate(formatYMD(cur));
   };
 
-  // Format anchor date for display e.g. "Day 1: Sep 12"
   const formattedAnchorDate = useMemo(() => {
     const d = startDate ? new Date(startDate + "T00:00:00") : new Date();
-    if (isNaN(d.getTime())) return "Day 1: Today";
+    if (isNaN(d.getTime())) return "Starts Today";
     const month = d.toLocaleDateString("en-US", { month: "short" });
     return `Day 1: ${month} ${d.getDate()}`;
   }, [startDate]);
 
-  // Today Day Index in the grid
-  const todayDayIndex = useMemo(() => {
-    const found = daysList.find((d) => d.isToday);
-    return found ? found.dayIndex : null;
-  }, [daysList]);
-
-  // Calculate SVG line/area path for DAILY PROGRESS chart
+  // SVG line/area path for Daily Progress chart
   const progressPath = useMemo(() => {
     const points = stats.dailyCompletions;
-    if (points.length === 0) return { area: "", line: "" };
+    if (points.length === 0) return { area: "", line: "", coords: [], width: 600, height: 90 };
 
     const width = 600;
     const height = 90;
-    const paddingX = 15;
-    const paddingY = 10;
+    const paddingX = 16;
+    const paddingY = 12;
     const step = (width - paddingX * 2) / (points.length - 1 || 1);
 
     const coords = points.map((p, idx) => {
@@ -376,919 +427,1190 @@ export default function HabitTrackerTab({
     return { area: areaPath, line: linePath, coords, width, height };
   }, [stats.dailyCompletions]);
 
-  // Calculate dual trend line for Mood & Sleep
-  const trendLineData = useMemo(() => {
-    const points = stats.dailyCompletions;
-    const width = 600;
-    const height = 40;
-    const step = width / (points.length - 1 || 1);
-
-    const moodCoords = points.map((p, idx) => {
-      const val = p.mood !== undefined ? p.mood : 0;
-      const x = idx * step;
-      const y = height - (val / 10) * (height - 8) - 4;
-      return { x, y, val };
-    });
-
-    const sleepCoords = points.map((p, idx) => {
-      const val = p.sleep !== undefined ? p.sleep : 0;
-      const x = idx * step;
-      const y = height - (val / 10) * (height - 8) - 4;
-      return { x, y, val };
-    });
-
-    const moodLine = moodCoords.reduce((acc, pt, idx) => {
-      return idx === 0 ? `M ${pt.x},${pt.y}` : `${acc} L ${pt.x},${pt.y}`;
-    }, "");
-
-    const sleepLine = sleepCoords.reduce((acc, pt, idx) => {
-      return idx === 0 ? `M ${pt.x},${pt.y}` : `${acc} L ${pt.x},${pt.y}`;
-    }, "");
-
-    return { moodLine, sleepLine, width, height };
-  }, [stats.dailyCompletions]);
-
-  // Overall Stats Donut ring calculation
-  const donutStroke = useMemo(() => {
-    const radius = 38;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (stats.completionRate / 100) * circumference;
-    return { radius, circumference, offset };
-  }, [stats.completionRate]);
+  const activeDayItem = useMemo(() => {
+    return daysList.find((d) => d.dateStr === selectedDayStr) || daysList.find((d) => d.isToday) || daysList[0];
+  }, [daysList, selectedDayStr]);
 
   return (
-    <div className={`space-y-6 pb-20 select-none ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>
-      
-      {/* ========================================================================= */}
-      {/* 1. TOP STATS ROW (DAILY PROGRESS, GOAL / COMPLETED / LEFT, OVERALL STATS) */}
-      {/* ========================================================================= */}
+    <div className={`space-y-6 pb-12 ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+      {/* Header & Storage Status */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-inherit">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Habit Tracker</h1>
+          <p className={`text-xs sm:text-sm mt-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+            Build consistent daily revision routines, track completion rates, and log daily mood and sleep quality.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div
+            className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 ${
+              isLight
+                ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#596474]"
+                : "bg-[#222938] border-[#283040] text-[#B7C0CF]"
+            }`}
+          >
+            {currentUser?.uid ? (
+              <>
+                <Cloud size={13} className="text-emerald-500" />
+                <span>{saveStatus === "saving" ? "Saving..." : "Synced to account"}</span>
+              </>
+            ) : (
+              <>
+                <HardDrive size={13} />
+                <span>{saveStatus === "saving" ? "Saving..." : "Saved on this device"}</span>
+              </>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer ${
+              isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
+            }`}
+          >
+            <Plus size={15} />
+            <span>Add Habit</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Undo Banner */}
+      {undoSnapshot && (
+        <div
+          role="region"
+          aria-label="Undo habit action"
+          className={`p-3.5 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs ${
+            isLight
+              ? "bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]"
+              : "bg-[#F59E0B]/15 border-[#FBBF24]/30 text-[#FBBF24]"
+          }`}
+        >
+          <span>{undoSnapshot.label}.</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleUndoLastAction}
+              className="px-3 py-1 rounded-lg font-semibold border border-current hover:bg-black/5 flex items-center gap-1 cursor-pointer"
+            >
+              <RotateCcw size={12} />
+              <span>Undo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setUndoSnapshot(null)}
+              aria-label="Dismiss undo notice"
+              className="p-1 rounded hover:bg-black/5 cursor-pointer"
+            >
+              <X size={13} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 1. SUMMARY METRICS & DAILY PROGRESS CHART */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-        
-        {/* Left: DAILY PROGRESS Area Chart */}
-        <div className={`lg:col-span-6 rounded-2xl border p-5 flex flex-col justify-between ${
-          isLight 
-            ? "bg-[#FFFFFF] border-[#E8D7C9] shadow-2xs" 
-            : "bg-[#0E1322] border-white/10 shadow-sm"
-        }`}>
+        {/* Left (7 cols): Daily Completion Trend Chart (or honest empty state when no data) */}
+        <div
+          className={`lg:col-span-7 rounded-2xl border p-5 flex flex-col justify-between ${
+            isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <BarChart3 size={16} className="text-[#C96F55]" />
-              <span className={`text-xs font-black tracking-widest uppercase ${
-                isLight ? "text-[#1D1D1B]" : "text-white"
-              }`}>
-                Daily Progress
-              </span>
+              <BarChart3 size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+              <h2 className="text-sm font-bold">Daily Completion Trend</h2>
             </div>
-            <span className={`text-xs font-medium ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-              {daysList.length} Days Tracking Period
+            <span className={`text-xs font-mono ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              {daysList.length}-day window
             </span>
           </div>
 
-          {/* SVG Progress Graph */}
-          <div className="relative w-full h-24 my-1 overflow-hidden">
-            {/* Horizontal Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
-              <div className={`border-b border-dashed ${isLight ? "border-slate-300" : "border-slate-600"}`} />
-              <div className={`border-b border-dashed ${isLight ? "border-slate-300" : "border-slate-600"}`} />
-              <div className={`border-b border-dashed ${isLight ? "border-slate-300" : "border-slate-600"}`} />
-            </div>
-
-            <svg viewBox={`0 0 ${progressPath.width} ${progressPath.height}`} className="w-full h-full preserve-3d" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="habitProgressGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#C96F55" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#C96F55" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              {progressPath.area && (
-                <path d={progressPath.area} fill="url(#habitProgressGradient)" />
-              )}
-              {progressPath.line && (
-                <path d={progressPath.line} fill="none" stroke="#C96F55" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              )}
-              {/* Point circles */}
-              {progressPath.coords?.map((pt, i) => (
-                <circle 
-                  key={i} 
-                  cx={pt.x} 
-                  cy={pt.y} 
-                  r={pt.isToday ? 4 : (pt.count > 0 ? 2.5 : 1.5)} 
-                  fill={pt.isToday ? "#C96F55" : (isLight ? "#1D1D1B" : "#FFFFFF")}
-                  stroke={pt.isToday ? "#FFFFFF" : "none"}
-                  strokeWidth={pt.isToday ? "1.5" : "0"}
-                />
-              ))}
-            </svg>
-          </div>
-
-          {/* Week Label Markers along Bottom Axis */}
-          <div className={`pt-2 border-t flex items-center justify-between text-[11px] font-bold tracking-wider uppercase ${
-            isLight ? "border-[#E8D7C9] text-[#77736B]" : "border-white/10 text-slate-400"
-          }`}>
-            <span>WEEK 1</span>
-            {rangeDays >= 14 && <span>WEEK 2</span>}
-            {rangeDays >= 21 && <span>WEEK 3</span>}
-            {rangeDays >= 28 && <span>WEEK 4</span>}
-            {rangeDays >= 30 && <span>WEEK 5</span>}
-          </div>
-        </div>
-
-        {/* Center: GOAL / COMPLETED / LEFT High-Impact Cards */}
-        <div className="lg:col-span-3 flex flex-col gap-2.5 justify-between">
-          
-          {/* GOAL CARD */}
-          <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
-            isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
-          }`}>
-            <div>
-              <div className={`text-[10px] font-extrabold tracking-widest uppercase ${
-                isLight ? "text-[#77736B]" : "text-slate-400"
-              }`}>
-                Goal
-              </div>
-              <div className={`text-2xl font-black tracking-tight leading-tight ${
-                isLight ? "text-[#1D1D1B]" : "text-white"
-              }`}>
-                {stats.totalPossible}
-              </div>
-            </div>
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-              isLight ? "bg-[#FAF8F5] text-[#77736B]" : "bg-white/5 text-slate-300"
-            }`}>
-              <Target size={18} />
-            </div>
-          </div>
-
-          {/* COMPLETED CARD */}
-          <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
-            isLight ? "bg-[#FFF1EC] border-[#E8D7C9]" : "bg-[#C96F55]/10 border-[#C96F55]/30"
-          }`}>
-            <div>
-              <div className="text-[10px] font-extrabold tracking-widest uppercase text-[#C96F55]">
-                Completed
-              </div>
-              <div className="text-2xl font-black tracking-tight leading-tight text-[#C96F55]">
-                {stats.completedCount}
-              </div>
-            </div>
-            <div className="w-9 h-9 rounded-lg bg-[#C96F55] text-white flex items-center justify-center shadow-xs">
-              <Check size={18} strokeWidth={3} />
-            </div>
-          </div>
-
-          {/* LEFT CARD */}
-          <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
-            isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
-          }`}>
-            <div>
-              <div className={`text-[10px] font-extrabold tracking-widest uppercase ${
-                isLight ? "text-[#77736B]" : "text-slate-400"
-              }`}>
-                Left
-              </div>
-              <div className={`text-2xl font-black tracking-tight leading-tight ${
-                isLight ? "text-[#1D1D1B]" : "text-white"
-              }`}>
-                {stats.remaining}
-              </div>
-            </div>
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-              isLight ? "bg-[#FAF8F5] text-[#77736B]" : "bg-white/5 text-slate-300"
-            }`}>
-              <Flame size={18} className="text-amber-500" />
-            </div>
-          </div>
-
-        </div>
-
-        {/* Right: OVERALL STATS Circular Gauge */}
-        <div className={`lg:col-span-3 rounded-2xl border p-5 flex flex-col items-center justify-between text-center ${
-          isLight 
-            ? "bg-[#FFFFFF] border-[#E8D7C9] shadow-2xs" 
-            : "bg-[#0E1322] border-white/10 shadow-sm"
-        }`}>
-          <div className={`text-xs font-black tracking-widest uppercase ${
-            isLight ? "text-[#1D1D1B]" : "text-white"
-          }`}>
-            Overall Stats
-          </div>
-
-          {/* Donut Ring */}
-          <div className="relative my-2 flex items-center justify-center">
-            <svg width="104" height="104" className="transform -rotate-90">
-              <circle
-                cx="52"
-                cy="52"
-                r={donutStroke.radius}
-                className={isLight ? "stroke-[#E8D7C9]" : "stroke-white/10"}
-                strokeWidth="9"
-                fill="transparent"
-              />
-              <circle
-                cx="52"
-                cy="52"
-                r={donutStroke.radius}
-                stroke="#C96F55"
-                strokeWidth="9"
-                strokeDasharray={donutStroke.circumference}
-                strokeDashoffset={donutStroke.offset}
-                strokeLinecap="round"
-                fill="transparent"
-                style={{ transition: "stroke-dashoffset 0.6s ease-in-out" }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-2xl font-black tracking-tight leading-none ${
-                isLight ? "text-[#1D1D1B]" : "text-white"
-              }`}>
-                {stats.completionRate}%
-              </span>
-              <span className={`text-[10px] font-semibold mt-0.5 ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                Rate
-              </span>
-            </div>
-          </div>
-
-          {/* Today summary pill */}
-          <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            isLight ? "bg-[#FAF8F5] text-[#77736B]" : "bg-white/5 text-slate-300"
-          }`}>
-            Today: <span className="font-bold text-[#C96F55]">{stats.todayCompleted}</span> / {stats.todayTotal} done
-          </div>
-        </div>
-
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 2. CONTROL BAR / TOOLBAR                                                  */}
-      {/* ========================================================================= */}
-      <div className={`rounded-2xl border p-3 flex flex-wrap items-center justify-between gap-3 ${
-        isLight 
-          ? "bg-[#FFFFFF] border-[#E8D7C9] shadow-2xs" 
-          : "bg-[#0E1322] border-white/10 shadow-sm"
-      }`}>
-        
-        {/* Left: Day Steppers & Date Badge & Presets */}
-        <div className="flex flex-wrap items-center gap-2">
-          
-          {/* Day prev/next stepper */}
-          <div className="flex items-center border rounded-xl overflow-hidden shadow-2xs">
-            <button
-              onClick={handlePrevDay}
-              title="Previous starting day"
-              className={`p-2 transition cursor-pointer ${
-                isLight 
-                  ? "bg-[#FAF8F5] hover:bg-[#E8D7C9] text-[#C96F55] hover:text-[#B85F48]" 
-                  : "bg-white/5 hover:bg-white/10 text-white"
+          {habits.length === 0 || stats.completedCount === 0 ? (
+            <div
+              className={`h-28 rounded-xl border border-dashed flex flex-col items-center justify-center p-4 text-center ${
+                isLight ? "bg-[#F6F7FA] border-[#CBD2E0]" : "bg-[#10131A]/50 border-[#364054]"
               }`}
             >
-              <ChevronLeft size={16} />
+              <p className="text-xs font-semibold">
+                {habits.length === 0 ? "No habits configured yet" : "No habit completions logged in this period yet"}
+              </p>
+              <p className={`text-[11px] mt-0.5 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                Check off habits below to see your daily consistency trend over the {rangeDays}-day window.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="relative w-full h-24 my-1 overflow-hidden">
+                <svg
+                  viewBox={`0 0 ${progressPath.width} ${progressPath.height}`}
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                  role="img"
+                  aria-label={`Habit completion trend chart showing ${stats.completionRate}% overall completion across ${rangeDays} days`}
+                >
+                  <defs>
+                    <linearGradient id="habitProgressGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isLight ? "#5F55C8" : "#6D5DF6"} stopOpacity="0.28" />
+                      <stop offset="100%" stopColor={isLight ? "#5F55C8" : "#6D5DF6"} stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  {progressPath.area && <path d={progressPath.area} fill="url(#habitProgressGrad)" />}
+                  {progressPath.line && (
+                    <path
+                      d={progressPath.line}
+                      fill="none"
+                      stroke={isLight ? "#5F55C8" : "#A99BFF"}
+                      strokeWidth="2.25"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                  {progressPath.coords?.map((pt, i) => (
+                    <circle
+                      key={i}
+                      cx={pt.x}
+                      cy={pt.y}
+                      r={pt.isToday ? 4 : pt.count > 0 ? 2.5 : 1.5}
+                      fill={pt.isToday ? (isLight ? "#5F55C8" : "#A99BFF") : isLight ? "#18202B" : "#F1F3F8"}
+                    />
+                  ))}
+                </svg>
+              </div>
+              <div
+                className={`pt-2 border-t flex items-center justify-between text-[11px] font-mono ${
+                  isLight ? "border-[#E2E6EF] text-[#596474]" : "border-[#283040] text-[#B7C0CF]"
+                }`}
+              >
+                <span>Day 1 ({daysList[0]?.monthShort} {daysList[0]?.dayNum})</span>
+                <span>Overall: {stats.completionRate}%</span>
+                <span>Day {daysList.length} ({daysList[daysList.length - 1]?.monthShort} {daysList[daysList.length - 1]?.dayNum})</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Right (5 cols): Mathematically Consistent Summary Cards */}
+        <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3">
+          <div
+            className={`rounded-2xl border p-4 flex flex-col justify-between ${
+              isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+            }`}
+          >
+            <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              Period Goal
+            </span>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className="text-2xl font-bold font-mono tabular-nums">{stats.totalPossible}</span>
+              <span className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                {habits.length} × {rangeDays}d
+              </span>
+            </div>
+          </div>
+
+          <div
+            className={`rounded-2xl border p-4 flex flex-col justify-between ${
+              isLight ? "bg-[#F0EEFF]/60 border-[#D8D3F8]" : "bg-[#6D5DF6]/15 border-[#6D5DF6]/35"
+            }`}
+          >
+            <span className={`text-xs font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
+              Completed
+            </span>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className={`text-2xl font-bold font-mono tabular-nums ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
+                {stats.completedCount}
+              </span>
+              <span className="text-xs font-mono font-semibold">{stats.completionRate}%</span>
+            </div>
+          </div>
+
+          <div
+            className={`rounded-2xl border p-4 flex flex-col justify-between ${
+              isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+            }`}
+          >
+            <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              Remaining
+            </span>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className="text-2xl font-bold font-mono tabular-nums">{stats.remaining}</span>
+              <span className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>checks left</span>
+            </div>
+          </div>
+
+          <div
+            className={`rounded-2xl border p-4 flex flex-col justify-between ${
+              isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+            }`}
+          >
+            <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              Today&apos;s Progress
+            </span>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className="text-2xl font-bold font-mono tabular-nums">
+                {stats.todayCompleted}/{stats.todayTotal}
+              </span>
+              <span className={`text-[11px] ${isLight ? "text-[#15803D]" : "text-[#34D399]"}`}>
+                today
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. TOOLBAR: Period Controls, Date Navigation, View Switcher, Quick Actions */}
+      <div
+        className={`rounded-2xl border p-3.5 flex flex-wrap items-center justify-between gap-3 ${
+          isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+        }`}
+      >
+        {/* Left Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Day 1 Anchor Stepper */}
+          <div
+            className={`flex items-center border rounded-xl overflow-hidden ${
+              isLight ? "border-[#E2E6EF] bg-[#F6F7FA]" : "border-[#364054] bg-[#222938]"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={handlePrevDay}
+              aria-label="Move start date back one day"
+              title="Previous start day"
+              className="p-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <ChevronLeft size={15} />
             </button>
-            <div className={`px-3 py-1.5 text-xs font-bold tracking-tight flex items-center gap-1.5 ${
-              isLight ? "bg-white text-[#1D1D1B]" : "bg-[#0E1322] text-white"
-            }`}>
-              <Calendar size={13} className="text-[#C96F55]" />
+            <div className="px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5">
+              <Calendar size={13} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
               <span>{formattedAnchorDate}</span>
             </div>
             <button
+              type="button"
               onClick={handleNextDay}
-              title="Next starting day"
-              className={`p-2 transition cursor-pointer ${
-                isLight 
-                  ? "bg-[#FAF8F5] hover:bg-[#E8D7C9] text-[#C96F55] hover:text-[#B85F48]" 
-                  : "bg-white/5 hover:bg-white/10 text-white"
-              }`}
+              aria-label="Move start date forward one day"
+              title="Next start day"
+              className="p-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={15} />
             </button>
           </div>
 
-          {/* TODAY = DAY 1 Indicator / Trigger */}
-          <button
-            onClick={handleStartFromToday}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider uppercase transition cursor-pointer border ${
-              startDate === todayStr
-                ? "bg-[#C96F55] text-white border-[#C96F55] shadow-xs"
-                : isLight
-                  ? "bg-[#1D1D1B] text-white hover:bg-black border-transparent"
-                  : "bg-white text-black hover:bg-slate-200 border-transparent"
+          {/* Period Presets (7D, 14D, 21D, 30D) */}
+          <div
+            role="group"
+            aria-label="Tracking period length"
+            className={`flex items-center border rounded-xl p-1 ${
+              isLight ? "bg-[#F0F2F7] border-[#E2E6EF]" : "bg-[#222938] border-[#364054]"
             }`}
           >
-            {todayDayIndex ? `Today = Day ${todayDayIndex}` : "Set Today = Day 1"}
-          </button>
-
-          {/* Range Pills (7D, 14D, 21D, 30D) */}
-          <div className={`flex items-center border rounded-xl p-0.5 ${
-            isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-white/5 border-white/10"
-          }`}>
             {([7, 14, 21, 30] as const).map((r) => (
               <button
                 key={r}
+                type="button"
                 onClick={() => setRangeDays(r)}
-                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                aria-pressed={rangeDays === r}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   rangeDays === r
                     ? isLight
-                      ? "bg-[#1D1D1B] text-white shadow-2xs"
-                      : "bg-[#C96F55] text-white shadow-xs"
+                      ? "bg-[#FFFFFF] text-[#18202B] shadow-2xs"
+                      : "bg-[#191E28] text-[#F1F3F8] shadow-2xs"
                     : isLight
-                      ? "text-[#77736B] hover:text-[#1D1D1B]"
-                      : "text-slate-400 hover:text-white"
+                    ? "text-[#596474] hover:text-[#18202B]"
+                    : "text-[#B7C0CF] hover:text-[#F1F3F8]"
                 }`}
               >
-                {r}D
+                {r} days
               </button>
             ))}
           </div>
 
-          {/* + ADD HABIT Button */}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#C96F55] text-white hover:bg-[#B85F48] transition cursor-pointer shadow-xs"
-          >
-            <Plus size={14} strokeWidth={2.5} />
-            <span>Add Habit</span>
-          </button>
-
-        </div>
-
-        {/* Right: Persistence Badge & Quick Actions */}
-        <div className="flex items-center gap-2">
-          
-          {/* Data Saved Indicator */}
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
-            isLight 
-              ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#66856D]" 
-              : "bg-white/5 border-white/10 text-emerald-400"
-          }`}>
-            <CheckCircle2 size={13} className="text-[#66856D]" />
-            <span>{saveStatus === "saving" ? "Saving..." : "All Data Saved"}</span>
-          </div>
-
-          {/* Check Today Button */}
-          <button
-            onClick={handleCheckToday}
-            title="Mark all habits completed for today"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
-              isLight 
-                ? "bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#1D1D1B] border-[#E8D7C9]" 
-                : "bg-white/5 hover:bg-white/10 text-white border-white/10"
+          {/* Layout View Switcher: Full Matrix vs Daily Focus View */}
+          <div
+            role="group"
+            aria-label="Habit layout view"
+            className={`flex items-center border rounded-xl p-1 ${
+              isLight ? "bg-[#F0F2F7] border-[#E2E6EF]" : "bg-[#222938] border-[#364054]"
             }`}
           >
-            <Check size={14} className="text-[#C96F55]" />
+            <button
+              type="button"
+              onClick={() => setViewMode("matrix")}
+              aria-pressed={viewMode === "matrix"}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg flex items-center gap-1 transition-colors cursor-pointer ${
+                viewMode === "matrix"
+                  ? isLight
+                    ? "bg-[#FFFFFF] text-[#18202B] shadow-2xs"
+                    : "bg-[#191E28] text-[#F1F3F8] shadow-2xs"
+                  : isLight
+                  ? "text-[#596474] hover:text-[#18202B]"
+                  : "text-[#B7C0CF] hover:text-[#F1F3F8]"
+              }`}
+            >
+              <Table2 size={13} />
+              <span>Grid View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("daily")}
+              aria-pressed={viewMode === "daily"}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg flex items-center gap-1 transition-colors cursor-pointer ${
+                viewMode === "daily"
+                  ? isLight
+                    ? "bg-[#FFFFFF] text-[#18202B] shadow-2xs"
+                    : "bg-[#191E28] text-[#F1F3F8] shadow-2xs"
+                  : isLight
+                  ? "text-[#596474] hover:text-[#18202B]"
+                  : "text-[#B7C0CF] hover:text-[#F1F3F8]"
+              }`}
+            >
+              <LayoutList size={13} />
+              <span>Daily Checklist</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Right Actions: Check Today, Start from Today, Clear */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCheckToday}
+            disabled={habits.length === 0}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+              isLight
+                ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#222938] hover:bg-[#2A3244] border-[#364054] text-[#F1F3F8]"
+            }`}
+          >
+            <Check size={13} className="text-emerald-500" />
             <span>Check Today</span>
           </button>
 
-          {/* Start from Today */}
           <button
+            type="button"
             onClick={handleStartFromToday}
-            title="Reset starting anchor to today's date"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
-              isLight 
-                ? "bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#1D1D1B] border-[#E8D7C9]" 
-                : "bg-white/5 hover:bg-white/10 text-white border-white/10"
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors flex items-center gap-1.5 cursor-pointer ${
+              startDate === todayStr
+                ? isLight
+                  ? "bg-[#F0EEFF] border-[#D8D3F8] text-[#5F55C8]"
+                  : "bg-[#6D5DF6]/20 border-[#6D5DF6]/40 text-[#A99BFF]"
+                : isLight
+                ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#222938] hover:bg-[#2A3244] border-[#364054] text-[#F1F3F8]"
             }`}
           >
             <RotateCcw size={13} />
             <span>Start from Today</span>
           </button>
 
-          {/* Clear Button */}
           <button
+            type="button"
             onClick={() => setShowClearConfirm(true)}
-            title="Reset habit checks"
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border ${
-              isLight 
-                ? "text-[#77736B] hover:text-red-600 hover:border-red-200 border-[#E8D7C9]" 
-                : "text-slate-400 hover:text-red-400 hover:border-red-500/30 border-white/10"
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+              isLight
+                ? "border-[#E2E6EF] text-[#596474] hover:text-[#BE123C] hover:border-[#FECDD3] hover:bg-[#FFF1F2]"
+                : "border-[#364054] text-[#B7C0CF] hover:text-[#FB7185] hover:border-rose-500/40 hover:bg-rose-500/10"
             }`}
           >
-            Clear
+            Clear Period
           </button>
-
         </div>
-
       </div>
 
-      {/* ========================================================================= */}
-      {/* 3. MAIN HABITS SPREADSHEET MATRIX / TABLE                                 */}
-      {/* ========================================================================= */}
-      <div className={`rounded-2xl border overflow-hidden shadow-2xs ${
-        isLight 
-          ? "bg-[#FFFFFF] border-[#E8D7C9]" 
-          : "bg-[#0E1322] border-white/10"
-      }`}>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left min-w-[700px]">
-            
-            {/* Header: Week Groupings */}
-            <thead>
-              <tr className={`border-b text-xs font-black tracking-widest uppercase ${
-                isLight ? "bg-[#1D1D1B] text-white border-[#1D1D1B]" : "bg-black text-white border-white/10"
-              }`}>
-                {/* Sticky Left Column Header */}
-                <th className="sticky left-0 z-20 px-4 py-3 min-w-[190px] md:min-w-[220px] bg-inherit border-r border-white/10">
-                  MY HABITS
-                </th>
+      {/* =========================================================================
+          VIEW A: DAILY CHECKLIST VIEW (Mobile-friendly & focused day view)
+      ========================================================================= */}
+      {viewMode === "daily" && activeDayItem && (
+        <div
+          className={`rounded-2xl border p-5 space-y-5 ${
+            isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+          }`}
+        >
+          {/* Day Selector Strip */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold">
+                Day {activeDayItem.dayIndex}: {activeDayItem.dayOfWeek}, {activeDayItem.monthShort} {activeDayItem.dayNum}
+                {activeDayItem.isToday ? " (Today)" : ""}
+              </h3>
+              <span className={`text-xs font-mono ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                Select any day below
+              </span>
+            </div>
 
-                {/* Week column spans */}
-                {weeksGrouped.map((w) => (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2">
+              {daysList.map((d) => {
+                const isSelected = d.dateStr === activeDayItem.dateStr;
+                return (
+                  <button
+                    key={d.dateStr}
+                    type="button"
+                    onClick={() => setSelectedDayStr(d.dateStr)}
+                    aria-pressed={isSelected}
+                    className={`min-w-[52px] py-2 px-2 rounded-xl border text-center transition-colors shrink-0 cursor-pointer ${
+                      isSelected
+                        ? isLight
+                          ? "bg-[#5F55C8] border-[#5F55C8] text-white"
+                          : "bg-[#6D5DF6] border-[#6D5DF6] text-white"
+                        : d.isToday
+                        ? isLight
+                          ? "bg-[#F0EEFF] border-[#D8D3F8] text-[#5F55C8]"
+                          : "bg-[#6D5DF6]/15 border-[#6D5DF6]/40 text-[#A99BFF]"
+                        : isLight
+                        ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#18202B]"
+                        : "bg-[#222938] border-[#364054] text-[#F1F3F8]"
+                    }`}
+                  >
+                    <span className="block text-[10px] opacity-80">{d.dayOfWeek}</span>
+                    <span className="block text-xs font-bold font-mono">{d.dayNum}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Habits Checklist for Selected Day */}
+          <div className="space-y-2">
+            {habits.map((habit) => {
+              const isChecked = !!habitLogs[activeDayItem.dateStr]?.completedHabits?.[habit.id];
+              return (
+                <div
+                  key={habit.id}
+                  className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${
+                    isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#364054]"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleToggleHabit(habit.id, activeDayItem.dateStr)}
+                    aria-pressed={isChecked}
+                    aria-label={`${habit.name} on ${activeDayItem.dateStr}: ${isChecked ? "Completed" : "Not completed"}`}
+                    className="flex items-center gap-3 flex-1 text-left cursor-pointer min-h-[40px]"
+                  >
+                    <span
+                      className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
+                        isChecked
+                          ? "text-white border-transparent"
+                          : isLight
+                          ? "bg-[#FFFFFF] border-[#CBD2E0]"
+                          : "bg-[#10131A] border-[#364054]"
+                      }`}
+                      style={{ backgroundColor: isChecked ? habit.color || "#5F55C8" : undefined }}
+                    >
+                      {isChecked && <Check size={14} strokeWidth={3} />}
+                    </span>
+                    <span className="text-base shrink-0">{habit.emoji}</span>
+                    <span className={`text-sm font-semibold ${isChecked ? "line-through opacity-75" : ""}`}>
+                      {habit.name}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setHabitPendingDelete(habit)}
+                    aria-label={`Delete habit ${habit.name}`}
+                    className={`p-2 rounded-lg cursor-pointer ${
+                      isLight
+                        ? "text-[#596474] hover:text-[#BE123C] hover:bg-[#FFF1F2]"
+                        : "text-[#B7C0CF] hover:text-[#FB7185] hover:bg-rose-500/15"
+                    }`}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Mood & Sleep Controls for Selected Day */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-inherit">
+            <button
+              type="button"
+              onClick={() =>
+                setRatingModal({
+                  type: "mood",
+                  dateStr: activeDayItem.dateStr,
+                  dayLabel: `${activeDayItem.dayOfWeek}, ${activeDayItem.monthShort} ${activeDayItem.dayNum}`
+                })
+              }
+              className={`p-3.5 rounded-xl border flex items-center justify-between cursor-pointer ${
+                isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#364054]"
+              }`}
+            >
+              <span className="flex items-center gap-2 text-xs font-semibold">
+                <Smile size={16} className="text-amber-500" />
+                <span>Mood Rating (1–10)</span>
+              </span>
+              <span className="font-mono text-xs font-bold">
+                {habitLogs[activeDayItem.dateStr]?.mood !== undefined
+                  ? `${habitLogs[activeDayItem.dateStr]?.mood} / 10`
+                  : "Set rating"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setRatingModal({
+                  type: "sleep",
+                  dateStr: activeDayItem.dateStr,
+                  dayLabel: `${activeDayItem.dayOfWeek}, ${activeDayItem.monthShort} ${activeDayItem.dayNum}`
+                })
+              }
+              className={`p-3.5 rounded-xl border flex items-center justify-between cursor-pointer ${
+                isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#364054]"
+              }`}
+            >
+              <span className="flex items-center gap-2 text-xs font-semibold">
+                <Moon size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+                <span>Sleep Quality (1–10)</span>
+              </span>
+              <span className="font-mono text-xs font-bold">
+                {habitLogs[activeDayItem.dateStr]?.sleep !== undefined
+                  ? `${habitLogs[activeDayItem.dateStr]?.sleep} / 10`
+                  : "Set rating"}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          VIEW B: FULL HABIT MATRIX TABLE (Confined Horizontal Scroll + Sticky Column)
+      ========================================================================= */}
+      {viewMode === "matrix" && (
+        <div
+          className={`rounded-2xl border overflow-hidden ${
+            isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+          }`}
+        >
+          {/* Mobile Hint / Scroll Affordance Bar */}
+          <div
+            className={`px-4 py-2 border-b text-xs flex items-center justify-between gap-2 ${
+              isLight
+                ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#596474]"
+                : "bg-[#222938] border-[#283040] text-[#B7C0CF]"
+            }`}
+          >
+            <span>Tip: Click any cell to toggle completion for that date, or click Mood/Sleep to rate 1–10.</span>
+            <span className="font-mono text-[11px] shrink-0">Scroll table horizontally →</span>
+          </div>
+
+          <div className="overflow-x-auto max-w-full">
+            <table className="w-full border-collapse text-left min-w-[680px]">
+              <thead>
+                {/* Week Header */}
+                <tr
+                  className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                    isLight
+                      ? "bg-[#F0F2F7] text-[#18202B] border-[#E2E6EF]"
+                      : "bg-[#10131A] text-[#F1F3F8] border-[#283040]"
+                  }`}
+                >
                   <th
-                    key={w.weekNum}
-                    colSpan={w.count}
-                    className="px-2 py-3 text-center border-r border-white/10"
-                  >
-                    WEEK {w.weekNum}
-                  </th>
-                ))}
-              </tr>
-
-              {/* Sub-header 1: Day of Week (Sa, Su, Mo, Tu, We, Th, Fr) */}
-              <tr className={`border-b text-[11px] font-bold ${
-                isLight 
-                  ? "bg-[#FAF8F5] text-[#77736B] border-[#E8D7C9]" 
-                  : "bg-white/5 text-slate-400 border-white/10"
-              }`}>
-                <th className={`sticky left-0 z-20 px-4 py-2 border-r uppercase tracking-wider text-[10px] font-extrabold ${
-                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-[#0A0E1C] border-white/10 text-slate-400"
-                }`}>
-                  DAY OF WEEK
-                </th>
-                {daysList.map((d) => (
-                  <th 
-                    key={d.dateStr} 
-                    className={`px-1.5 py-1.5 text-center border-r min-w-[38px] ${
-                      d.isToday 
-                        ? (isLight ? "bg-[#FFF1EC] text-[#C96F55] font-black border-[#E8D7C9]" : "bg-[#C96F55]/20 text-white font-black border-[#C96F55]/40")
-                        : (isLight ? "border-[#E8D7C9]" : "border-white/10")
+                    scope="col"
+                    className={`sticky left-0 z-20 px-4 py-2.5 min-w-[200px] md:min-w-[230px] border-r ${
+                      isLight ? "bg-[#F0F2F7] border-[#E2E6EF]" : "bg-[#10131A] border-[#283040]"
                     }`}
                   >
-                    {d.dayOfWeek}
+                    Habit
                   </th>
-                ))}
-              </tr>
-
-              {/* Sub-header 2: Day & Date Number (D1 12, D2 13...) */}
-              <tr className={`border-b text-xs font-semibold ${
-                isLight 
-                  ? "bg-[#FFFFFF] text-[#1D1D1B] border-[#E8D7C9]" 
-                  : "bg-[#0E1322] text-white border-white/10"
-              }`}>
-                <th className={`sticky left-0 z-20 px-4 py-2 border-r text-[10px] font-extrabold tracking-wider uppercase ${
-                  isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#77736B]" : "bg-[#0E1322] border-white/10 text-slate-400"
-                }`}>
-                  DAY & DATE
-                </th>
-                {daysList.map((d) => (
-                  <th 
-                    key={d.dateStr} 
-                    className={`px-1 py-1.5 text-center border-r ${
-                      d.isToday 
-                        ? (isLight ? "bg-[#FFF1EC] border-[#E8D7C9]" : "bg-[#C96F55]/15 border-[#C96F55]/40")
-                        : (isLight ? "border-[#E8D7C9]" : "border-white/10")
-                    }`}
-                  >
-                    <div className="flex flex-col items-center">
-                      <span className="text-[10px] text-[#77736B] leading-none">D{d.dayIndex}</span>
-                      <span className={`text-xs font-extrabold leading-tight ${d.isToday ? "text-[#C96F55]" : ""}`}>
-                        {d.dayNum}
-                      </span>
-                      {d.isToday && (
-                        <span className="mt-0.5 px-1 rounded text-[8px] font-black tracking-tighter bg-[#C96F55] text-white uppercase">
-                          TODAY
-                        </span>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            {/* Habit Rows Body */}
-            <tbody>
-              {habits.length === 0 ? (
-                <tr>
-                  <td colSpan={daysList.length + 1} className="py-12 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Sparkles size={28} className="text-[#C96F55]" />
-                      <p className={`text-sm font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>
-                        No habits configured yet
-                      </p>
-                      <button
-                        onClick={() => setShowAddModal(true)}
-                        className="px-4 py-2 rounded-xl text-xs font-bold bg-[#C96F55] text-white shadow-xs hover:bg-[#B85F48]"
-                      >
-                        Add Your First Habit
-                      </button>
-                    </div>
-                  </td>
+                  {weeksGrouped.map((w) => (
+                    <th
+                      key={w.weekNum}
+                      colSpan={w.count}
+                      scope="colgroup"
+                      className={`px-2 py-2.5 text-center border-r ${
+                        isLight ? "border-[#E2E6EF]" : "border-[#283040]"
+                      }`}
+                    >
+                      Week {w.weekNum}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                habits.map((habit) => (
-                  <tr 
-                    key={habit.id}
-                    className={`border-b transition group ${
-                      isLight 
-                        ? "hover:bg-[#FAF9F5] border-[#E8D7C9]" 
-                        : "hover:bg-white/[0.02] border-white/10"
+
+                {/* Day & Date Header */}
+                <tr
+                  className={`border-b text-xs ${
+                    isLight
+                      ? "bg-[#FFFFFF] text-[#18202B] border-[#E2E6EF]"
+                      : "bg-[#191E28] text-[#F1F3F8] border-[#283040]"
+                  }`}
+                >
+                  <th
+                    scope="col"
+                    className={`sticky left-0 z-20 px-4 py-2 border-r text-[11px] font-semibold ${
+                      isLight
+                        ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#596474]"
+                        : "bg-[#191E28] border-[#283040] text-[#B7C0CF]"
                     }`}
                   >
-                    {/* Sticky Habit Info Column */}
-                    <td className={`sticky left-0 z-10 px-4 py-2.5 border-r ${
-                      isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
-                    }`}>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-base select-none shrink-0">{habit.emoji}</span>
-                          <span className={`text-xs font-bold truncate max-w-[120px] md:max-w-[150px] ${
-                            isLight ? "text-[#1D1D1B]" : "text-white"
-                          }`}>
-                            {habit.name}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteHabit(habit.id)}
-                          title="Delete habit"
-                          className="p-1 rounded-md opacity-40 hover:opacity-100 hover:text-red-500 transition cursor-pointer"
+                    Day &amp; Date
+                  </th>
+                  {daysList.map((d) => (
+                    <th
+                      key={d.dateStr}
+                      scope="col"
+                      className={`px-1 py-2 text-center border-r min-w-[42px] ${
+                        d.isToday
+                          ? isLight
+                            ? "bg-[#F0EEFF] border-[#D8D3F8]"
+                            : "bg-[#6D5DF6]/20 border-[#6D5DF6]/40"
+                          : isLight
+                          ? "border-[#E2E6EF]"
+                          : "border-[#283040]"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center leading-tight">
+                        <span className={`text-[10px] font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                          {d.dayOfWeek}
+                        </span>
+                        <span
+                          className={`text-xs font-bold font-mono mt-0.5 ${
+                            d.isToday ? (isLight ? "text-[#5F55C8]" : "text-[#A99BFF]") : ""
+                          }`}
                         >
-                          <Trash2 size={13} />
+                          {d.dayNum}
+                        </span>
+                        {d.isToday && (
+                          <span
+                            className={`mt-0.5 text-[9px] font-bold ${
+                              isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"
+                            }`}
+                          >
+                            Today
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {habits.length === 0 ? (
+                  <tr>
+                    <td colSpan={daysList.length + 1} className="py-12 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <p className="text-sm font-semibold">No habits configured yet</p>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddModal(true)}
+                          className={`px-4 py-2 rounded-xl text-xs font-semibold text-white cursor-pointer ${
+                            isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
+                          }`}
+                        >
+                          Add Your First Habit
                         </button>
                       </div>
                     </td>
-
-                    {/* Checkbox columns for each day */}
-                    {daysList.map((d) => {
-                      const isChecked = !!habitLogs[d.dateStr]?.completedHabits?.[habit.id];
-
-                      return (
-                        <td
-                          key={d.dateStr}
-                          className={`p-1 text-center border-r ${
-                            d.isToday 
-                              ? (isLight ? "bg-[#FFF1EC]/50 border-[#E8D7C9]" : "bg-[#C96F55]/5 border-[#C96F55]/30")
-                              : (isLight ? "border-[#E8D7C9]" : "border-white/10")
-                          }`}
-                        >
+                  </tr>
+                ) : (
+                  habits.map((habit) => (
+                    <tr
+                      key={habit.id}
+                      className={`border-b transition-colors group ${
+                        isLight
+                          ? "hover:bg-[#F6F7FA]/70 border-[#E2E6EF]"
+                          : "hover:bg-[#222938]/50 border-[#283040]"
+                      }`}
+                    >
+                      {/* Sticky Habit Name Column */}
+                      <th
+                        scope="row"
+                        className={`sticky left-0 z-10 px-4 py-2.5 border-r font-medium ${
+                          isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-base shrink-0" aria-hidden="true">
+                              {habit.emoji}
+                            </span>
+                            <span className="text-xs sm:text-sm font-semibold truncate">{habit.name}</span>
+                          </div>
                           <button
-                            onClick={() => handleToggleHabit(habit.id, d.dateStr)}
-                            title={`${habit.name} on ${d.dateStr}`}
-                            className={`w-7 h-7 mx-auto rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer border ${
-                              isChecked
-                                ? "bg-[#C96F55] border-[#C96F55] text-white shadow-2xs transform scale-105"
-                                : isLight
-                                  ? "bg-white border-[#D6D3CB] hover:border-[#C96F55]"
-                                  : "bg-white/5 border-white/15 hover:border-white/40"
+                            type="button"
+                            onClick={() => setHabitPendingDelete(habit)}
+                            aria-label={`Delete habit ${habit.name}`}
+                            title="Delete habit"
+                            className={`p-1.5 rounded-lg opacity-70 group-hover:opacity-100 transition-colors cursor-pointer shrink-0 ${
+                              isLight
+                                ? "text-[#596474] hover:text-[#BE123C] hover:bg-[#FFF1F2]"
+                                : "text-[#B7C0CF] hover:text-[#FB7185] hover:bg-rose-500/15"
                             }`}
                           >
-                            {isChecked && <Check size={14} strokeWidth={3} className="animate-in zoom-in-75 duration-150" />}
+                            <Trash2 size={13} />
                           </button>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))
-              )}
+                        </div>
+                      </th>
 
-              {/* ================================================================= */}
-              {/* SPECIAL TRACKER ROWS: MOOD & SLEEP (from user image)               */}
-              {/* ================================================================= */}
-              
-              {/* MOOD (1-10) ROW */}
-              <tr className={`border-b ${
-                isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/10"
-              }`}>
-                <td className={`sticky left-0 z-10 px-4 py-2.5 border-r ${
-                  isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#0A0E1C] border-white/10"
-                }`}>
-                  <div className="flex items-center gap-2">
-                    <Smile size={16} className="text-amber-500" />
-                    <span className="text-[11px] font-black tracking-wider uppercase">
-                      Mood (1–10)
-                    </span>
-                  </div>
-                </td>
+                      {/* Daily Completion Cells */}
+                      {daysList.map((d) => {
+                        const isChecked = !!habitLogs[d.dateStr]?.completedHabits?.[habit.id];
+                        return (
+                          <td
+                            key={d.dateStr}
+                            className={`p-1 text-center border-r ${
+                              d.isToday
+                                ? isLight
+                                  ? "bg-[#F0EEFF]/40 border-[#D8D3F8]"
+                                  : "bg-[#6D5DF6]/10 border-[#6D5DF6]/30"
+                                : isLight
+                                ? "border-[#E2E6EF]"
+                                : "border-[#283040]"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleToggleHabit(habit.id, d.dateStr)}
+                              aria-label={`${habit.name} on ${d.monthShort} ${d.dayNum} (${d.dateStr}): ${
+                                isChecked ? "Completed" : "Not completed"
+                              }`}
+                              aria-pressed={isChecked}
+                              className={`w-8 h-8 rounded-lg mx-auto flex items-center justify-center transition-all cursor-pointer border ${
+                                isChecked
+                                  ? "text-white border-transparent shadow-2xs"
+                                  : isLight
+                                  ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#CBD2E0]"
+                                  : "bg-[#222938] hover:bg-[#2A3244] border-[#364054]"
+                              }`}
+                              style={{
+                                backgroundColor: isChecked ? habit.color || "#5F55C8" : undefined
+                              }}
+                            >
+                              {isChecked && <Check size={15} strokeWidth={3} />}
+                            </button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))
+                )}
 
-                {daysList.map((d) => {
-                  const moodVal = habitLogs[d.dateStr]?.mood;
-
-                  return (
-                    <td 
-                      key={d.dateStr} 
-                      className={`p-1 text-center border-r ${
-                        d.isToday 
-                          ? (isLight ? "bg-[#FFF1EC]/50 border-[#E8D7C9]" : "bg-[#C96F55]/5 border-[#C96F55]/30")
-                          : (isLight ? "border-[#E8D7C9]" : "border-white/10")
-                      }`}
-                    >
-                      <button
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setRatingPopover({
-                            type: "mood",
-                            dateStr: d.dateStr,
-                            dayNum: d.dayIndex,
-                            x: rect.left,
-                            y: rect.bottom + 4
-                          });
-                        }}
-                        className={`w-7 h-7 mx-auto rounded-md text-[11px] font-bold flex items-center justify-center transition cursor-pointer border ${
-                          moodVal !== undefined
-                            ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/40"
-                            : isLight
-                              ? "bg-white/60 text-slate-400 hover:text-slate-700 border-dashed border-slate-300"
-                              : "bg-white/5 text-slate-500 hover:text-slate-300 border-dashed border-white/10"
-                        }`}
-                        title={`Mood for D${d.dayIndex}: ${moodVal || "Not set"}`}
-                      >
-                        {moodVal !== undefined ? moodVal : "–"}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-
-              {/* SLEEP (1-10) ROW */}
-              <tr className={`border-b ${
-                isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-black/30 border-white/10"
-              }`}>
-                <td className={`sticky left-0 z-10 px-4 py-2.5 border-r ${
-                  isLight ? "bg-[#FAF9F5] border-[#E8D7C9]" : "bg-[#0A0E1C] border-white/10"
-                }`}>
-                  <div className="flex items-center gap-2">
-                    <Moon size={16} className="text-indigo-400" />
-                    <span className="text-[11px] font-black tracking-wider uppercase">
-                      Sleep (1–10)
-                    </span>
-                  </div>
-                </td>
-
-                {daysList.map((d) => {
-                  const sleepVal = habitLogs[d.dateStr]?.sleep;
-
-                  return (
-                    <td 
-                      key={d.dateStr} 
-                      className={`p-1 text-center border-r ${
-                        d.isToday 
-                          ? (isLight ? "bg-[#FFF1EC]/50 border-[#E8D7C9]" : "bg-[#C96F55]/5 border-[#C96F55]/30")
-                          : (isLight ? "border-[#E8D7C9]" : "border-white/10")
-                      }`}
-                    >
-                      <button
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setRatingPopover({
-                            type: "sleep",
-                            dateStr: d.dateStr,
-                            dayNum: d.dayIndex,
-                            x: rect.left,
-                            y: rect.bottom + 4
-                          });
-                        }}
-                        className={`w-7 h-7 mx-auto rounded-md text-[11px] font-bold flex items-center justify-center transition cursor-pointer border ${
-                          sleepVal !== undefined
-                            ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border-indigo-500/40"
-                            : isLight
-                              ? "bg-white/60 text-slate-400 hover:text-slate-700 border-dashed border-slate-300"
-                              : "bg-white/5 text-slate-500 hover:text-slate-300 border-dashed border-white/10"
-                        }`}
-                        title={`Sleep for D${d.dayIndex}: ${sleepVal || "Not set"}`}
-                      >
-                        {sleepVal !== undefined ? sleepVal : "–"}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-
-              {/* TREND LINE FOOTER ROW (from user image) */}
-              <tr className={isLight ? "bg-[#FFFFFF]" : "bg-[#0E1322]"}>
-                <td className={`sticky left-0 z-10 px-4 py-2 border-r ${
-                  isLight ? "bg-[#FFFFFF] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
-                }`}>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-black tracking-wider uppercase text-[#77736B]">
-                      TREND LINE
-                    </span>
-                    <div className="flex items-center gap-3 text-[10px] font-semibold">
-                      <span className="flex items-center gap-1 text-amber-500">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Mood
-                      </span>
-                      <span className="flex items-center gap-1 text-indigo-400">
-                        <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" /> Sleep
-                      </span>
-                    </div>
-                  </div>
-                </td>
-
-                <td colSpan={daysList.length} className="px-2 py-1">
-                  <div className="h-10 w-full">
-                    <svg viewBox={`0 0 ${trendLineData.width} ${trendLineData.height}`} className="w-full h-full" preserveAspectRatio="none">
-                      {trendLineData.moodLine && (
-                        <path d={trendLineData.moodLine} fill="none" stroke="#F59E0B" strokeWidth="2" strokeDasharray="3 3" />
-                      )}
-                      {trendLineData.sleepLine && (
-                        <path d={trendLineData.sleepLine} fill="none" stroke="#818CF8" strokeWidth="2" />
-                      )}
-                    </svg>
-                  </div>
-                </td>
-              </tr>
-
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 4. MODALS & POPOVERS                                                      */}
-      {/* ========================================================================= */}
-
-      {/* RATING POPOVER (For Mood / Sleep quick 1-10 selector) */}
-      <AnimatePresence>
-        {ratingPopover && (
-          <div 
-            className="fixed inset-0 z-50 bg-black/20"
-            onClick={() => setRatingPopover(null)}
-          >
-            <div 
-              className={`absolute p-2.5 rounded-xl border shadow-xl ${
-                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#141A2D] border-white/20 text-white"
-              }`}
-              style={{
-                left: Math.min(Math.max(16, ratingPopover.x - 60), window.innerWidth - 180),
-                top: Math.min(ratingPopover.y, window.innerHeight - 130)
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-[10px] font-bold tracking-wider uppercase mb-1.5 flex items-center justify-between">
-                <span>Select {ratingPopover.type} (D{ratingPopover.dayNum})</span>
-                <button onClick={() => setRatingPopover(null)} className="text-slate-400 hover:text-slate-600">
-                  <X size={12} />
-                </button>
-              </div>
-              <div className="grid grid-cols-5 gap-1.5">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                  <button
-                    key={num}
-                    onClick={() => handleSetRating(ratingPopover.type, ratingPopover.dateStr, num)}
-                    className={`w-7 h-7 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      num >= 8 
-                        ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500 hover:text-white"
-                        : num >= 5
-                          ? "bg-amber-500/20 text-amber-600 dark:text-amber-300 hover:bg-amber-500 hover:text-white"
-                          : "bg-red-500/20 text-red-600 dark:text-red-300 hover:bg-red-500 hover:text-white"
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ADD HABIT MODAL */}
-      <AnimatePresence>
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className={`w-full max-w-md rounded-2xl border p-6 shadow-2xl ${
-                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0E1322] border-white/15 text-white"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#C96F55]/15 text-[#C96F55] flex items-center justify-center font-bold">
-                    +
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold">Add New Habit</h3>
-                    <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                      Track your daily academic and personal routines
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 transition"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <form onSubmit={handleAddHabit} className="space-y-4">
-                {/* Habit Name */}
-                <div>
-                  <label className="block text-xs font-bold mb-1 uppercase tracking-wider text-[#77736B]">
-                    Habit Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newHabitName}
-                    onChange={(e) => setNewHabitName(e.target.value)}
-                    placeholder="e.g. Read 20 mins, Solve Physics, Review Flashcards"
-                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition ${
-                      isLight 
-                        ? "bg-[#FAF8F5] border-[#E8D7C9] focus:border-[#C96F55]" 
-                        : "bg-white/5 border-white/10 focus:border-[#C96F55]"
-                    }`}
-                  />
-                </div>
-
-                {/* Emoji Selection */}
-                <div>
-                  <label className="block text-xs font-bold mb-1 uppercase tracking-wider text-[#77736B]">
-                    Choose Icon
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {emojiOptions.map((em) => (
-                      <button
-                        type="button"
-                        key={em}
-                        onClick={() => setNewHabitEmoji(em)}
-                        className={`w-9 h-9 rounded-xl text-lg flex items-center justify-center transition cursor-pointer border ${
-                          newHabitEmoji === em
-                            ? "bg-[#C96F55]/20 border-[#C96F55] scale-110 shadow-xs"
-                            : isLight
-                              ? "bg-[#FAF8F5] border-[#E8D7C9] hover:border-slate-400"
-                              : "bg-white/5 border-white/10 hover:border-white/30"
-                        }`}
-                      >
-                        {em}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                      isLight ? "text-[#77736B] hover:bg-[#F0EEE8]" : "text-slate-400 hover:bg-white/5"
-                    }`}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-[#C96F55] text-white hover:bg-[#B85F48] transition cursor-pointer shadow-xs"
-                  >
-                    Create Habit
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* CLEAR DATA CONFIRMATION MODAL */}
-      <AnimatePresence>
-        {showClearConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className={`w-full max-w-sm rounded-2xl border p-6 shadow-2xl ${
-                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0E1322] border-white/15 text-white"
-              }`}
-            >
-              <div className="w-10 h-10 rounded-xl bg-red-500/15 text-red-500 flex items-center justify-center mb-3">
-                <AlertCircle size={20} />
-              </div>
-              <h3 className="text-base font-bold mb-1">Clear Current Progress?</h3>
-              <p className={`text-xs mb-4 ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                This will reset all completed checks for the visible {rangeDays}-day challenge period. Your configured habits will be kept.
-              </p>
-              <div className="flex items-center justify-end gap-2">
-                <button
-                  onClick={() => setShowClearConfirm(false)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                    isLight ? "text-[#77736B] hover:bg-[#F0EEE8]" : "text-slate-400 hover:bg-white/5"
+                {/* MOOD RATING ROW (1-10) */}
+                <tr
+                  className={`border-b text-xs ${
+                    isLight ? "bg-[#F6F7FA]/60 border-[#E2E6EF]" : "bg-[#10131A]/40 border-[#283040]"
                   }`}
                 >
-                  Keep Data
+                  <th
+                    scope="row"
+                    className={`sticky left-0 z-10 px-4 py-2.5 border-r font-semibold ${
+                      isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Smile size={14} className="text-amber-500" />
+                        <span>Mood (1–10)</span>
+                      </span>
+                      <span className={`text-[10px] font-normal ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                        Click cell
+                      </span>
+                    </div>
+                  </th>
+                  {daysList.map((d) => {
+                    const moodVal = habitLogs[d.dateStr]?.mood;
+                    return (
+                      <td
+                        key={d.dateStr}
+                        className={`p-1 text-center border-r ${
+                          isLight ? "border-[#E2E6EF]" : "border-[#283040]"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setRatingModal({
+                              type: "mood",
+                              dateStr: d.dateStr,
+                              dayLabel: `${d.dayOfWeek}, ${d.monthShort} ${d.dayNum}`
+                            })
+                          }
+                          aria-label={`Mood rating for ${d.monthShort} ${d.dayNum}: ${
+                            moodVal !== undefined ? `${moodVal} out of 10` : "Not rated"
+                          }`}
+                          className={`w-8 h-7 rounded-md mx-auto font-mono text-xs font-bold flex items-center justify-center transition-colors cursor-pointer ${
+                            moodVal !== undefined
+                              ? isLight
+                                ? "bg-amber-100 text-amber-900 border border-amber-300"
+                                : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                              : isLight
+                              ? "text-[#768295] hover:bg-[#E8ECF4]"
+                              : "text-[#8592A6] hover:bg-[#222938]"
+                          }`}
+                        >
+                          {moodVal !== undefined ? moodVal : "–"}
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+
+                {/* SLEEP QUALITY ROW (1-10) */}
+                <tr
+                  className={`text-xs ${
+                    isLight ? "bg-[#F6F7FA]/60 border-[#E2E6EF]" : "bg-[#10131A]/40 border-[#283040]"
+                  }`}
+                >
+                  <th
+                    scope="row"
+                    className={`sticky left-0 z-10 px-4 py-2.5 border-r font-semibold ${
+                      isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Moon size={14} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+                        <span>Sleep (1–10)</span>
+                      </span>
+                      <span className={`text-[10px] font-normal ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                        Click cell
+                      </span>
+                    </div>
+                  </th>
+                  {daysList.map((d) => {
+                    const sleepVal = habitLogs[d.dateStr]?.sleep;
+                    return (
+                      <td
+                        key={d.dateStr}
+                        className={`p-1 text-center border-r ${
+                          isLight ? "border-[#E2E6EF]" : "border-[#283040]"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setRatingModal({
+                              type: "sleep",
+                              dateStr: d.dateStr,
+                              dayLabel: `${d.dayOfWeek}, ${d.monthShort} ${d.dayNum}`
+                            })
+                          }
+                          aria-label={`Sleep rating for ${d.monthShort} ${d.dayNum}: ${
+                            sleepVal !== undefined ? `${sleepVal} out of 10` : "Not rated"
+                          }`}
+                          className={`w-8 h-7 rounded-md mx-auto font-mono text-xs font-bold flex items-center justify-center transition-colors cursor-pointer ${
+                            sleepVal !== undefined
+                              ? isLight
+                                ? "bg-[#F0EEFF] text-[#5F55C8] border border-[#D8D3F8]"
+                                : "bg-[#6D5DF6]/25 text-[#A99BFF] border border-[#6D5DF6]/40"
+                              : isLight
+                              ? "text-[#768295] hover:bg-[#E8ECF4]"
+                              : "text-[#8592A6] hover:bg-[#222938]"
+                          }`}
+                        >
+                          {sleepVal !== undefined ? sleepVal : "–"}
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: ACCESSIBLE MOOD & SLEEP RATING SELECTOR (1–10 Scale Explained)
+      ========================================================================= */}
+      {ratingModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rating-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+        >
+          <div
+            className={`w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-xl ${
+              isLight
+                ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#191E28] border-[#364054] text-[#F1F3F8]"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 id="rating-modal-title" className="text-base font-bold">
+                  {ratingModal.type === "mood" ? "Rate Daily Mood" : "Rate Sleep Quality"} — {ratingModal.dayLabel}
+                </h3>
+                <p className={`text-xs mt-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                  {ratingModal.type === "mood"
+                    ? "Scale: 1 = Very low energy/stressed · 10 = Focused & positive"
+                    : "Scale: 1 = Very poor rest · 10 = Fully rested (8+ hours)"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRatingModal(null)}
+                aria-label="Close rating dialog"
+                className="p-1.5 rounded-lg border border-inherit cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-5 gap-2 pt-1">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((val) => {
+                const currentVal = habitLogs[ratingModal.dateStr]?.[ratingModal.type];
+                const isSelected = currentVal === val;
+                return (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => handleSetRating(ratingModal.type, ratingModal.dateStr, val)}
+                    aria-pressed={isSelected}
+                    className={`py-2.5 rounded-xl font-mono text-sm font-bold border transition-colors cursor-pointer ${
+                      isSelected
+                        ? isLight
+                          ? "bg-[#5F55C8] border-[#5F55C8] text-white"
+                          : "bg-[#6D5DF6] border-[#6D5DF6] text-white"
+                        : isLight
+                        ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#CBD2E0] text-[#18202B]"
+                        : "bg-[#222938] hover:bg-[#2A3244] border-[#364054] text-[#F1F3F8]"
+                    }`}
+                  >
+                    {val}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-inherit">
+              <button
+                type="button"
+                onClick={() => handleSetRating(ratingModal.type, ratingModal.dateStr, undefined)}
+                className={`text-xs font-medium cursor-pointer ${
+                  isLight ? "text-[#BE123C] hover:underline" : "text-[#FB7185] hover:underline"
+                }`}
+              >
+                Clear rating
+              </button>
+              <button
+                type="button"
+                onClick={() => setRatingModal(null)}
+                className={`px-4 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer ${
+                  isLight ? "border-[#CBD2E0] text-[#596474]" : "border-[#364054] text-[#B7C0CF]"
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: ADD NEW HABIT
+      ========================================================================= */}
+      {showAddModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-habit-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+        >
+          <div
+            className={`w-full max-w-md rounded-2xl border p-6 space-y-5 shadow-xl ${
+              isLight
+                ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#191E28] border-[#364054] text-[#F1F3F8]"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <h3 id="add-habit-modal-title" className="text-lg font-bold">
+                Add Daily Habit
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                aria-label="Close modal"
+                className="p-1.5 rounded-lg border border-inherit cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddHabit} className="space-y-4">
+              <div>
+                <label htmlFor="new-habit-name" className="text-xs font-semibold block mb-1.5">
+                  Habit Name *
+                </label>
+                <input
+                  id="new-habit-name"
+                  type="text"
+                  required
+                  value={newHabitName}
+                  onChange={(e) => setNewHabitName(e.target.value)}
+                  placeholder="e.g., Solve 1 Past Paper"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none ${
+                    isLight
+                      ? "bg-[#F6F7FA] border-[#CBD2E0] text-[#18202B] focus:bg-[#FFFFFF] focus:border-[#5F55C8]"
+                      : "bg-[#10131A] border-[#364054] text-[#F1F3F8] focus:border-[#A99BFF]"
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold block mb-1.5">Icon</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {emojiOptions.map((em) => (
+                    <button
+                      key={em}
+                      type="button"
+                      onClick={() => setNewHabitEmoji(em)}
+                      aria-pressed={newHabitEmoji === em}
+                      className={`w-9 h-9 rounded-lg border flex items-center justify-center text-base cursor-pointer ${
+                        newHabitEmoji === em
+                          ? isLight
+                            ? "bg-[#F0EEFF] border-[#5F55C8]"
+                            : "bg-[#6D5DF6]/25 border-[#A99BFF]"
+                          : isLight
+                          ? "bg-[#F6F7FA] border-[#E2E6EF]"
+                          : "bg-[#222938] border-[#364054]"
+                      }`}
+                    >
+                      {em}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold block mb-1.5">Checkmark Color</label>
+                <div className="flex flex-wrap gap-2">
+                  {colorOptions.map((c) => (
+                    <button
+                      key={c.hex}
+                      type="button"
+                      onClick={() => setNewHabitColor(c.hex)}
+                      aria-pressed={newHabitColor === c.hex}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 cursor-pointer ${
+                        newHabitColor === c.hex
+                          ? isLight
+                            ? "bg-[#18202B] text-white border-[#18202B]"
+                            : "bg-[#F1F3F8] text-[#10131A] border-[#F1F3F8]"
+                          : isLight
+                          ? "bg-[#F6F7FA] border-[#CBD2E0]"
+                          : "bg-[#222938] border-[#364054]"
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.hex }} />
+                      <span>{c.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 rounded-xl border border-inherit text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
                 </button>
                 <button
-                  onClick={handleClearData}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-red-600 text-white hover:bg-red-700 transition cursor-pointer shadow-xs"
+                  type="submit"
+                  className={`px-5 py-2 rounded-xl text-xs font-semibold text-white cursor-pointer ${
+                    isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
+                  }`}
                 >
-                  Yes, Clear Checks
+                  Save Habit
                 </button>
               </div>
-            </motion.div>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
+      {/* =========================================================================
+          MODAL: CONFIRM DELETE HABIT
+      ========================================================================= */}
+      {habitPendingDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-habit-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+        >
+          <div
+            className={`w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-xl ${
+              isLight
+                ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#191E28] border-[#364054] text-[#F1F3F8]"
+            }`}
+          >
+            <h3 id="delete-habit-title" className="text-base font-bold">
+              Delete &ldquo;{habitPendingDelete.name}&rdquo;?
+            </h3>
+            <p className={`text-xs leading-relaxed ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              This habit row will be removed from your tracker. You can click Undo right after deleting if you change your mind.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setHabitPendingDelete(null)}
+                className="px-4 py-2 rounded-xl border border-inherit text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteHabit}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
+              >
+                Delete Habit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: CONFIRM CLEAR PERIOD CHECKS
+      ========================================================================= */}
+      {showClearConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="clear-period-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+        >
+          <div
+            className={`w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-xl ${
+              isLight
+                ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#191E28] border-[#364054] text-[#F1F3F8]"
+            }`}
+          >
+            <h3 id="clear-period-title" className="text-base font-bold">
+              Clear checkmarks for this {rangeDays}-day period?
+            </h3>
+            <p className={`text-xs leading-relaxed ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              Your habit list will stay intact, and all checkmarks in the visible {rangeDays}-day window will be reset. You can undo this immediately after clearing.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClearConfirm(false)}
+                className="px-4 py-2 rounded-xl border border-inherit text-xs font-semibold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearData}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
+              >
+                Clear Checkmarks
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

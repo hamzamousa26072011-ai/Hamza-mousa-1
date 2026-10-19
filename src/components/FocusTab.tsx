@@ -1,18 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "motion/react";
 import { 
   Play, 
   Pause, 
   RotateCcw, 
-  Sparkles, 
-  Award, 
-  Lock, 
-  Unlock, 
-  Minus, 
-  Plus, 
   CheckCircle2, 
-  Flame, 
   Volume2, 
   VolumeX, 
   Headphones,
@@ -22,7 +14,6 @@ import {
   Sun,
   Timer,
   Clock,
-  BookOpen,
   Edit3
 } from "lucide-react";
 import {
@@ -30,9 +21,7 @@ import {
   setSoundscape,
   setSoundscapeVolume,
   stopAllSoundscapes,
-  pauseSoundscape,
-  resumeSoundscape,
-  getCurrentSoundscape
+  pauseSoundscape
 } from "../lib/ambientSoundscapes";
 import { FlipClockTimer } from "./FlipClockTimer";
 
@@ -69,15 +58,8 @@ export default function FocusTab({
   themeMode = "dark",
   onFullScreenChange
 }: FocusTabProps) {
-
   const isLight = themeMode === "light";
 
-  // Determine current active mode based on focusMinutesSelected:
-  // P2: exactly 45 min
-  // P4: 1 hour 15 min = 75 min
-  // P6: 1 hour = 60 min
-  // Math: 2 hours = 120 min
-  // Otherwise: custom
   const determineMode = (mins: number): TimerModeType => {
     if (mins === 45) return "p2";
     if (mins === 75) return "p4";
@@ -90,20 +72,16 @@ export default function FocusTab({
   const [isLocked, setIsLocked] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Custom Time Input State (Hours & Minutes)
   const [customHours, setCustomHours] = useState<number>(() => Math.floor(focusMinutesSelected / 60));
   const [customMinutes, setCustomMinutes] = useState<number>(() => focusMinutesSelected % 60);
-  const [isCustomEditing, setIsCustomEditing] = useState(false);
 
-  // Synchronize custom inputs whenever focusMinutesSelected changes externally
   useEffect(() => {
     setActiveMode(determineMode(focusMinutesSelected));
     setCustomHours(Math.floor(focusMinutesSelected / 60));
     setCustomMinutes(focusMinutesSelected % 60);
   }, [focusMinutesSelected]);
 
-  // Ambient Soundscapes State - Default is "silent" (Quiet)
-  // Only 2 sounds exist: "silent" (mute) and "white_noise" (gentle rain)
+  // Ambient Soundscapes State
   const [selectedSoundscape, setSelectedSoundscape] = useState<SoundscapeType>(() => {
     const saved = localStorage.getItem("ENGEZ_SELECTED_SOUNDSCAPE");
     if (saved === "white_noise" || saved === "silent") {
@@ -122,11 +100,9 @@ export default function FocusTab({
     return saved !== null ? saved === "true" : false;
   });
 
-  // Custom accomplishment modal (silent visual celebration upon timer zero)
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [prevFocusActive, setPrevFocusActive] = useState(focusModeActive);
 
-  // Save ambient sound preferences
   useEffect(() => {
     localStorage.setItem("ENGEZ_SELECTED_SOUNDSCAPE", selectedSoundscape);
   }, [selectedSoundscape]);
@@ -139,7 +115,6 @@ export default function FocusTab({
     localStorage.setItem("ENGEZ_AUTO_SOUND_STUDY", autoSoundOnStudy.toString());
   }, [autoSoundOnStudy]);
 
-  // Handle ambient sound lifecycle: pause sound when timer is paused, resume when active
   useEffect(() => {
     if (selectedSoundscape === "silent") {
       stopAllSoundscapes();
@@ -153,19 +128,16 @@ export default function FocusTab({
     }
   }, [focusModeActive, isPaused, selectedSoundscape]);
 
-  // Keep volume synchronized smoothly with zero playback disruption
   useEffect(() => {
     setSoundscapeVolume(soundVolume);
   }, [soundVolume]);
 
-  // Stop sounds on unmount
   useEffect(() => {
     return () => {
       stopAllSoundscapes();
     };
   }, []);
 
-  // Handle user selecting a soundscape
   const handleSelectSoundscape = (type: SoundscapeType) => {
     if (type === "silent") {
       setSelectedSoundscape("silent");
@@ -174,7 +146,6 @@ export default function FocusTab({
     }
 
     if (selectedSoundscape === type && !isPaused) {
-      // Toggle to silent if clicking active
       setSelectedSoundscape("silent");
       stopAllSoundscapes();
     } else {
@@ -187,7 +158,6 @@ export default function FocusTab({
     }
   };
 
-  // Quick toggle in fullscreen
   const handleQuickToggleSound = () => {
     if (selectedSoundscape !== "silent") {
       setSelectedSoundscape("silent");
@@ -202,7 +172,6 @@ export default function FocusTab({
     }
   };
 
-  // Full Screen Mode Handlers
   const handleEnterFullscreen = async () => {
     setIsFullScreen(true);
     onFullScreenChange?.(true);
@@ -217,6 +186,7 @@ export default function FocusTab({
 
   const handleExitFullscreen = () => {
     setIsFullScreen(false);
+    setIsLocked(false);
     onFullScreenChange?.(false);
     try {
       if (document.fullscreenElement && document.exitFullscreen) {
@@ -227,7 +197,6 @@ export default function FocusTab({
     }
   };
 
-  // Synchronize state with native browser fullscreen changes (e.g. user pressed Esc)
   useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement && isFullScreen) {
@@ -239,7 +208,6 @@ export default function FocusTab({
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, [isFullScreen, onFullScreenChange]);
 
-  // Lock background body scrolling & notify parent when fullscreen or locked focus mode is active
   useEffect(() => {
     if (isFullScreen || isLocked) {
       onFullScreenChange?.(true);
@@ -253,7 +221,6 @@ export default function FocusTab({
     };
   }, [isFullScreen, isLocked, onFullScreenChange]);
 
-  // Keyboard shortcut listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
@@ -261,8 +228,12 @@ export default function FocusTab({
         return;
       }
 
-      if (e.key === "Escape" && (isFullScreen || isLocked)) {
-        handleExitFullscreen();
+      if (e.key === "Escape") {
+        if (showCompletionModal) {
+          setShowCompletionModal(false);
+        } else if (isFullScreen || isLocked) {
+          handleExitFullscreen();
+        }
       } else if (e.key === "f" || e.key === "F") {
         if (isFullScreen || isLocked) {
           handleExitFullscreen();
@@ -285,9 +256,8 @@ export default function FocusTab({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullScreen, isLocked, focusModeActive, onPauseFocus, onStopFocus, onStartFocus, selectedSoundscape, soundVolume]);
+  }, [isFullScreen, isLocked, focusModeActive, showCompletionModal, onPauseFocus, onStopFocus, onStartFocus, selectedSoundscape, soundVolume]);
 
-  // Listen for timer completion
   useEffect(() => {
     if (prevFocusActive && !focusModeActive && !isPaused) {
       setShowCompletionModal(true);
@@ -295,7 +265,6 @@ export default function FocusTab({
     setPrevFocusActive(focusModeActive);
   }, [focusModeActive, isPaused]);
 
-  // Handle switching to one of the 3 exam modes or custom
   const handleSelectMode = (mode: TimerModeType) => {
     if (focusModeActive) {
       onPauseFocus ? onPauseFocus() : onStopFocus();
@@ -303,48 +272,34 @@ export default function FocusTab({
     setActiveMode(mode);
 
     if (mode === "p2") {
-      // P2: exactly 45 min
       onDurationChange(45);
       setCustomHours(0);
       setCustomMinutes(45);
-      setIsCustomEditing(false);
     } else if (mode === "p4") {
-      // P4: 1 hour and 15 min = 75 min
       onDurationChange(75);
       setCustomHours(1);
       setCustomMinutes(15);
-      setIsCustomEditing(false);
     } else if (mode === "p6") {
-      // P6: exactly 1 hour = 60 min
       onDurationChange(60);
       setCustomHours(1);
       setCustomMinutes(0);
-      setIsCustomEditing(false);
     } else if (mode === "math") {
-      // Math: exactly 2 hours = 120 min
       onDurationChange(120);
       setCustomHours(2);
       setCustomMinutes(0);
-      setIsCustomEditing(false);
-    } else if (mode === "custom") {
-      setIsCustomEditing(true);
     }
     onResetFocus?.();
   };
 
-  // Apply custom typed hours and minutes
   const handleApplyCustomTime = (h: number, m: number) => {
     const validH = Math.max(0, Math.min(23, isNaN(h) ? 0 : h));
     const validM = Math.max(0, Math.min(59, isNaN(m) ? 0 : m));
-    const totalMins = validH * 60 + validM;
-    
-    // Minimum 1 minute
-    const finalMins = Math.max(1, totalMins);
-    
+    const finalMins = Math.max(1, validH * 60 + validM);
+
     if (focusModeActive) {
       onPauseFocus ? onPauseFocus() : onStopFocus();
     }
-    
+
     setCustomHours(Math.floor(finalMins / 60));
     setCustomMinutes(finalMins % 60);
     onDurationChange(finalMins);
@@ -352,7 +307,6 @@ export default function FocusTab({
     onResetFocus?.();
   };
 
-  // Parse remaining seconds safely for visual progress bar
   let remainingSeconds = 0;
   try {
     const parts = focusTimeRemaining.split(":");
@@ -361,848 +315,528 @@ export default function FocusTab({
     } else if (parts.length === 2) {
       remainingSeconds = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
     }
-  } catch (e) {
+  } catch {
     remainingSeconds = focusMinutesSelected * 60;
   }
-  
+
   const totalSeconds = focusMinutesSelected * 60;
   const progressRatio = totalSeconds > 0 ? Math.max(0, Math.min(1, remainingSeconds / totalSeconds)) : 1;
 
-  // Format mode display label
   const getModeLabel = () => {
-    if (activeMode === "p2") return "P2 (45 min)";
-    if (activeMode === "p4") return "P4 (1h 15m)";
-    if (activeMode === "p6") return "P6 (1 hour)";
-    if (activeMode === "math") return "Math (2 hours)";
+    if (activeMode === "p2") return "Paper 2 (45 min)";
+    if (activeMode === "p4") return "Paper 4 (1h 15m)";
+    if (activeMode === "p6") return "Paper 6 (1 hour)";
+    if (activeMode === "math") return "Mathematics (2 hours)";
     return `Custom (${focusMinutesSelected}m)`;
   };
 
   return (
     <>
-      {/* =========================================================================
-          FULL SCREEN IMMERSIVE TIMER OVERLAY
-          ========================================================================= */}
+      {/* FULL SCREEN FOCUS OVERLAY */}
       {typeof document !== "undefined" &&
         createPortal(
           (isFullScreen || isLocked) && (
             <div
-              className={`fixed inset-0 z-9999 flex flex-col justify-between p-4 sm:p-6 md:p-8 select-none transition-colors duration-500 overflow-y-auto ${
-                isLight ? "bg-[#F7F5F0] text-[#1D1D1B]" : "bg-[#05070D] text-white"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Full screen focus timer"
+              className={`fixed inset-0 z-9999 flex flex-col justify-between p-4 sm:p-6 md:p-8 select-none overflow-y-auto ${
+                isLight ? "bg-[#F6F7FA] text-[#18202B]" : "bg-[#10131A] text-[#F1F3F8]"
               }`}
             >
               {/* Fullscreen Header */}
               <div className="w-full flex items-center justify-between gap-3">
-                {/* Left: Mode Title */}
                 <div className="flex items-center gap-2.5">
-                  <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#C96F55]" : "bg-indigo-500"} animate-pulse`} />
-                  <span className={`text-xs font-mono font-bold uppercase tracking-wider ${isLight ? "text-[#C96F55]" : "text-indigo-400"}`}>
-                    {getModeLabel()}
-                  </span>
-
-                  {/* Mobile-only exit button */}
-                  <button
-                    onClick={handleExitFullscreen}
-                    className={`sm:hidden p-2 ${
-                      isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
-                    } border rounded-xl transition cursor-pointer`}
-                    title="Exit Full Screen (Esc)"
-                  >
-                    <Minimize2 size={16} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
-                  </button>
+                  <Timer size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+                  <span className="text-xs sm:text-sm font-semibold">{getModeLabel()}</span>
                 </div>
 
-                {/* Center: Mode Switcher Pills in Full Screen */}
-                <div className={`hidden md:flex items-center border ${
-                  isLight ? "border-[#E8D7C9] bg-[#F0EEE8]" : "border-white/10 bg-[#0C101E]"
-                } p-1 rounded-2xl gap-1`}>
-                  <button
-                    onClick={() => handleSelectMode("p2")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer ${
-                      activeMode === "p2"
-                        ? isLight ? "bg-[#C96F55] text-white shadow-xs font-extrabold" : "bg-indigo-600 text-white shadow-md font-extrabold"
-                        : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    P2 · 45m
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectMode("p4")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer ${
-                      activeMode === "p4"
-                        ? isLight ? "bg-[#C96F55] text-white shadow-xs font-extrabold" : "bg-indigo-600 text-white shadow-md font-extrabold"
-                        : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    P4 · 1h 15m
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectMode("p6")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer ${
-                      activeMode === "p6"
-                        ? isLight ? "bg-[#C96F55] text-white shadow-xs font-extrabold" : "bg-indigo-600 text-white shadow-md font-extrabold"
-                        : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    P6 · 1h
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectMode("math")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer ${
-                      activeMode === "math"
-                        ? isLight ? "bg-[#C96F55] text-white shadow-xs font-extrabold" : "bg-indigo-600 text-white shadow-md font-extrabold"
-                        : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    Math · 2h
-                  </button>
-
-                  <button
-                    onClick={() => handleSelectMode("custom")}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition cursor-pointer ${
-                      activeMode === "custom"
-                        ? isLight ? "bg-[#C96F55] text-white shadow-xs font-extrabold" : "bg-indigo-600 text-white shadow-md font-extrabold"
-                        : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    Custom
-                  </button>
+                {/* Preset Switcher in Full Screen */}
+                <div
+                  className={`hidden md:flex items-center border p-1 rounded-xl gap-1 ${
+                    isLight ? "border-[#E2E6EF] bg-[#FFFFFF]" : "border-[#283040] bg-[#191E28]"
+                  }`}
+                >
+                  {(
+                    [
+                      { id: "p2", label: "P2 · 45m" },
+                      { id: "p6", label: "P6 · 1h" },
+                      { id: "p4", label: "P4 · 1h 15m" },
+                      { id: "math", label: "Math · 2h" },
+                      { id: "custom", label: "Custom" }
+                    ] as const
+                  ).map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => handleSelectMode(m.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                        activeMode === m.id
+                          ? isLight
+                            ? "bg-[#5F55C8] text-white"
+                            : "bg-[#6D5DF6] text-white"
+                          : isLight
+                          ? "text-[#596474] hover:text-[#18202B]"
+                          : "text-[#B7C0CF] hover:text-[#F1F3F8]"
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Right: Sound Quick Toggle & Exit Button */}
-                <div className="hidden sm:flex items-center gap-2.5">
+                {/* Sound & Exit */}
+                <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={handleQuickToggleSound}
-                    className={`py-2 px-3 ${
-                      isLight 
-                        ? selectedSoundscape !== "silent" ? "bg-[#FFF1EC] border-[#C96F55] text-[#C96F55]" : "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" 
-                        : selectedSoundscape !== "silent" ? "bg-indigo-600 hover:bg-indigo-500 border-indigo-600 text-white shadow-md shadow-indigo-600/20" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-300"
-                    } border rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer`}
-                    title={selectedSoundscape !== "silent" ? "Sound: White Noise (Main Rain Loop 7:48m)" : "Quiet (Click to play White Noise)"}
+                    className={`py-2 px-3 border rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer ${
+                      selectedSoundscape !== "silent"
+                        ? isLight
+                          ? "bg-[#F0EEFF] border-[#D8D3F8] text-[#5F55C8]"
+                          : "bg-[#6D5DF6]/20 border-[#6D5DF6]/40 text-[#A99BFF]"
+                        : isLight
+                        ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#596474]"
+                        : "bg-[#191E28] border-[#283040] text-[#B7C0CF]"
+                    }`}
                   >
-                    {selectedSoundscape === "silent" ? (
-                      <VolumeX size={13} className={isLight ? "text-[#77736B]" : "text-slate-400"} />
-                    ) : (
-                      <Volume2 size={13} className={isLight ? "text-[#C96F55] animate-pulse" : "text-white animate-pulse"} />
-                    )}
-                    <span className="text-[11px]">
-                      {selectedSoundscape === "silent" ? "Quiet" : "White Noise"}
-                    </span>
+                    {selectedSoundscape === "silent" ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                    <span>{selectedSoundscape === "silent" ? "Quiet" : "Gentle Rain"}</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleExitFullscreen}
-                    className={`py-2 px-3.5 ${
-                      isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 hover:bg-white/10 border-white/10 text-slate-200"
-                    } border rounded-xl text-xs font-mono font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
-                    title="Exit Full Screen (Esc)"
+                    className={`py-2 px-3.5 border rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer ${
+                      isLight
+                        ? "bg-[#FFFFFF] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
+                        : "bg-[#191E28] hover:bg-[#222938] border-[#283040] text-[#F1F3F8]"
+                    }`}
                   >
-                    <Minimize2 size={14} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
+                    <Minimize2 size={14} />
                     <span>Exit Full Screen</span>
-                    <kbd className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${isLight ? "bg-[#F0EEE8] text-[#77736B]" : "bg-white/10 text-slate-300"}`}>
-                      Esc
-                    </kbd>
                   </button>
                 </div>
               </div>
 
-              {/* Central Chrono Display */}
-              <div className="my-auto py-6 flex flex-col items-center justify-center">
-                <div className="transform scale-110 sm:scale-125 md:scale-135 lg:scale-150 transition-transform">
-                  <FlipClockTimer 
-                    timeRemaining={focusTimeRemaining} 
-                    size="xl" 
-                    themeMode={themeMode} 
-                    isPaused={isPaused} 
-                  />
-                </div>
+              {/* Central Timer Readout */}
+              <div className="my-auto py-8 flex flex-col items-center justify-center">
+                <FlipClockTimer
+                  timeRemaining={focusTimeRemaining}
+                  size="xl"
+                  themeMode={themeMode}
+                  isPaused={isPaused}
+                  showLabels
+                />
 
-                {/* Linear progress bar */}
                 {focusModeActive && (
-                  <div className="w-64 sm:w-80 md:w-96 lg:w-[32rem] h-2 bg-black/10 dark:bg-white/10 rounded-full mt-6 sm:mt-8 overflow-hidden">
-                    <div 
+                  <div className="w-64 sm:w-80 md:w-96 h-2 bg-black/10 dark:bg-white/10 rounded-full mt-8 overflow-hidden">
+                    <div
                       className={`h-full rounded-full transition-all duration-300 ${
-                        isLight ? "bg-[#C96F55]" : "bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]"
+                        isLight ? "bg-[#5F55C8]" : "bg-[#6D5DF6]"
                       }`}
                       style={{ width: `${Math.round((1 - progressRatio) * 100)}%` }}
                     />
                   </div>
                 )}
-                
-                {isPaused && (
-                  <span className="text-[10px] sm:text-xs font-mono font-extrabold uppercase tracking-widest text-[#B85C5C] bg-[#FFF1EC] border border-[#E8D7C9] px-3.5 py-1 rounded-full mt-5 animate-pulse">
-                    ⏸ PAUSED
-                  </span>
-                )}
 
-                {!isPaused && (
-                  <div className="flex flex-col sm:flex-row items-center gap-2 mt-5">
-                    <span className={`text-[10px] sm:text-xs font-mono tracking-widest ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase font-black`}>
-                      {focusModeActive ? `ACTIVE COUNTDOWN • ${getModeLabel()}` : "READY TO LAUNCH"}
-                    </span>
-                    {focusModeActive && (
-                      <span className={`text-[9px] font-mono uppercase font-bold flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${
-                        isLight ? "bg-black/5 text-[#77736B]" : "bg-white/10 text-slate-300"
-                      }`} title="Screen timeout prevented while timer is on">
-                        <Sun size={10} className="text-amber-400" />
-                        <span>Screen Kept On</span>
-                      </span>
-                    )}
-                  </div>
-                )}
+                <p className={`text-xs font-medium mt-4 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                  {isPaused
+                    ? "Session paused — press Space or Resume to continue"
+                    : focusModeActive
+                    ? `Active study block · ${getModeLabel()}`
+                    : `Ready · ${getModeLabel()}`}
+                </p>
               </div>
 
-              {/* Fullscreen Action Controls */}
+              {/* Bottom Controls */}
               <div className="w-full flex flex-col items-center gap-3">
                 <div className="flex items-center gap-3">
                   {focusModeActive ? (
                     <button
+                      type="button"
                       onClick={() => {
                         pauseSoundscape();
                         onPauseFocus ? onPauseFocus() : onStopFocus();
                       }}
-                      className={`py-3 px-8 ${
-                        isLight ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]" : "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                      } border rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-md`}
+                      className={`py-3 px-8 border rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer ${
+                        isLight
+                          ? "bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]"
+                          : "bg-[#F59E0B]/15 border-[#FBBF24]/30 text-[#FBBF24]"
+                      }`}
                     >
-                      <Pause size={14} fill="currentColor" />
+                      <Pause size={15} fill="currentColor" />
                       <span>Pause Session</span>
-                      <kbd className="text-[9px] px-1.5 py-0.5 rounded bg-black/20 text-white font-mono">Space</kbd>
                     </button>
                   ) : (
                     <button
+                      type="button"
                       onClick={() => {
                         if (selectedSoundscape !== "silent") {
                           setSoundscape(selectedSoundscape, soundVolume);
                         }
                         onStartFocus();
                       }}
-                      className={`py-3 px-8 ${
-                        isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30"
-                      } text-white rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-lg`}
+                      className={`py-3 px-8 rounded-xl text-xs font-semibold text-white flex items-center gap-2 cursor-pointer ${
+                        isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
+                      }`}
                     >
-                      <Play size={14} fill="currentColor" />
+                      <Play size={15} fill="currentColor" />
                       <span>{isPaused ? "Resume Session" : "Start Session"}</span>
-                      <kbd className="text-[9px] px-1.5 py-0.5 rounded bg-black/20 text-white font-mono">Space</kbd>
                     </button>
                   )}
 
                   <button
+                    type="button"
                     onClick={() => {
                       pauseSoundscape();
                       onResetFocus ? onResetFocus() : onStopFocus();
                       onDurationChange(focusMinutesSelected);
                     }}
-                    className={`py-3 px-5 ${
-                      isLight ? "bg-[#FFFFFF] hover:bg-[#F0EEE8] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/10 hover:bg-white/15 border-white/10 text-slate-300"
-                    } border rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
-                    title="Reset to full interval"
+                    className={`py-3 px-5 border rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer ${
+                      isLight
+                        ? "bg-[#FFFFFF] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
+                        : "bg-[#191E28] hover:bg-[#222938] border-[#283040] text-[#F1F3F8]"
+                    }`}
                   >
-                    <RotateCcw size={13} className={isLight ? "text-[#77736B]" : "text-slate-400"} />
+                    <RotateCcw size={14} />
                     <span>Reset</span>
                   </button>
                 </div>
 
-                {/* Keyboard hints */}
-                <div className={`hidden sm:flex items-center gap-4 text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-500"}`}>
-                  <span><kbd className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/5 font-mono">Space</kbd> Start/Pause</span>
-                  <span><kbd className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/5 font-mono">Esc</kbd> Exit Full Screen</span>
-                </div>
+                <p className={`text-[11px] font-mono ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                  Keyboard: Space to Play/Pause · Esc to Exit Full Screen
+                </p>
               </div>
             </div>
           ),
           document.body
         )}
 
-      {/* =========================================================================
-          MAIN PAGE VIEW
-          ========================================================================= */}
-      <div className="space-y-6">
-        {/* Top Header Bar */}
-        <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b ${
-          isLight ? "border-[#E8D7C9]" : "border-white/10"
-        } pb-6`}>
+      {/* MAIN TIMER PAGE */}
+      <div className={`space-y-6 ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-inherit">
           <div>
-            <div className="flex items-center gap-2">
-              <span className={`text-[9px] font-mono uppercase tracking-widest ${
-                isLight ? "bg-[#FFF1EC] border border-[#E8D7C9] text-[#C96F55]" : "bg-indigo-950/60 border border-indigo-900/50 text-indigo-400"
-              } font-bold px-2 py-0.5 rounded-full flex items-center gap-1`}>
-                <Timer size={10} />
-                <span>EXAM & STUDY TIMER</span>
-              </span>
-              <span className={`text-[9px] font-mono ${
-                isLight ? "bg-[#EAF3EC] border border-[#CDE3D2] text-[#66856D]" : "bg-emerald-950/40 border border-emerald-900/40 text-emerald-400"
-              } font-bold px-2 py-0.5 rounded-full flex items-center gap-1`}>
-                <span>🍅</span>
-                <span>{pomodoroCount} sessions completed</span>
-              </span>
-            </div>
-            <h1 className={`text-2xl md:text-3xl font-black ${isLight ? "text-[#1D1D1B]" : "text-white"} mt-2`}>Timer</h1>
-            <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} max-w-xl mt-0.5`}>
-              Exam countdown for Paper 2 (45m), Paper 4 (1h 15m), Paper 6 (1h), Math (2h), or type any custom study time.
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Focus &amp; Exam Timer</h1>
+            <p className={`text-xs sm:text-sm mt-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              Practice under real exam paper durations or set a custom focus block. ({pomodoroCount} sessions completed)
             </p>
           </div>
 
-          {/* Full Screen Mode Trigger */}
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={handleEnterFullscreen}
-              className={`py-2.5 px-4 ${
-                isLight
-                  ? "bg-[#C96F55] hover:bg-[#B85E45] shadow-md shadow-[#C96F55]/25"
-                  : "bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/30"
-              } text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wide transition flex items-center gap-2 cursor-pointer select-none`}
-              title="Enter distraction-free Full Screen Focus Mode (F)"
-            >
-              <Maximize2 size={13} />
-              <span>Full Screen Mode</span>
-              <kbd className="hidden sm:inline text-[9px] px-1.5 py-0.5 rounded bg-black/20 text-white font-mono">F</kbd>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleEnterFullscreen}
+            className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-2 cursor-pointer ${
+              isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
+            }`}
+          >
+            <Maximize2 size={14} />
+            <span>Full Screen Mode</span>
+          </button>
         </div>
 
-        {/* Central Master Module */}
-        <div className={`p-4 sm:p-6 md:p-8 rounded-3xl border ${
-          isLight ? "bg-[#FFFFFF] border-[#E8D7C9] shadow-sm" : "bg-[#090C16] border-white/10 shadow-xl"
-        } relative overflow-hidden transition-all duration-300`}>
-
-          {/* Module Header with Quick Full Screen button */}
-          <div className="flex items-center justify-between border-b pb-4 mb-4 select-none border-inherit">
-            <div className="flex items-center gap-2.5">
-              <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#C96F55]" : "bg-indigo-500"} ${focusModeActive ? "animate-ping" : ""}`} />
-              <span className={`text-xs font-mono font-bold uppercase tracking-wider ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>
-                {getModeLabel()}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleEnterFullscreen}
-                className={`py-1.5 px-3 rounded-lg border text-[10px] font-mono font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
-                  isLight
-                    ? "bg-[#C96F55] hover:bg-[#B85E45] border-[#C96F55] text-white"
-                    : "bg-indigo-600 hover:bg-indigo-500 border-indigo-600 text-white"
-                }`}
-                title="Enter Full Screen Focus View (F)"
-              >
-                <Maximize2 size={11} className="text-white" />
-                <span>Full Screen</span>
-              </button>
-            </div>
-          </div>
-
-          {/* =========================================================================
-              EXAM MODES (P2, P4, P6, Custom)
-              ========================================================================= */}
-          <div className="flex flex-col gap-3 my-2 select-none">
+        {/* Main Timer Container */}
+        <div
+          className={`p-5 sm:p-7 rounded-2xl border space-y-6 ${
+            isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+          }`}
+        >
+          {/* 1. Exam Paper Duration Presets */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className={`text-[10px] font-mono uppercase tracking-widest font-black ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                SELECT MODE OR TYPE TIME
-              </span>
-              <span className={`text-[10px] font-mono font-semibold ${isLight ? "text-[#C96F55]" : "text-indigo-400"}`}>
-                Current: {focusMinutesSelected >= 60 ? `${Math.floor(focusMinutesSelected / 60)}h ${focusMinutesSelected % 60 > 0 ? `${focusMinutesSelected % 60}m` : ""}` : `${focusMinutesSelected}m`}
+              <h2 className="text-sm font-bold">Select Duration Preset</h2>
+              <span className={`text-xs font-mono font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
+                Active: {getModeLabel()}
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-              {/* Mode P2: exactly 45 min */}
-              <button
-                type="button"
-                onClick={() => handleSelectMode("p2")}
-                className={`py-3 px-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  activeMode === "p2"
-                    ? isLight
-                      ? "bg-[#FFF1EC] border-[#C96F55] shadow-xs ring-1 ring-[#C96F55]"
-                      : "bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500/50"
-                    : isLight
-                    ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] border-[#E8D7C9]"
-                    : "bg-[#101524] hover:bg-[#151D33] border-white/10"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-mono font-extrabold uppercase ${
-                    activeMode === "p2" ? (isLight ? "text-[#C96F55]" : "text-indigo-300") : (isLight ? "text-[#1D1D1B]" : "text-white")
-                  }`}>
-                    P2
-                  </span>
-                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-                    activeMode === "p2"
-                      ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white"
-                      : isLight ? "bg-[#E8D7C9] text-[#1D1D1B]" : "bg-white/10 text-slate-300"
-                  }`}>
-                    45 min
-                  </span>
-                </div>
-                <p className={`text-[10px] font-mono leading-tight ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                  Paper 2 · 45 minutes
-                </p>
-              </button>
-
-              {/* Mode P4: 1 hour and 15 min (75m) */}
-              <button
-                type="button"
-                onClick={() => handleSelectMode("p4")}
-                className={`py-3 px-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  activeMode === "p4"
-                    ? isLight
-                      ? "bg-[#FFF1EC] border-[#C96F55] shadow-xs ring-1 ring-[#C96F55]"
-                      : "bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500/50"
-                    : isLight
-                    ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] border-[#E8D7C9]"
-                    : "bg-[#101524] hover:bg-[#151D33] border-white/10"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-mono font-extrabold uppercase ${
-                    activeMode === "p4" ? (isLight ? "text-[#C96F55]" : "text-indigo-300") : (isLight ? "text-[#1D1D1B]" : "text-white")
-                  }`}>
-                    P4
-                  </span>
-                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-                    activeMode === "p4"
-                      ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white"
-                      : isLight ? "bg-[#E8D7C9] text-[#1D1D1B]" : "bg-white/10 text-slate-300"
-                  }`}>
-                    1h 15m
-                  </span>
-                </div>
-                <p className={`text-[10px] font-mono leading-tight ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                  Paper 4 · 75 minutes
-                </p>
-              </button>
-
-              {/* Mode P6: exactly 1 hour (60m) */}
-              <button
-                type="button"
-                onClick={() => handleSelectMode("p6")}
-                className={`py-3 px-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  activeMode === "p6"
-                    ? isLight
-                      ? "bg-[#FFF1EC] border-[#C96F55] shadow-xs ring-1 ring-[#C96F55]"
-                      : "bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500/50"
-                    : isLight
-                    ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] border-[#E8D7C9]"
-                    : "bg-[#101524] hover:bg-[#151D33] border-white/10"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-mono font-extrabold uppercase ${
-                    activeMode === "p6" ? (isLight ? "text-[#C96F55]" : "text-indigo-300") : (isLight ? "text-[#1D1D1B]" : "text-white")
-                  }`}>
-                    P6
-                  </span>
-                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-                    activeMode === "p6"
-                      ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white"
-                      : isLight ? "bg-[#E8D7C9] text-[#1D1D1B]" : "bg-white/10 text-slate-300"
-                  }`}>
-                    1 hour
-                  </span>
-                </div>
-                <p className={`text-[10px] font-mono leading-tight ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                  Paper 6 · 60 minutes
-                </p>
-              </button>
-
-              {/* Mode Math: exactly 2 hours (120m) */}
-              <button
-                type="button"
-                onClick={() => handleSelectMode("math")}
-                className={`py-3 px-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  activeMode === "math"
-                    ? isLight
-                      ? "bg-[#FFF1EC] border-[#C96F55] shadow-xs ring-1 ring-[#C96F55]"
-                      : "bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500/50"
-                    : isLight
-                    ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] border-[#E8D7C9]"
-                    : "bg-[#101524] hover:bg-[#151D33] border-white/10"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-mono font-extrabold uppercase ${
-                    activeMode === "math" ? (isLight ? "text-[#C96F55]" : "text-indigo-300") : (isLight ? "text-[#1D1D1B]" : "text-white")
-                  }`}>
-                    Math
-                  </span>
-                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-                    activeMode === "math"
-                      ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white"
-                      : isLight ? "bg-[#E8D7C9] text-[#1D1D1B]" : "bg-white/10 text-slate-300"
-                  }`}>
-                    2 hours
-                  </span>
-                </div>
-                <p className={`text-[10px] font-mono leading-tight ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                  Mathematics · 120 minutes
-                </p>
-              </button>
-
-              {/* Custom Mode / Type Time */}
-              <button
-                type="button"
-                onClick={() => handleSelectMode("custom")}
-                className={`py-3 px-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  activeMode === "custom"
-                    ? isLight
-                      ? "bg-[#FFF1EC] border-[#C96F55] shadow-xs ring-1 ring-[#C96F55]"
-                      : "bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500/50"
-                    : isLight
-                    ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] border-[#E8D7C9]"
-                    : "bg-[#101524] hover:bg-[#151D33] border-white/10"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-mono font-extrabold uppercase ${
-                    activeMode === "custom" ? (isLight ? "text-[#C96F55]" : "text-indigo-300") : (isLight ? "text-[#1D1D1B]" : "text-white")
-                  }`}>
-                    Custom
-                  </span>
-                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded flex items-center gap-1 ${
-                    activeMode === "custom"
-                      ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white"
-                      : isLight ? "bg-[#E8D7C9] text-[#1D1D1B]" : "bg-white/10 text-slate-300"
-                  }`}>
-                    <Edit3 size={10} />
-                    <span>Type</span>
-                  </span>
-                </div>
-                <p className={`text-[10px] font-mono leading-tight ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                  Type any time you want
-                </p>
-              </button>
+              {[
+                { id: "p2" as const, code: "Paper 2", time: "45 min", desc: "Multiple Choice / Short" },
+                { id: "p6" as const, code: "Paper 6", time: "1 hour", desc: "Alternative to Practical" },
+                { id: "p4" as const, code: "Paper 4", time: "1h 15m", desc: "Extended Theory" },
+                { id: "math" as const, code: "Mathematics", time: "2 hours", desc: "Full Extended Paper" },
+                { id: "custom" as const, code: "Custom", time: `${focusMinutesSelected}m`, desc: "Set hours & minutes" }
+              ].map((preset) => {
+                const isSelected = activeMode === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectMode(preset.id)}
+                    aria-pressed={isSelected}
+                    className={`p-3.5 rounded-xl border text-left transition-colors cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      isSelected
+                        ? isLight
+                          ? "bg-[#F0EEFF] border-[#5F55C8] text-[#18202B]"
+                          : "bg-[#6D5DF6]/20 border-[#A99BFF] text-[#F1F3F8]"
+                        : isLight
+                        ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
+                        : "bg-[#222938] hover:bg-[#2A3244] border-[#364054] text-[#F1F3F8]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold">{preset.code}</span>
+                      <span
+                        className={`text-[11px] font-mono font-semibold ${
+                          isSelected
+                            ? isLight
+                              ? "text-[#5F55C8]"
+                              : "text-[#A99BFF]"
+                            : isLight
+                            ? "text-[#596474]"
+                            : "text-[#B7C0CF]"
+                        }`}
+                      >
+                        {preset.time}
+                      </span>
+                    </div>
+                    <p className={`text-[11px] leading-snug ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                      {preset.desc}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Direct Type-In Time Bar */}
-            <div className={`mt-2 p-3 sm:p-4 rounded-2xl border ${
-              isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#0E1322] border-white/10"
-            } flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3`}>
-              <div className="flex items-center gap-2">
-                <Clock size={16} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
+            {/* Custom Duration Input Bar */}
+            <div
+              className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#364054]"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Clock size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
                 <div>
-                  <h4 className={`text-xs font-mono font-bold uppercase ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>
-                    Type Your Own Duration
-                  </h4>
-                  <p className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                    Enter hours and minutes to set any custom timer duration
+                  <h3 className="text-xs font-bold">Custom Study Duration</h3>
+                  <p className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                    Set exact hours and minutes or adjust by 5/15-minute steps
                   </p>
                 </div>
               </div>
 
-              {/* Hours & Minutes Input Fields */}
-              <div className="flex items-center gap-2 self-end sm:self-auto">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <div className="flex flex-col items-center">
-                    <span className={`text-[8px] font-mono uppercase font-bold mb-0.5 ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                      Hours
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={23}
-                      value={customHours}
-                      onChange={(e) => {
-                        const h = parseInt(e.target.value, 10) || 0;
-                        setCustomHours(h);
-                        handleApplyCustomTime(h, customMinutes);
-                      }}
-                      className={`w-14 text-center font-mono font-bold text-sm py-1.5 px-2 rounded-xl border ${
-                        isLight
-                          ? "bg-white border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] focus:ring-1 focus:ring-[#C96F55]"
-                          : "bg-[#060810] border-white/15 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                      } outline-none`}
-                    />
-                  </div>
-
-                  <span className={`font-mono font-black text-lg mt-3 ${isLight ? "text-[#77736B]" : "text-slate-500"}`}>:</span>
-
-                  <div className="flex flex-col items-center">
-                    <span className={`text-[8px] font-mono uppercase font-bold mb-0.5 ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                      Minutes
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={59}
-                      value={customMinutes}
-                      onChange={(e) => {
-                        const m = parseInt(e.target.value, 10) || 0;
-                        setCustomMinutes(m);
-                        handleApplyCustomTime(customHours, m);
-                      }}
-                      className={`w-14 text-center font-mono font-bold text-sm py-1.5 px-2 rounded-xl border ${
-                        isLight
-                          ? "bg-white border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] focus:ring-1 focus:ring-[#C96F55]"
-                          : "bg-[#060810] border-white/15 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                      } outline-none`}
-                    />
-                  </div>
+                  <label htmlFor="timer-custom-hours" className="text-[11px] font-medium">
+                    Hrs
+                  </label>
+                  <input
+                    id="timer-custom-hours"
+                    type="number"
+                    min={0}
+                    max={23}
+                    value={customHours}
+                    onChange={(e) => {
+                      const h = parseInt(e.target.value, 10) || 0;
+                      setCustomHours(h);
+                      handleApplyCustomTime(h, customMinutes);
+                    }}
+                    className={`w-14 text-center font-mono font-bold text-xs py-1.5 px-2 rounded-lg border outline-none ${
+                      isLight
+                        ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#18202B]"
+                        : "bg-[#10131A] border-[#364054] text-[#F1F3F8]"
+                    }`}
+                  />
+                  <span className="font-mono font-bold">:</span>
+                  <label htmlFor="timer-custom-mins" className="text-[11px] font-medium">
+                    Mins
+                  </label>
+                  <input
+                    id="timer-custom-mins"
+                    type="number"
+                    min={0}
+                    max={59}
+                    value={customMinutes}
+                    onChange={(e) => {
+                      const m = parseInt(e.target.value, 10) || 0;
+                      setCustomMinutes(m);
+                      handleApplyCustomTime(customHours, m);
+                    }}
+                    className={`w-14 text-center font-mono font-bold text-xs py-1.5 px-2 rounded-lg border outline-none ${
+                      isLight
+                        ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#18202B]"
+                        : "bg-[#10131A] border-[#364054] text-[#F1F3F8]"
+                    }`}
+                  />
                 </div>
 
-                {/* Quick adjustments */}
-                <div className="flex items-center gap-1 mt-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newTotal = Math.max(1, focusMinutesSelected - 5);
-                      handleApplyCustomTime(Math.floor(newTotal / 60), newTotal % 60);
-                    }}
-                    className={`px-2 py-1.5 rounded-lg border text-[10px] font-mono font-bold transition cursor-pointer ${
-                      isLight ? "bg-white border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F0EEE8]" : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-                    }`}
-                    title="Subtract 5 minutes"
-                  >
-                    -5m
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newTotal = focusMinutesSelected + 5;
-                      handleApplyCustomTime(Math.floor(newTotal / 60), newTotal % 60);
-                    }}
-                    className={`px-2 py-1.5 rounded-lg border text-[10px] font-mono font-bold transition cursor-pointer ${
-                      isLight ? "bg-white border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F0EEE8]" : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-                    }`}
-                    title="Add 5 minutes"
-                  >
-                    +5m
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newTotal = focusMinutesSelected + 15;
-                      handleApplyCustomTime(Math.floor(newTotal / 60), newTotal % 60);
-                    }}
-                    className={`px-2 py-1.5 rounded-lg border text-[10px] font-mono font-bold transition cursor-pointer ${
-                      isLight ? "bg-white border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F0EEE8]" : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-                    }`}
-                    title="Add 15 minutes"
-                  >
-                    +15m
-                  </button>
+                <div className="flex items-center gap-1">
+                  {[
+                    { label: "-5m", delta: -5 },
+                    { label: "+5m", delta: 5 },
+                    { label: "+15m", delta: 15 }
+                  ].map((adj) => (
+                    <button
+                      key={adj.label}
+                      type="button"
+                      onClick={() => {
+                        const newTotal = Math.max(1, focusMinutesSelected + adj.delta);
+                        handleApplyCustomTime(Math.floor(newTotal / 60), newTotal % 60);
+                      }}
+                      className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono font-semibold cursor-pointer ${
+                        isLight
+                          ? "bg-[#FFFFFF] hover:bg-[#E8ECF4] border-[#CBD2E0] text-[#18202B]"
+                          : "bg-[#191E28] hover:bg-[#2A3244] border-[#364054] text-[#F1F3F8]"
+                      }`}
+                    >
+                      {adj.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* =========================================================================
-              TIMER DISPLAY CHRONO
-              ========================================================================= */}
-          <div className="flex flex-col items-center justify-center shrink-0 my-6 select-none text-center">
-            <div>
-              <FlipClockTimer 
-                timeRemaining={focusTimeRemaining} 
-                size="lg" 
-                themeMode={themeMode} 
-                isPaused={isPaused} 
-              />
-            </div>
+          {/* 2. Central Timer Display */}
+          <div
+            className={`py-8 px-4 rounded-2xl border flex flex-col items-center justify-center text-center ${
+              isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#10131A] border-[#283040]"
+            }`}
+          >
+            <FlipClockTimer
+              timeRemaining={focusTimeRemaining}
+              size="lg"
+              themeMode={themeMode}
+              isPaused={isPaused}
+              showLabels
+            />
 
-            {/* Linear progress bar */}
             {focusModeActive && (
-              <div className="w-56 sm:w-72 h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-4 overflow-hidden">
-                <div 
+              <div className="w-56 sm:w-72 h-2 bg-black/10 dark:bg-white/10 rounded-full mt-5 overflow-hidden">
+                <div
                   className={`h-full rounded-full transition-all duration-300 ${
-                    isLight ? "bg-[#C96F55]" : "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]"
+                    isLight ? "bg-[#5F55C8]" : "bg-[#6D5DF6]"
                   }`}
                   style={{ width: `${Math.round((1 - progressRatio) * 100)}%` }}
                 />
               </div>
             )}
 
-            {isPaused ? (
-              <span className={`text-[10px] font-mono font-extrabold uppercase tracking-widest ${
-                isLight ? "text-[#B85C5C] bg-[#FFF1EC] border-[#E8D7C9]" : "text-amber-400 bg-amber-950/40 border-amber-500/30"
-              } border px-3 py-0.5 rounded-full mt-3 animate-pulse`}>
-                ⏸ PAUSED
-              </span>
-            ) : (
-              <div className="flex flex-col sm:flex-row items-center gap-2 mt-3">
-                <span className={`text-[10px] font-mono tracking-widest ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase font-black`}>
-                  {focusModeActive ? `ACTIVE COUNTDOWN • ${getModeLabel()}` : "READY TO LAUNCH"}
-                </span>
-                {focusModeActive && (
-                  <span className={`text-[9px] font-mono uppercase font-bold flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${
-                    isLight ? "bg-black/5 text-[#77736B]" : "bg-white/10 text-slate-300"
-                  }`} title="Screen timeout prevented while timer is on">
-                    <Sun size={10} className="text-amber-400" />
-                    <span>Screen Kept On</span>
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
+            <p className={`text-xs font-medium mt-4 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              {isPaused
+                ? "Paused — click Resume to continue your study session"
+                : focusModeActive
+                ? `Active countdown · ${getModeLabel()}`
+                : `Ready · ${getModeLabel()}`}
+            </p>
 
-          {/* =========================================================================
-              BOTTOM ACTIONS ROW: Play, Pause, Reset
-              ========================================================================= */}
-          <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-3 shrink-0 my-4 select-none">
-            <div className="flex flex-wrap gap-3 justify-center items-center w-full">
-              
-              {/* Play / Pause Toggle Button */}
+            {/* Primary Controls */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
               {focusModeActive ? (
                 <button
+                  type="button"
                   onClick={() => {
                     pauseSoundscape();
                     onPauseFocus ? onPauseFocus() : onStopFocus();
                   }}
-                  className={`py-3 px-8 ${
-                    isLight ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]" : "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                  } border rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
+                  className={`min-h-[44px] py-2.5 px-7 rounded-xl border text-xs font-semibold flex items-center gap-2 cursor-pointer ${
+                    isLight
+                      ? "bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]"
+                      : "bg-[#F59E0B]/15 border-[#FBBF24]/30 text-[#FBBF24]"
+                  }`}
                 >
-                  <Pause size={14} fill="currentColor" />
+                  <Pause size={15} fill="currentColor" />
                   <span>Pause</span>
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => {
                     if (selectedSoundscape !== "silent") {
                       setSoundscape(selectedSoundscape, soundVolume);
                     }
                     onStartFocus();
                   }}
-                  className={`py-3 px-8 ${
-                    isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500"
-                  } text-white rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-md`}
+                  className={`min-h-[44px] py-2.5 px-7 rounded-xl text-xs font-semibold text-white flex items-center gap-2 cursor-pointer ${
+                    isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
+                  }`}
                 >
-                  <Play size={14} fill="currentColor" />
-                  <span>{isPaused ? "Resume" : "Start Study"}</span>
+                  <Play size={15} fill="currentColor" />
+                  <span>{isPaused ? "Resume Study" : "Start Study"}</span>
                 </button>
               )}
 
-              {/* Reset timer button */}
               <button
+                type="button"
                 onClick={() => {
                   pauseSoundscape();
                   onResetFocus ? onResetFocus() : onStopFocus();
                   onDurationChange(focusMinutesSelected);
                 }}
-                className={`py-3 px-5 ${
-                  isLight ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#111626] hover:bg-[#161D30] border-white/10 text-slate-300"
-                } border rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-2 cursor-pointer shadow-xs`}
-                title="Reset to full interval"
+                className={`min-h-[44px] py-2.5 px-5 rounded-xl border text-xs font-semibold flex items-center gap-2 cursor-pointer ${
+                  isLight
+                    ? "bg-[#FFFFFF] hover:bg-[#E8ECF4] border-[#CBD2E0] text-[#18202B]"
+                    : "bg-[#191E28] hover:bg-[#222938] border-[#364054] text-[#F1F3F8]"
+                }`}
               >
-                <RotateCcw size={13} className={isLight ? "text-[#77736B]" : "text-slate-400"} />
+                <RotateCcw size={14} />
                 <span>Reset</span>
               </button>
             </div>
           </div>
 
-          {/* =========================================================================
-              AMBIENT SOUNDSCAPES CONTROLS (Only Silent & White Noise)
-              ========================================================================= */}
-          <div className={`mt-6 pt-4 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/5"} space-y-3.5`}>
+          {/* 3. Ambient Background Audio */}
+          <div className="pt-4 border-t border-inherit space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-0.5 text-[#C96F55]">
-                  <span className="w-1 h-3 bg-[#C96F55] rounded-full inline-block animate-pulse" />
-                  <span className="w-1 h-5 bg-[#C96F55] rounded-full inline-block" />
-                  <span className="w-1 h-2.5 bg-[#C96F55] rounded-full inline-block animate-pulse" />
-                  <span className="w-1 h-4 bg-[#C96F55] rounded-full inline-block" />
-                </div>
-                <h3 className={`text-xs md:text-sm font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>
-                  Ambient Focus Soundscapes
-                </h3>
-              </div>
-
-              {selectedSoundscape !== "silent" ? (
-                isPaused ? (
-                  <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full ${
-                    isLight ? "bg-amber-50 text-amber-600 border border-amber-200" : "bg-amber-950/40 text-amber-400 border border-amber-500/30"
-                  } flex items-center gap-1`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Paused with timer
-                  </span>
-                ) : focusModeActive ? (
-                  <span className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full ${
-                    isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30"
-                  } flex items-center gap-1 animate-pulse`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${isLight ? "bg-[#C96F55]" : "bg-indigo-400"}`} />
-                    Playing White Noise
-                  </span>
-                ) : (
-                  <span className={`text-[9px] font-mono font-medium ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                    Ready on start
-                  </span>
-                )
-              ) : (
-                <span className={`text-[9px] font-mono font-medium ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                  Default Quiet
-                </span>
-              )}
+              <h3 className="text-sm font-bold">Background Audio</h3>
+              <span className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                {selectedSoundscape === "silent" ? "Muted (Quiet)" : "Gentle Rain"}
+              </span>
             </div>
 
-            {/* Exactly 2 Soundscape Cards: Silent & White Noise (Gentle Rain) */}
-            <div className="grid grid-cols-2 gap-3 max-w-md mx-auto sm:mx-0">
-              {/* Card 1: Silent */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
               <button
                 type="button"
                 onClick={() => handleSelectSoundscape("silent")}
-                className={`py-3.5 px-3 rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer border select-none ${
+                aria-pressed={selectedSoundscape === "silent"}
+                className={`p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer ${
                   selectedSoundscape === "silent"
                     ? isLight
-                      ? "bg-[#FAF8F5] border-[#C96F55] ring-1 ring-[#C96F55] text-[#1D1D1B] shadow-xs"
-                      : "bg-white/10 border-indigo-500 ring-1 ring-indigo-500/50 text-white shadow-md"
+                      ? "bg-[#F0EEFF] border-[#5F55C8] text-[#18202B]"
+                      : "bg-[#6D5DF6]/20 border-[#A99BFF] text-[#F1F3F8]"
                     : isLight
-                    ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] text-[#77736B] border-[#E8D7C9]"
-                    : "bg-[#101524] hover:bg-[#151D33] text-slate-400 border-white/10"
+                    ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#596474]"
+                    : "bg-[#222938] border-[#364054] text-[#B7C0CF]"
                 }`}
               >
-                <div className="relative inline-flex items-center justify-center">
-                  <VolumeX size={18} className={selectedSoundscape === "silent" ? (isLight ? "text-[#C96F55]" : "text-indigo-400") : "text-slate-400"} />
-                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-red-500" />
-                </div>
+                <VolumeX size={18} />
                 <div className="text-left">
-                  <div className={`text-xs font-mono font-bold leading-tight ${
-                    selectedSoundscape === "silent" ? (isLight ? "text-[#1D1D1B]" : "text-white") : ""
-                  }`}>
-                    Silent
-                  </div>
-                  <div className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                    No audio
-                  </div>
+                  <span className="block text-xs font-bold">Silent</span>
+                  <span className="block text-[11px] opacity-80">No background sound</span>
                 </div>
               </button>
 
-              {/* Card 2: White Noise (Gentle Rain) */}
               <button
                 type="button"
                 onClick={() => handleSelectSoundscape("white_noise")}
-                className={`py-3.5 px-3 rounded-2xl flex items-center justify-center gap-2.5 transition-all cursor-pointer border select-none ${
+                aria-pressed={selectedSoundscape === "white_noise"}
+                className={`p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer ${
                   selectedSoundscape === "white_noise"
                     ? isLight
-                      ? "bg-[#C96F55] text-white border-[#C96F55] shadow-md -translate-y-0.5"
-                      : "bg-indigo-600 hover:bg-indigo-500 text-white border-indigo-600 shadow-md shadow-indigo-600/30 -translate-y-0.5"
+                      ? "bg-[#F0EEFF] border-[#5F55C8] text-[#18202B]"
+                      : "bg-[#6D5DF6]/20 border-[#A99BFF] text-[#F1F3F8]"
                     : isLight
-                    ? "bg-[#FAF8F5] hover:bg-[#F5F2EC] text-[#77736B] border-[#E8D7C9]"
-                    : "bg-[#101524] hover:bg-[#151D33] text-slate-400 border-white/10"
+                    ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#596474]"
+                    : "bg-[#222938] border-[#364054] text-[#B7C0CF]"
                 }`}
               >
-                <CloudRain size={18} className={selectedSoundscape === "white_noise" ? "text-white" : "text-blue-400"} />
+                <CloudRain size={18} className="text-sky-500" />
                 <div className="text-left">
-                  <div className={`text-xs font-mono font-bold leading-tight ${
-                    selectedSoundscape === "white_noise" ? "text-white" : ""
-                  }`}>
-                    White Noise
-                  </div>
-                  <div className={`text-[9px] font-mono ${
-                    selectedSoundscape === "white_noise" ? "text-white/80" : isLight ? "text-[#77736B]" : "text-slate-400"
-                  }`}>
-                    Gentle Rain Loop
-                  </div>
+                  <span className="block text-xs font-bold">Gentle Rain</span>
+                  <span className="block text-[11px] opacity-80">Steady ambient rain loop</span>
                 </div>
               </button>
             </div>
 
-            {/* Sound Volume Slider & Auto-Play Toggle */}
-            <div className={`pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 text-xs">
               <div className="flex items-center gap-3 w-full sm:w-64">
-                <span className="text-[10px] flex items-center gap-1 font-bold shrink-0">
-                  <Headphones size={12} />
-                  <span>Volume:</span>
-                </span>
+                <label htmlFor="sound-volume-slider" className="flex items-center gap-1.5 font-medium shrink-0">
+                  <Headphones size={13} />
+                  <span>Volume</span>
+                </label>
                 <input
+                  id="sound-volume-slider"
                   type="range"
                   min="0"
                   max="1"
@@ -1213,65 +847,63 @@ export default function FocusTab({
                     setSoundVolumeState(newVol);
                     setSoundscapeVolume(newVol);
                   }}
-                  className="flex-1 h-1.5 bg-[#E8D7C9] dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#C96F55]"
+                  className="flex-1 h-1.5 rounded-lg cursor-pointer accent-[#5F55C8]"
                 />
-                <span className="text-[10px] w-8 text-right font-bold text-[#C96F55]">
-                  {Math.round(soundVolume * 100)}%
-                </span>
+                <span className="font-mono text-xs w-9 text-right">{Math.round(soundVolume * 100)}%</span>
               </div>
 
-              <label className="flex items-center gap-2 cursor-pointer select-none text-[10px] font-mono">
+              <label className="flex items-center gap-2 cursor-pointer text-xs">
                 <input
                   type="checkbox"
                   checked={autoSoundOnStudy}
                   onChange={(e) => setAutoSoundOnStudy(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded border-[#E8D7C9] text-[#C96F55] accent-[#C96F55] cursor-pointer"
+                  className="w-4 h-4 rounded accent-[#5F55C8] cursor-pointer"
                 />
-                <span>Play automatically when timer starts</span>
+                <span>Start audio automatically with timer</span>
               </label>
             </div>
           </div>
         </div>
       </div>
 
-      {/* =========================================================================
-          COMPLETION CELEBRATION MODAL
-          ========================================================================= */}
-      <AnimatePresence>
-        {showCompletionModal && (
-          <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className={`max-w-md w-full p-6 sm:p-8 rounded-3xl border shadow-2xl text-center select-none ${
-                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0F1424] border-white/15 text-white"
+      {/* COMPLETION DIALOG */}
+      {showCompletionModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="session-complete-title"
+          className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+        >
+          <div
+            className={`max-w-md w-full p-6 rounded-2xl border shadow-xl text-center space-y-4 ${
+              isLight
+                ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#191E28] border-[#364054] text-[#F1F3F8]"
+            }`}
+          >
+            <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center bg-emerald-500/15 text-emerald-500">
+              <CheckCircle2 size={26} />
+            </div>
+            <div className="space-y-1">
+              <h2 id="session-complete-title" className="text-lg font-bold">
+                Focus Session Complete
+              </h2>
+              <p className={`text-xs leading-relaxed ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+                You completed your {getModeLabel()} study block. Take a short break before starting your next session.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowCompletionModal(false)}
+              className={`px-6 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer ${
+                isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
               }`}
             >
-              <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center bg-[#C96F55]/15 text-[#C96F55] mb-4">
-                <Sparkles size={32} />
-              </div>
-
-              <h2 className="text-xl font-bold font-sans">Session Completed!</h2>
-              <p className={`text-xs mt-2 font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
-                You successfully completed your {getModeLabel()} study block. Excellent work staying focused!
-              </p>
-
-              <div className="mt-6 flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => setShowCompletionModal(false)}
-                  className={`py-2.5 px-6 rounded-xl font-mono text-xs font-bold uppercase transition cursor-pointer ${
-                    isLight ? "bg-[#C96F55] hover:bg-[#B85F48] text-white" : "bg-indigo-600 hover:bg-indigo-500 text-white"
-                  }`}
-                >
-                  Awesome, Close
-                </button>
-              </div>
-            </motion.div>
+              Done
+            </button>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </>
   );
 }

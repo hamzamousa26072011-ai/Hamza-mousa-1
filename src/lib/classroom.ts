@@ -50,11 +50,13 @@ function getActiveFirebaseConfig() {
           baseConfig = { ...baseConfig, ...parsed };
         }
       }
-      // Check if user enabled custom DNS auth handler (same-domain authDomain via reverse proxy)
+      // Check if user enabled custom DNS auth handler on the canonical custom domain only
       const useCustomDnsAuth = localStorage.getItem("ENGEZ_USE_CUSTOM_DNS_AUTH") === "true";
       const connectedDns = localStorage.getItem("ENGEZ_CONNECTED_CUSTOM_DNS") === "true";
       const host = window.location.host;
-      if ((useCustomDnsAuth || connectedDns) && host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
+      const isActualCustomDomain =
+        host === CANONICAL_CUSTOM_DOMAIN || host === CANONICAL_WWW_DOMAIN;
+      if ((useCustomDnsAuth || connectedDns) && isActualCustomDomain) {
         baseConfig.authDomain = host;
       }
     } catch (e) {
@@ -869,8 +871,13 @@ export const googleSignIn = async (
     }
 
     return { user: result.user, accessToken: cachedAccessToken || "" };
-  } catch (error) {
-    console.error("Sign-in authentication error:", error);
+  } catch (error: any) {
+    const code = error?.code || "";
+    if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+      console.warn("Sign-in popup closed by user.");
+    } else {
+      console.warn("Sign-in authentication notice:", error);
+    }
     throw error;
   } finally {
     isSigningIn = false;
