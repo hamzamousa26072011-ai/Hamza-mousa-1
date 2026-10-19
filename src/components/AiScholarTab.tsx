@@ -675,8 +675,6 @@ export default function AiScholarTab({
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatTimelineRef = useRef<HTMLDivElement>(null);
-  const prevMsgCountRef = useRef<number>(activeThread.messages.length);
 
   // Safe localStorage synchronization: strips heavy dataUrls and blob previewUrls to prevent QuotaExceededError
   useEffect(() => {
@@ -742,15 +740,8 @@ export default function AiScholarTab({
   }, [activeThreadId]);
 
   useEffect(() => {
-    const currentLen = activeThread.messages.length;
-    if ((currentLen > prevMsgCountRef.current || isAiLoading) && chatTimelineRef.current) {
-      chatTimelineRef.current.scrollTo({
-        top: chatTimelineRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-    prevMsgCountRef.current = currentLen;
-  }, [activeThread.messages.length, isAiLoading, activeThread.id]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeThread.messages, isAiLoading]);
 
   const handleAddNewThread = () => {
     const nextId = "thread-" + Date.now();
@@ -1066,184 +1057,155 @@ export default function AiScholarTab({
   }
 
   const promptSuggestions = [
-    { label: "Evaluate my answer: earned marks vs. lost marks", prompt: "Please identify the subject, grade my answer against official IGCSE mark schemes, and explicitly list: 1) Key Points You Got Right (Earned Marks), and 2) Key Points You Lost Marks On (Missed Marks & Traps)." },
-    { label: "Grade against official IGCSE mark scheme", prompt: "Please check my answer against the IGCSE mark scheme: evaluate all steps, calculate marks awarded (e.g. 3/4), pinpoint mistakes, and provide a full-mark model answer." },
-    { label: "Identify mistakes, missed keywords & unit errors", prompt: "Analyze my uploaded work or solution: identify every mistake, missed syllabus keyword, or unit error, and explain how to earn full marks." },
-    { label: "Break down Method [M], Accuracy [A], and Independent [B] marks", prompt: "Explain and check this Cambridge IGCSE question step-by-step, detailing Method [M], Accuracy [A], and Independent [B] mark scheme points." },
-    { label: "Summarize common examiner traps for this topic", prompt: "Summarize the critical IGCSE examiner traps, common student misconceptions, and essential keywords for this topic." }
+    { label: "✅ Key Points Got Right & ❌ Points Lost Marks On", prompt: "Please identify the subject, grade my answer against official IGCSE mark schemes, and explicitly list: 1) Key Points You Got Right (Earned Marks), and 2) Key Points You Lost Marks On (Missed Marks & Traps)." },
+    { label: "🎯 Check my answer against official IGCSE Mark Scheme", prompt: "Please check my answer against the IGCSE mark scheme: evaluate all steps, calculate marks awarded (e.g. 3/4), pinpoint mistakes, and provide a 100% full-mark model answer." },
+    { label: "⚡ Identify mistakes, missed keywords & lost marks", prompt: "Analyze my uploaded work or solution: identify every mistake, missed syllabus keyword, or unit error, and explain how to earn full marks." },
+    { label: "📑 Check Question with Cambridge [M][A][B] Mark Scheme", prompt: "Explain and check this Cambridge IGCSE question step-by-step, detailing Method [M], Accuracy [A], and Independent [B] mark scheme points." },
+    { label: "🔍 Pinpoint Chief Examiner traps & common student pitfalls", prompt: "Summarize the critical IGCSE examiner traps, common student misconceptions, and essential keywords for this topic." }
   ];
 
   return (
-    <div className="space-y-5 pb-8">
-      {/* Page Header */}
-      <header
-        className={`rounded-2xl border p-5 sm:p-6 ${
-          isLight
-            ? "bg-[#FFFFFF] border-[#E2E6EE] shadow-[0_1px_3px_rgba(24,32,43,0.04)]"
-            : "bg-[#191E28] border-[#2B3344]"
-        }`}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-6">
+      
+
+      {/* Tab Header Banner */}
+      <div className={`border-b ${isLight ? "border-[#E8D7C9]" : "border-white/5"} pb-4 sm:pb-5`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                AI Tutor & Mark Scheme Assistant
-              </h1>
-              <span
-                className={`text-xs font-semibold px-2.5 py-0.5 rounded-md border flex items-center gap-1.5 ${
-                  isLight
-                    ? "bg-[#EFEEFA] border-[#D6D2F6] text-[#5F55C8]"
-                    : "bg-[#5F55C8]/15 border-[#A99BFF]/30 text-[#A99BFF]"
-                }`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                <span>Syllabus & Past Paper Support</span>
+              <h1 className={`text-xl sm:text-2xl font-black ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>AI Tutor</h1>
+              <span className={`text-[10px] font-mono font-bold ${
+                isLight 
+                  ? "bg-purple-50 border border-purple-300 text-purple-900" 
+                  : "bg-purple-950/40 border border-purple-700/60 text-purple-300"
+              } px-2 py-0.5 rounded-md uppercase flex items-center gap-1.5`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                IGCSE Examiner & Tutor
               </span>
             </div>
-            <p className={`text-sm max-w-2xl mt-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              Attach past paper questions, syllabus notes, or photos of your working to review step-by-step explanations and mark scheme feedback. Verify AI feedback against your official syllabus.
+            <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} max-w-2xl mt-1`}>
+              Academic examiner and tutor calibrated to official Cambridge, Edexcel, and school examination systems. Attach exam questions, past papers, worksheets, or photos of your handwritten working to analyze documents, evaluate marks, and receive step-by-step model answers.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className={`hidden lg:flex min-h-[40px] px-3.5 py-2 rounded-xl border text-xs font-semibold transition items-center gap-1.5 cursor-pointer ${
-                isLight
-                  ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] hover:bg-[#ECEFF5]"
-                  : "bg-[#222938] border-[#2B3344] text-[#F1F3F8] hover:bg-[#2B3344]"
+              className={`hidden lg:flex px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition items-center gap-1.5 cursor-pointer ${
+                isLight ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F7F5F0]" : "bg-white/5 border-white/10 text-white hover:bg-white/10"
               }`}
-              title={isSidebarOpen ? "Hide History & Files panels" : "Show History & Files panels"}
+              title="Toggle sidebar"
             >
-              <History size={14} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-              <span>{isSidebarOpen ? "Focus Chat" : "Show Panels"}</span>
+              <History size={13} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
+              <span>{isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}</span>
             </button>
 
             <button
               type="button"
               onClick={handleAddNewThread}
-              className="min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold bg-[#5F55C8] hover:bg-[#4E45B0] text-white transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                isLight ? "bg-[#C96F55] hover:bg-[#B85F48] text-white" : "bg-indigo-600 hover:bg-indigo-500 text-white"
+              }`}
             >
-              <Plus size={15} />
-              <span>New Session</span>
+              <Plus size={13} />
+              <span>New Chat</span>
             </button>
           </div>
         </div>
 
         {/* Mobile & Tablet Segmented View Switcher (< lg screens) */}
-        <div
-          role="tablist"
-          aria-label="Tutor workspace view"
-          className={`flex lg:hidden items-center gap-1.5 mt-4 p-1 rounded-xl border w-full max-w-md ${
-            isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#10131A] border-[#2B3344]"
-          }`}
-        >
+        <div className={`flex lg:hidden items-center gap-1.5 mt-3 p-1 ${
+          isLight ? "bg-[#F0EEE8] border border-[#E8D7C9]" : "bg-black/40 border border-white/10"
+        } rounded-xl w-full max-w-md`}>
           <button
             type="button"
-            role="tab"
-            aria-selected={mobileView === "chat"}
             onClick={() => setMobileView("chat")}
-            className={`flex-1 min-h-[38px] py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
               mobileView === "chat"
-                ? isLight
-                  ? "bg-[#5F55C8] text-white shadow-2xs"
-                  : "bg-[#A99BFF] text-[#10131A]"
-                : isLight
-                ? "text-[#596474] hover:text-[#18202B]"
-                : "text-[#B7C0CF] hover:text-[#F1F3F8]"
+                ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-white"
             }`}
           >
-            <Sparkles size={13} />
-            <span>Conversation</span>
+            <Sparkles size={13} className={mobileView === "chat" ? "text-white" : isLight ? "text-[#C96F55]" : "text-indigo-400"} />
+            <span>Chat</span>
           </button>
 
           <button
             type="button"
-            role="tab"
-            aria-selected={mobileView === "document"}
             onClick={() => setMobileView("document")}
-            className={`flex-1 min-h-[38px] py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
               mobileView === "document"
-                ? isLight
-                  ? "bg-[#5F55C8] text-white shadow-2xs"
-                  : "bg-[#A99BFF] text-[#10131A]"
-                : isLight
-                ? "text-[#596474] hover:text-[#18202B]"
-                : "text-[#B7C0CF] hover:text-[#F1F3F8]"
+                ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-white"
             }`}
           >
-            <Files size={13} />
+            <Files size={13} className={mobileView === "document" ? "text-white" : isLight ? "text-[#C96F55]" : "text-purple-400"} />
             <span className="truncate">Files {totalFilesCount > 0 ? `(${totalFilesCount})` : ""}</span>
           </button>
 
           <button
             type="button"
-            role="tab"
-            aria-selected={mobileView === "history"}
             onClick={() => setMobileView("history")}
-            className={`flex-1 min-h-[38px] py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
               mobileView === "history"
-                ? isLight
-                  ? "bg-[#5F55C8] text-white shadow-2xs"
-                  : "bg-[#A99BFF] text-[#10131A]"
-                : isLight
-                ? "text-[#596474] hover:text-[#18202B]"
-                : "text-[#B7C0CF] hover:text-[#F1F3F8]"
+                ? isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-white"
             }`}
           >
-            <History size={13} />
+            <History size={13} className={mobileView === "history" ? "text-white" : isLight ? "text-[#C96F55]" : "text-cyan-400"} />
             <span>History ({threads.length})</span>
           </button>
         </div>
-      </header>
+      </div>
 
-      {/* Main 3-Column Grounding Interface */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-stretch min-h-[560px] h-[calc(100dvh-250px)] lg:h-[760px]">
-        {/* PANEL 1: HISTORY */}
-        <div
-          id="chat-history-column"
+      {/* Responsive Grounding Chat Interface */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-stretch min-h-[560px] h-[calc(100dvh-230px)] lg:h-[880px]">
+        
+        {/* PANEL 1: HISTORY (Spans 2 Columns on desktop when open, toggled on mobile) */}
+        <div 
+          id="chat-history-column" 
           className={`${mobileView === "history" ? "flex" : "hidden"} ${
-            isSidebarOpen ? "lg:flex lg:col-span-3" : "lg:hidden"
+            isSidebarOpen ? "lg:flex lg:col-span-2" : "lg:hidden"
           } ${
-            isLight
-              ? "bg-[#FFFFFF] border border-[#E2E6EE] text-[#18202B]"
-              : "bg-[#191E28] border border-[#2B3344] text-[#F1F3F8]"
-          } rounded-2xl p-4 flex-col h-full overflow-hidden`}
+            isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
+          } rounded-2xl lg:rounded-3xl p-4 lg:p-5 flex-col h-full overflow-hidden select-none`}
         >
-          <div
-            className={`flex items-center justify-between pb-3 border-b ${
-              isLight ? "border-[#EDF0F5]" : "border-[#2B3344]"
-            } mb-3 shrink-0`}
-          >
-            <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-              <History size={14} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-              <span>Sessions</span>
+          
+          <div className={`flex items-center justify-between pb-3.5 border-b ${
+            isLight ? "border-[#E8D7C9]" : "border-white/5"
+          } mb-4 shrink-0`}>
+            <span className={`text-xs font-bold ${isLight ? "text-[#1D1D1B]" : "text-slate-200"} tracking-wide flex items-center gap-1.5 font-mono uppercase`}>
+              <History size={13} className={isLight ? "text-[#77736B]" : "text-slate-400"} />
+              <span>History</span>
             </span>
-            <span
-              className={`text-xs font-mono py-0.5 px-2 rounded-md font-semibold ${
-                isLight ? "bg-[#F6F7FA] text-[#596474]" : "bg-[#222938] text-[#B7C0CF]"
-              }`}
-            >
+            <span className={`text-[10px] font-mono ${
+              isLight ? "bg-[#F0EEE8] text-[#77736B]" : "bg-white/5 text-slate-400"
+            } py-0.5 px-2 rounded-lg font-bold`}>
               {threads.length}
             </span>
           </div>
 
+          {/* New Chat Button */}
           <button
-            type="button"
             onClick={handleAddNewThread}
             id="new-chat-thread-btn"
-            className="w-full min-h-[40px] py-2 px-4 mb-3 bg-[#5F55C8] hover:bg-[#4E45B0] text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+            className={`w-full py-2.5 px-4 mb-4 ${
+              isLight 
+                ? "bg-[#C96F55] hover:bg-[#B85F48] text-white shadow-2xs border border-[#C96F55]" 
+                : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 shadow-lg shadow-indigo-500/10"
+            } rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-2 shrink-0 cursor-pointer`}
           >
             <Plus size={14} />
-            <span>New Session</span>
+            <span>New chat</span>
           </button>
 
+          {/* Threads scrolling viewport */}
           <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-0">
             {threads.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-10 px-4">
-                <MessageSquare size={22} className={`mb-2 ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`} />
-                <p className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>No sessions yet.</p>
+              <div className="h-full flex flex-col items-center justify-center text-center py-10 px-4 text-slate-500">
+                <MessageSquare size={22} className="opacity-20 mb-2" />
+                <p className="text-[11px] font-mono font-medium">No chats yet. Start one!</p>
               </div>
             ) : (
               threads.map((t) => {
@@ -1260,31 +1222,29 @@ export default function AiScholarTab({
                         setShowCustomForm(false);
                       }
                     }}
-                    className={`group w-full py-2.5 px-3 rounded-xl border text-xs text-left cursor-pointer flex items-center justify-between transition ${
+                    className={`group w-full py-2.5 px-3.5 rounded-xl border text-xs text-left cursor-pointer flex items-center justify-between transition-all duration-200 ${
                       isActive
                         ? isLight
-                          ? "bg-[#EFEEFA] border-[#D6D2F6] text-[#5F55C8] font-semibold"
-                          : "bg-[#222938] border-[#A99BFF]/50 text-[#F1F3F8] font-semibold"
+                          ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#1D1D1B] font-bold shadow-2xs"
+                          : "bg-[#1E253A] border-indigo-500/50 text-white font-bold shadow-md"
                         : isLight
-                        ? "bg-[#F6F7FA] border-transparent text-[#596474] hover:text-[#18202B] hover:bg-[#ECEFF5]"
-                        : "bg-[#10131A]/50 border-transparent text-[#B7C0CF] hover:text-[#F1F3F8] hover:bg-[#222938]"
+                          ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F0EEE8]"
+                          : "bg-[#111626]/40 border-white/5 text-slate-400 hover:text-slate-200 hover:bg-[#111626]/80"
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <MessageSquare size={13} className="shrink-0 opacity-70" />
-                      <span className="truncate block pr-2">{t.title}</span>
+                      <span className="text-[10px] shrink-0">💬</span>
+                      <span className="truncate block font-mono pr-2">{t.title}</span>
                     </div>
 
                     <button
-                      type="button"
                       onClick={(e) => handleDeleteThread(t.id, e)}
-                      aria-label={`Delete session ${t.title}`}
-                      className={`opacity-0 group-hover:opacity-100 p-1 rounded transition cursor-pointer ${
-                        isLight ? "text-[#7A8699] hover:text-[#C93B3B]" : "text-[#8590A2] hover:text-[#F87171]"
-                      }`}
-                      title="Delete session"
+                      className={`opacity-0 group-hover:opacity-100 p-1 ${
+                        isLight ? "text-[#77736B] hover:text-[#B85C5C]" : "text-slate-500 hover:text-rose-400"
+                      } rounded transition cursor-pointer`}
+                      title="Delete thread"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 );
@@ -1293,131 +1253,91 @@ export default function AiScholarTab({
           </div>
         </div>
 
-        {/* PANEL 2: STUDY DOCUMENTS */}
-        <div
-          id="scholar-document-column"
+        {/* PANEL 2: DOCUMENT VIEWER / GROUNDING DRIVER (Spans 3 Columns on desktop when open, toggled on mobile) */}
+        <div 
+          id="scholar-document-column" 
           className={`${mobileView === "document" ? "flex" : "hidden"} ${
             isSidebarOpen ? "lg:flex lg:col-span-3" : "lg:hidden"
           } ${
-            isLight
-              ? "bg-[#FFFFFF] border border-[#E2E6EE] text-[#18202B]"
-              : "bg-[#191E28] border border-[#2B3344] text-[#F1F3F8]"
-          } rounded-2xl p-4 flex-col h-full overflow-hidden relative`}
+            isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
+          } rounded-2xl lg:rounded-3xl p-4 lg:p-5 flex-col h-full overflow-hidden select-none relative`}
         >
-          <div
-            className={`flex items-center justify-between pb-3 border-b ${
-              isLight ? "border-[#EDF0F5]" : "border-[#2B3344]"
-            } mb-3 shrink-0`}
-          >
+          {/* Header */}
+          <div className={`flex items-center justify-between pb-3.5 border-b ${isLight ? "border-[#E8D7C9]" : "border-white/5"} mb-3 shrink-0`}>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-bold ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                  Study Files {totalFilesCount > 0 ? `(${totalFilesCount})` : ""}
+                <span className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest block font-bold`}>
+                  DOCUMENTS {totalFilesCount > 0 ? `(${totalFilesCount})` : ""}
                 </span>
-                <span
-                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
-                    isLight
-                      ? "bg-[#F6F7FA] text-[#596474] border-[#E2E6EE]"
-                      : "bg-[#222938] text-[#B7C0CF] border-[#2B3344]"
-                  }`}
-                >
-                  {formatFileSize(totalFilesSizeBytes)}
+                <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded border ${
+                  isLight 
+                    ? "bg-[#F0EEE8] text-[#77736B] border-[#E8D7C9]" 
+                    : "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                }`}>
+                  {formatFileSize(totalFilesSizeBytes)} / 100 MB
                 </span>
               </div>
-              <p className={`text-xs truncate mt-0.5 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              <h2 className={`text-sm font-extrabold ${isLight ? "text-[#1D1D1B]" : "text-white"} truncate pr-2 font-mono mt-0.5`}>
                 {currentDocTitle}
-              </p>
+              </h2>
             </div>
-
+            
             {totalFilesCount > 0 && (
               <button
                 type="button"
                 onClick={handleClearAllFiles}
-                className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                  isLight
-                    ? "text-[#C93B3B] hover:bg-[#FDECEC]"
-                    : "text-[#F87171] hover:bg-[#3A1D24]"
-                }`}
-                title="Clear all attached files"
+                className={`text-[9px] font-mono ${
+                  isLight ? "text-[#B85C5C] hover:text-[#A04545] bg-[#F5E2E2]" : "text-rose-400 hover:text-rose-300 bg-rose-950/20"
+                } px-2 py-1 rounded-lg border border-transparent transition cursor-pointer flex items-center gap-1`}
+                title="Clear all attached files from this chat"
               >
-                <Trash2 size={12} />
+                <Trash2 size={10} />
                 <span>Clear</span>
               </button>
             )}
           </div>
 
-          {extractError && (
-            <div
-              role="alert"
-              className={`mb-3 p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${
-                isLight
-                  ? "bg-[#FDECEC] border-[#F7C6C6] text-[#C93B3B]"
-                  : "bg-[#3A1D24] border-[#C93B3B]/40 text-[#FCA5A5]"
-              }`}
-            >
-              <span>{extractError}</span>
-              <button type="button" onClick={() => setExtractError(null)} aria-label="Dismiss file error">
-                <X size={13} />
-              </button>
-            </div>
-          )}
-
+          {/* Body Content */}
           <div className="flex-1 overflow-y-auto space-y-3 min-h-0 pr-1 flex flex-col">
             {showCustomForm ? (
-              <form
-                onSubmit={handleApplyCustomFile}
-                className={`p-3.5 rounded-xl border space-y-3 flex flex-col h-full justify-between overflow-y-auto min-h-0 ${
-                  isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#10131A] border-[#2B3344]"
-                }`}
-              >
+              <form onSubmit={handleApplyCustomFile} className={`p-4 rounded-2xl space-y-3 flex flex-col h-full justify-between overflow-y-auto min-h-0 ${
+                isLight ? "bg-[#FAF8F5] border border-[#E8D7C9]" : "bg-[#111728]/90 border border-white/5"
+              }`}>
                 <div className="space-y-3 min-h-0 flex-1 overflow-y-auto pr-1">
                   <div className="flex items-center justify-between">
-                    <span className={`text-xs font-bold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
-                      Paste Study Text
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowCustomForm(false)}
-                      aria-label="Close paste form"
-                      className={`p-1 rounded-md cursor-pointer ${
-                        isLight ? "hover:bg-[#E2E6EE] text-[#596474]" : "hover:bg-[#222938] text-[#B7C0CF]"
-                      }`}
+                    <span className={`text-[10px] font-mono ${isLight ? "text-[#C96F55]" : "text-indigo-400"} uppercase tracking-widest font-black`}>Pasted Study Document</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowCustomForm(false)} 
+                      className={`p-1 rounded ${isLight ? "bg-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 text-slate-400"} cursor-pointer`}
                     >
-                      <X size={13} />
+                      <X size={12} />
                     </button>
                   </div>
 
                   <div>
-                    <label className={`block text-xs font-semibold mb-1 ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                      Document Title
-                    </label>
+                    <label className={`text-[8px] ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest font-bold`}>Document Title</label>
                     <input
                       type="text"
                       value={customTitle}
                       onChange={(e) => setCustomTitle(e.target.value)}
-                      placeholder="e.g., Biology Chapter 4 Notes"
-                      className={`w-full px-3 py-2 rounded-lg border text-xs focus:outline-none ${
-                        isLight
-                          ? "bg-white border-[#D0D7E2] text-[#18202B] focus:border-[#5F55C8]"
-                          : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
-                      }`}
+                      placeholder="e.g., Biology Midterm Notes"
+                      className={`w-full mt-1 px-3 py-2 ${
+                        isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0C101C] border border-white/10 text-white"
+                      } rounded-xl text-xs focus:outline-none`}
                       required
                     />
                   </div>
 
                   <div className="flex-1 flex flex-col min-h-[140px]">
-                    <label className={`block text-xs font-semibold mb-1 ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                      Notes or Mark Scheme Text
-                    </label>
+                    <label className={`text-[8px] ${isLight ? "text-[#77736B]" : "text-slate-400"} uppercase tracking-widest font-bold mb-1`}>Notes Content</label>
                     <textarea
                       value={customContent}
                       onChange={(e) => setCustomContent(e.target.value)}
-                      placeholder="Paste syllabus notes, definitions, or question text here..."
-                      className={`w-full flex-1 px-3 py-2 rounded-lg border text-xs resize-none focus:outline-none ${
-                        isLight
-                          ? "bg-white border-[#D0D7E2] text-[#18202B] focus:border-[#5F55C8]"
-                          : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
-                      }`}
+                      placeholder="Paste your course notes, textbooks snippets, definition indexes or worksheets text here..."
+                      className={`w-full flex-1 px-3 py-2 ${
+                        isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#0C101C] border border-white/10 text-white"
+                      } rounded-xl text-xs font-mono resize-none focus:outline-none`}
                       required
                     />
                   </div>
@@ -1425,45 +1345,37 @@ export default function AiScholarTab({
 
                 <button
                   type="submit"
-                  className="w-full min-h-[38px] py-2 bg-[#5F55C8] hover:bg-[#4E45B0] text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 mt-2"
+                  className={`w-full py-2.5 ${
+                    isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500"
+                  } text-white rounded-xl text-xs font-mono font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 mt-3`}
                 >
                   <FileUp size={13} />
-                  <span>Attach Text Document</span>
+                  <span>Add To Attached Documents</span>
                 </button>
               </form>
             ) : totalFilesCount === 0 ? (
-              <div
+              <div 
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`flex-1 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed rounded-xl transition cursor-pointer h-full ${
-                  isDragging
-                    ? isLight
-                      ? "border-[#5F55C8] bg-[#EFEEFA]"
-                      : "border-[#A99BFF] bg-[#5F55C8]/10"
-                    : isLight
-                    ? "border-[#D0D7E2] bg-[#F6F7FA] hover:border-[#5F55C8]"
-                    : "border-[#2B3344] bg-[#10131A]/60 hover:border-[#A99BFF]/50"
+                className={`flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-2xl transition duration-300 cursor-pointer h-full group relative overflow-hidden ${
+                  isDragging 
+                    ? isLight ? "border-[#C96F55] bg-[#FFF1EC]" : "border-indigo-500 bg-indigo-500/10"
+                    : isLight ? "border-[#E8D7C9] bg-[#FAF8F5] hover:border-[#C96F55]/60 hover:bg-[#FFF1EC]/30" : "border-white/5 bg-[#11111f]/20 hover:border-indigo-500/30"
                 }`}
               >
                 {isExtracting ? (
                   <div className="space-y-2">
-                    <RefreshCw size={22} className={`animate-spin mx-auto ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`} />
-                    <p className={`text-xs font-semibold ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                      Reading document...
-                    </p>
+                    <RefreshCw size={24} className={`animate-spin mx-auto ${isLight ? "text-[#C96F55]" : "text-indigo-400"}`} />
+                    <p className={`text-xs font-mono ${isLight ? "text-[#1D1D1B]" : "text-slate-200"}`}>Extracting notes...</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <FileUp size={26} className={`mx-auto ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`} />
+                    <FileUp size={28} className={`mx-auto ${isLight ? "text-[#C96F55]" : "text-indigo-400"}`} />
                     <div>
-                      <p className={`text-xs font-bold ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                        Attach PDF, Image, or Notes
-                      </p>
-                      <p className={`text-[11px] mt-0.5 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                        Drop past papers or worksheets here
-                      </p>
+                      <p className={`text-xs font-bold ${isLight ? "text-[#1D1D1B]" : "text-slate-200"} font-mono`}>Drag & Drop study documents</p>
+                      <p className={`text-[10px] ${isLight ? "text-[#77736B]" : "text-slate-500"} mt-0.5`}>PDFs, text notes, past papers up to 100 MB</p>
                     </div>
                     <button
                       type="button"
@@ -1471,13 +1383,11 @@ export default function AiScholarTab({
                         e.stopPropagation();
                         setShowCustomForm(true);
                       }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer ${
-                        isLight
-                          ? "bg-white border-[#D0D7E2] text-[#18202B] hover:bg-[#ECEFF5]"
-                          : "bg-[#222938] border-[#2B3344] text-[#F1F3F8] hover:bg-[#2B3344]"
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold ${
+                        isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 text-slate-300"
                       }`}
                     >
-                      + Paste text notes
+                      + Paste text directly
                     </button>
                   </div>
                 )}
@@ -1491,23 +1401,17 @@ export default function AiScholarTab({
                       <div
                         key={doc.id}
                         onClick={() => {
-                          setThreads((prev) =>
-                            prev.map((t) => (t.id === activeThread.id ? { ...t, activeFileId: doc.id } : t))
-                          );
+                          setThreads(prev => prev.map(t => t.id === activeThread.id ? { ...t, activeFileId: doc.id } : t));
                         }}
                         className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 cursor-pointer transition ${
                           isDocActive
-                            ? isLight
-                              ? "bg-[#EFEEFA] border-[#D6D2F6] text-[#18202B] font-semibold"
-                              : "bg-[#222938] border-[#A99BFF]/40 text-[#F1F3F8] font-semibold"
-                            : isLight
-                            ? "bg-[#F6F7FA] border-[#E2E6EE] text-[#596474]"
-                            : "bg-[#10131A] border-[#2B3344] text-[#B7C0CF]"
+                            ? isLight ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#1B233D] border-indigo-500/40 text-white"
+                            : isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-white/5 border-white/5 text-slate-400"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <FileText size={14} className={isDocActive ? (isLight ? "text-[#5F55C8]" : "text-[#A99BFF]") : ""} />
-                          <span className="truncate">{doc.name}</span>
+                          <FileText size={14} className={isDocActive ? isLight ? "text-[#C96F55]" : "text-indigo-400" : ""} />
+                          <span className="truncate font-mono">{doc.name}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
@@ -1523,9 +1427,8 @@ export default function AiScholarTab({
                                 content: doc.content
                               });
                             }}
-                            aria-label={`Preview ${doc.name}`}
-                            className={`p-1 rounded-md transition cursor-pointer ${
-                              isLight ? "text-[#596474] hover:text-[#5F55C8]" : "text-[#B7C0CF] hover:text-[#A99BFF]"
+                            className={`p-1 rounded-lg transition cursor-pointer ${
+                              isLight ? "text-[#77736B] hover:text-[#C96F55]" : "text-slate-400 hover:text-indigo-400"
                             }`}
                             title="Preview file"
                           >
@@ -1537,13 +1440,10 @@ export default function AiScholarTab({
                               e.stopPropagation();
                               handleRemoveAttachedFile(doc.id);
                             }}
-                            aria-label={`Remove ${doc.name}`}
-                            className={`p-1 rounded-md transition cursor-pointer ${
-                              isLight ? "text-[#7A8699] hover:text-[#C93B3B]" : "text-[#8590A2] hover:text-[#F87171]"
-                            }`}
+                            className="text-slate-400 hover:text-rose-400 p-1 cursor-pointer"
                             title="Remove file"
                           >
-                            <X size={13} />
+                            <X size={12} />
                           </button>
                         </div>
                       </div>
@@ -1554,71 +1454,70 @@ export default function AiScholarTab({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className={`min-h-[38px] py-2 w-full rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 cursor-pointer transition ${
-                    isLight
-                      ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] hover:bg-[#ECEFF5]"
-                      : "bg-[#222938] border-[#2B3344] text-[#F1F3F8] hover:bg-[#2B3344]"
+                  className={`py-2 w-full rounded-xl text-xs font-mono font-bold uppercase flex items-center justify-center gap-1.5 ${
+                    isLight ? "bg-[#F0EEE8] border border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#E8D7C9]" : "bg-white/5 hover:bg-white/10 text-slate-300"
                   }`}
                 >
                   <Plus size={13} />
-                  <span>Attach Another File</span>
+                  <span>Attach another file</span>
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* PANEL 3: MAIN CONVERSATION PANEL */}
-        <div
-          id="scholar-chat-column"
+        {/* PANEL 3: MAIN CHAT PANEL (Spans 7 Columns on desktop when sidebar open, 12 columns when closed, or toggled on mobile) */}
+        <div 
+          id="scholar-chat-column" 
           className={`${mobileView === "chat" ? "flex" : "hidden lg:flex"} ${
-            isSidebarOpen ? "lg:col-span-6" : "lg:col-span-12"
+            isSidebarOpen ? "lg:col-span-7" : "lg:col-span-12"
           } ${
-            isLight
-              ? "bg-[#FFFFFF] border border-[#E2E6EE] text-[#18202B]"
-              : "bg-[#191E28] border border-[#2B3344] text-[#F1F3F8]"
-          } rounded-2xl p-4 sm:p-5 flex flex-col h-full overflow-hidden`}
+            isLight ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs text-[#1D1D1B]" : "bg-[#0E1322]/80 border border-white/10 text-white"
+          } rounded-2xl lg:rounded-3xl p-4 lg:p-5 flex flex-col h-full overflow-hidden`}
         >
-          {/* Chat Header */}
-          <div
-            className={`flex items-center justify-between pb-3.5 border-b ${
-              isLight ? "border-[#EDF0F5]" : "border-[#2B3344]"
-            } mb-3 shrink-0 gap-2`}
-          >
+          {/* Header */}
+          <div className={`flex items-center justify-between pb-3.5 border-b ${isLight ? "border-[#E8D7C9]" : "border-white/5"} mb-3 shrink-0`}>
             <div className="flex items-center gap-2.5 min-w-0">
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className={`hidden lg:flex p-1.5 rounded-xl border ${
+                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]" : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                } transition cursor-pointer`}
+                title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+              >
+                <History size={14} />
+              </button>
+              <div className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#66856D]" : "bg-emerald-400"} animate-pulse shrink-0`} />
               <div className="min-w-0">
-                <h2 className={`text-sm font-bold truncate ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                  {activeThread.title}
-                </h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <label
-                    className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-lg border cursor-pointer ${
-                      isLight
-                        ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B]"
-                        : "bg-[#222938] border-[#2B3344] text-[#F1F3F8]"
-                    }`}
-                  >
-                    <BookOpen size={12} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-                    <span className={isLight ? "text-[#596474]" : "text-[#B7C0CF]"}>Subject:</span>
+                <div className="flex items-center gap-2">
+                  <h3 className={`text-xs font-mono font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"} uppercase tracking-wider truncate`}>
+                    {activeThread.title}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <label className={`flex items-center gap-1.5 text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg border cursor-pointer ${
+                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-white/5 border-white/10 text-slate-200"
+                  }`}>
+                    <BookOpen size={11} className={isLight ? "text-[#C96F55]" : "text-indigo-400"} />
+                    <span className={isLight ? "text-[#77736B]" : "text-slate-400"}>Subject:</span>
                     <select
                       value={activeThread.selectedSubject || "Auto-Detect"}
                       onChange={(e) => handleSubjectChange(e.target.value)}
-                      aria-label="Select subject context"
-                      className={`bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer pr-1 ${
-                        isLight ? "text-[#18202B]" : "text-[#F1F3F8]"
+                      className={`bg-transparent border-none text-[10px] font-bold font-mono focus:outline-none cursor-pointer pr-1 ${
+                        isLight ? "text-[#1D1D1B]" : "text-white"
                       }`}
                     >
                       {IGCSE_SUBJECT_OPTIONS.map((sub) => (
-                        <option
-                          key={sub.id}
-                          value={sub.id}
-                          className={isLight ? "bg-white text-[#18202B]" : "bg-[#191E28] text-[#F1F3F8]"}
-                        >
+                        <option key={sub.id} value={sub.id} className={isLight ? "bg-white text-slate-900" : "bg-[#111626] text-white"}>
                           {sub.label}
                         </option>
                       ))}
                     </select>
                   </label>
+                  <span className="text-[9px] text-[#77736B] hidden sm:inline truncate">
+                    • Identifies Key Points & Lost Marks
+                  </span>
                 </div>
               </div>
             </div>
@@ -1631,63 +1530,78 @@ export default function AiScholarTab({
                     setIsSidebarOpen(true);
                     setMobileView("document");
                   }}
-                  className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition cursor-pointer ${
-                    isLight
-                      ? "bg-[#EFEEFA] border-[#D6D2F6] text-[#5F55C8]"
-                      : "bg-[#5F55C8]/15 border-[#A99BFF]/30 text-[#A99BFF]"
-                  }`}
+                  className="flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-1 rounded-lg border border-[#C96F55]/30 bg-[#FFF1EC] text-[#C96F55] hover:bg-[#FFE6DC] transition cursor-pointer"
                   title="View attached study files"
                 >
-                  <Files size={12} />
-                  <span>
-                    {totalFilesCount} {totalFilesCount === 1 ? "File" : "Files"}
-                  </span>
+                  <Files size={11} />
+                  <span>{totalFilesCount} {totalFilesCount === 1 ? "File" : "Files"}</span>
+                </button>
+              )}
+
+              {/* If attached images exist or latest user message has a photo, provide a quick preview button */}
+              {(attachedImages.length > 0 || activeThread.messages.some(m => (m.imageUrls && m.imageUrls.length > 0) || m.imageUrl)) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const firstImg = attachedImages[0] || activeThread.messages.slice().reverse().find(m => (m.imageUrls && m.imageUrls.length > 0) || m.imageUrl)?.imageUrl || activeThread.messages.slice().reverse().find(m => m.imageUrls && m.imageUrls.length > 0)?.imageUrls?.[0];
+                    if (firstImg) {
+                      setPreviewModalFile({
+                        name: "Study Photo Preview",
+                        type: "image/jpeg",
+                        previewUrl: firstImg
+                      });
+                    }
+                  }}
+                  className="flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-1 rounded-lg border border-[#C96F55]/30 bg-[#FFF1EC] text-[#C96F55] hover:bg-[#FFE6DC] transition cursor-pointer"
+                  title="Preview latest study photo"
+                >
+                  <Eye size={11} />
+                  <span>Photo</span>
                 </button>
               )}
 
               <button
                 type="button"
                 onClick={() => {
-                  setThreads((prev) =>
-                    prev.map((t) => (t.id === activeThread.id ? { ...t, messages: [] } : t))
-                  );
+                  if (window.confirm("Clear all messages in this conversation?")) {
+                    setThreads(prev => prev.map(t => t.id === activeThread.id ? { ...t, messages: [] } : t));
+                  }
                 }}
                 disabled={activeThread.messages.length === 0}
-                aria-label="Clear messages in this session"
-                className={`p-2 rounded-xl border transition cursor-pointer disabled:opacity-30 ${
-                  isLight
-                    ? "border-[#E2E6EE] text-[#596474] hover:text-[#C93B3B] hover:bg-[#FDECEC]"
-                    : "border-[#2B3344] text-[#B7C0CF] hover:text-[#F87171] hover:bg-[#3A1D24]"
+                className={`p-1.5 rounded-xl border transition cursor-pointer disabled:opacity-30 ${
+                  isLight ? "border-[#E8D7C9] text-[#77736B] hover:text-rose-600 hover:bg-rose-50" : "border-white/10 text-slate-400 hover:text-rose-400"
                 }`}
                 title="Clear conversation messages"
               >
-                <Trash2 size={14} />
+                <Trash2 size={13} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDnsHubModal(true)}
+                className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                  isLight ? "border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B] hover:bg-[#F7F5F0]" : "border-white/10 text-slate-400 hover:text-white"
+                }`}
+                title="DNS & Custom Domain Hub (engeznafsak.com)"
+              >
+                <Globe size={13} />
               </button>
             </div>
           </div>
 
           {/* Conversation Timeline */}
-          <div
-            ref={chatTimelineRef}
-            className="flex-1 overflow-y-auto space-y-4 min-h-0 pr-1.5 select-text"
-          >
+          <div className="flex-1 overflow-y-auto space-y-4 min-h-0 pr-1 select-text">
             {activeThread.messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 my-auto">
-                <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${
-                    isLight
-                      ? "bg-[#EFEEFA] text-[#5F55C8] border-[#D6D2F6]"
-                      : "bg-[#5F55C8]/15 text-[#A99BFF] border-[#A99BFF]/30"
-                  }`}
-                >
-                  <Sparkles size={22} />
+                <div className={`w-12 h-12 rounded-2xl ${
+                  isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                } flex items-center justify-center`}>
+                  <Sparkles size={24} />
                 </div>
-                <div className="space-y-1 max-w-md">
-                  <h3 className={`text-base font-bold ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                    Ask a Syllabus Question or Check Your Working
-                  </h3>
-                  <p className={`text-xs leading-relaxed ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                    Paste a past paper question, upload a photo of your handwritten solution, or choose a starter prompt below.
+                <div className="space-y-1 max-w-sm">
+                  <h4 className={`text-sm font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>Ask or Upload Your Working</h4>
+                  <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
+                    Paste an IGCSE question, upload a past paper picture, or ask for a full mark scheme breakdown.
                   </p>
                 </div>
 
@@ -1697,14 +1611,13 @@ export default function AiScholarTab({
                       key={i}
                       type="button"
                       onClick={() => handleSend(sug.prompt)}
-                      className={`w-full p-3 rounded-xl border text-xs font-medium transition cursor-pointer text-left flex items-center justify-between gap-2 ${
-                        isLight
-                          ? "bg-[#F6F7FA] border-[#E2E6EE] text-[#18202B] hover:border-[#5F55C8] hover:bg-[#EFEEFA]/50"
-                          : "bg-[#222938] border-[#2B3344] text-[#F1F3F8] hover:border-[#A99BFF]/50"
+                      className={`w-full p-2.5 rounded-xl border text-xs transition cursor-pointer text-left ${
+                        isLight 
+                          ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#FFF1EC] hover:border-[#E8D7C9]" 
+                          : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
                       }`}
                     >
-                      <span>{sug.label}</span>
-                      <Send size={12} className="shrink-0 opacity-60" />
+                      {sug.label}
                     </button>
                   ))}
                 </div>
@@ -1713,58 +1626,52 @@ export default function AiScholarTab({
               activeThread.messages.map((msg) => {
                 const isAi = msg.role === "assistant";
                 return (
-                  <div key={msg.id} className={`flex gap-3 max-w-[94%] ${isAi ? "mr-auto w-full" : "ml-auto"}`}>
+                  <div key={msg.id} className={`flex gap-3 max-w-[92%] ${isAi ? "mr-auto w-full" : "ml-auto"}`}>
                     {isAi && (
-                      <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
-                          isLight
-                            ? "bg-[#EFEEFA] text-[#5F55C8] border-[#D6D2F6]"
-                            : "bg-[#222938] text-[#A99BFF] border-[#2B3344]"
-                        }`}
-                      >
-                        <Bot size={15} />
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                        isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-[#1B233D] text-indigo-400 border border-indigo-500/20"
+                      }`}>
+                        <Bot size={14} />
                       </div>
                     )}
 
-                    <div
-                      className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                        isAi
-                          ? isLight
-                            ? "bg-[#F6F7FA] border border-[#E2E6EE] text-[#18202B] w-full"
-                            : "bg-[#222938] border border-[#2B3344] text-[#F1F3F8] w-full"
-                          : "bg-[#5F55C8] text-white"
-                      }`}
-                    >
+                    <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-xs ${
+                      isAi 
+                        ? isLight ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] w-full" : "bg-[#111626] border border-white/10 text-slate-100 w-full"
+                        : isLight ? "bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-indigo-600 text-white"
+                    }`}>
                       {isAi ? (
                         <div className="space-y-3">
-                          <FormattedScholarResponse content={msg.content} isLight={isLight} />
+                          <FormattedScholarResponse content={msg.content} />
+                          {msg.provider && (
+                            <div className={`pt-2.5 border-t ${isLight ? "border-[#E8D7C9]" : "border-white/5"} flex items-center justify-between text-[10px] font-mono ${
+                              isLight ? "text-[#77736B]" : "text-slate-400"
+                            }`}>
+                              <span className="flex items-center gap-1.5">
+                                <span className={`w-1.5 h-1.5 rounded-full ${msg.engine === "deepseek" ? "bg-cyan-500" : "bg-emerald-500"}`} />
+                                <span>{msg.provider}</span>
+                              </span>
+                              {msg.model && <span className="opacity-75">{msg.model}</span>}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {(msg.imageUrls && msg.imageUrls.length > 0
-                            ? msg.imageUrls
-                            : msg.imageUrl
-                            ? [msg.imageUrl]
-                            : []
-                          ).map((imgUrl, imgIdx) => (
+                          {((msg.imageUrls && msg.imageUrls.length > 0) ? msg.imageUrls : (msg.imageUrl ? [msg.imageUrl] : [])).map((imgUrl, imgIdx) => (
                             <div
                               key={imgIdx}
-                              onClick={() =>
-                                setPreviewModalFile({
-                                  name: `Attached Image ${imgIdx + 1}`,
-                                  type: "image/jpeg",
-                                  previewUrl: imgUrl
-                                })
-                              }
-                              className="relative group cursor-zoom-in rounded-xl overflow-hidden border border-white/20 max-w-[200px]"
+                              onClick={() => setPreviewModalFile({
+                                name: `Attached Image ${imgIdx + 1}`,
+                                type: "image/jpeg",
+                                previewUrl: imgUrl
+                              })}
+                              className="relative group cursor-zoom-in rounded-xl overflow-hidden border border-black/10 shadow-xs max-w-[200px]"
                               title="Click to preview full-screen"
                             >
-                              <img
-                                src={imgUrl}
-                                alt="Attached student work"
-                                className="w-full h-28 object-cover"
-                                referrerPolicy="no-referrer"
-                              />
+                              <img src={imgUrl} alt="Attached student work" className="w-full h-28 object-cover" referrerPolicy="no-referrer" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[11px] font-bold gap-1">
+                                <Eye size={13} /> Preview
+                              </div>
                             </div>
                           ))}
                           {msg.attachedFiles && msg.attachedFiles.length > 0 && (
@@ -1773,22 +1680,22 @@ export default function AiScholarTab({
                                 <button
                                   key={afIdx}
                                   type="button"
-                                  onClick={() =>
-                                    setPreviewModalFile({
-                                      name: af.name,
-                                      type: af.type || "application/pdf",
-                                      previewUrl: af.previewUrl
-                                    })
-                                  }
-                                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/20 hover:bg-black/30 border border-white/20 text-xs font-mono text-white transition cursor-pointer"
+                                  onClick={() => setPreviewModalFile({
+                                    name: af.name,
+                                    type: af.type || "application/pdf",
+                                    previewUrl: af.previewUrl
+                                  })}
+                                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/20 hover:bg-black/30 border border-white/20 text-[11px] font-mono text-white transition cursor-pointer"
+                                  title="Click to view attached document"
                                 >
-                                  <FileText size={12} className="shrink-0" />
+                                  <FileText size={12} className="text-amber-300 shrink-0" />
                                   <span className="truncate max-w-[150px]">{af.name}</span>
+                                  {af.size ? <span className="opacity-70 text-[9px]">({formatFileSize(af.size)})</span> : null}
                                 </button>
                               ))}
                             </div>
                           )}
-                          <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+                          <p className="whitespace-pre-line font-medium leading-relaxed">{msg.content}</p>
                         </div>
                       )}
                     </div>
@@ -1798,24 +1705,19 @@ export default function AiScholarTab({
             )}
 
             {isAiLoading && (
-              <div className="flex gap-3 max-w-[92%] mr-auto items-center">
-                <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
-                    isLight
-                      ? "bg-[#EFEEFA] text-[#5F55C8] border-[#D6D2F6]"
-                      : "bg-[#222938] text-[#A99BFF] border-[#2B3344]"
-                  }`}
-                >
-                  <Bot size={15} />
+              <div className="flex gap-3 max-w-[92%] mr-auto animate-in fade-in duration-200 items-center">
+                <div className={`w-9 h-9 rounded-2xl ${
+                  isLight ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" : "bg-[#1B233D] text-indigo-400 border border-indigo-500/20"
+                } flex items-center justify-center shrink-0 animate-pulse shadow-2xs`}>
+                  <Bot size={18} />
                 </div>
-                <div
-                  className={`px-4 py-2.5 rounded-2xl border flex items-center gap-2.5 ${
-                    isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"
-                  }`}
-                >
-                  <RefreshCw size={13} className={`animate-spin ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`} />
-                  <span className={`text-xs font-medium ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-                    Reviewing question and mark scheme...
+                <div className={`px-4 py-2.5 ${isLight ? "bg-[#FAF8F5] border border-[#E8D7C9]" : "bg-[#111626] border border-white/10"} rounded-2xl shadow-2xs flex items-center gap-2.5`}>
+                  <span className="relative flex h-2 w-2">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLight ? "bg-[#C96F55]" : "bg-indigo-400"}`}></span>
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isLight ? "bg-[#C96F55]" : "bg-indigo-400"}`}></span>
+                  </span>
+                  <span className={`text-xs font-mono font-medium ${isLight ? "text-[#1D1D1B]" : "text-slate-200"}`}>
+                    Thinking...
                   </span>
                 </div>
               </div>
@@ -1823,55 +1725,47 @@ export default function AiScholarTab({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Action Starter Bar */}
-          <div className="pt-2 pb-1.5 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
+          {/* Quick Action chips bar */}
+          <div className="pt-2 pb-1.5 flex items-center gap-1.5 overflow-x-auto scrollbar-none select-none shrink-0">
             <button
               type="button"
-              onClick={() =>
-                handleSend(
-                  "Please detect the subject, evaluate my answer against official IGCSE mark scheme standards, and explicitly break down the Key Points I got right vs the ones I lost marks on."
-                )
-              }
+              onClick={() => handleSend("🎯 Please detect the subject, evaluate my answer against official IGCSE mark scheme standards, and explicitly break down the Key Points I got right vs the ones I lost marks on.")}
               disabled={isAiLoading}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold whitespace-nowrap transition cursor-pointer disabled:opacity-50 ${
-                isLight
-                  ? "bg-[#EFEEFA] hover:bg-[#E2DFF7] border-[#D6D2F6] text-[#5F55C8]"
-                  : "bg-[#5F55C8]/15 hover:bg-[#5F55C8]/25 border-[#A99BFF]/30 text-[#A99BFF]"
-              }`}
+              className={`px-2.5 py-1 ${
+                isLight ? "bg-[#FFF1EC] hover:bg-[#FFE6DC] border border-[#E8D7C9] text-[#C96F55]" : "bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 text-emerald-300"
+              } rounded-lg text-[10px] font-mono font-bold whitespace-nowrap transition cursor-pointer disabled:opacity-50 flex items-center gap-1`}
             >
-              Earned vs. Lost Marks
+              <span>✅ Key Points Right & ❌ Lost Marks</span>
             </button>
             <button
               type="button"
-              onClick={() =>
-                handleSend(
-                  "Please grade this answer strictly against the official IGCSE mark scheme, allocate [M]/[A]/[B] marks, and detail where any marks were lost."
-                )
-              }
+              onClick={() => handleSend("🎯 Please grade this answer strictly against the official IGCSE mark scheme, allocate [M]/[A]/[B] marks, and detail where any marks were lost.")}
               disabled={isAiLoading}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-medium whitespace-nowrap transition cursor-pointer disabled:opacity-50 ${
-                isLight
-                  ? "bg-[#F6F7FA] hover:bg-[#ECEFF5] border-[#E2E6EE] text-[#18202B]"
-                  : "bg-[#222938] hover:bg-[#2B3344] border-[#2B3344] text-[#F1F3F8]"
-              }`}
+              className={`px-2.5 py-1 ${
+                isLight ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-indigo-600/25 border border-indigo-500/20 text-indigo-300"
+              } rounded-lg text-[10px] font-mono font-bold whitespace-nowrap transition cursor-pointer disabled:opacity-50`}
             >
-              Grade vs. Mark Scheme
+              🎯 Grade vs Mark Scheme
             </button>
             <button
               type="button"
-              onClick={() =>
-                handleSend(
-                  "Provide the full-mark model answer with complete step-by-step working and required syllabus keywords."
-                )
-              }
+              onClick={() => handleSend("❌ Find and pinpoint every mistake or omitted keyword in this solution and explain why the examiner deducted marks.")}
               disabled={isAiLoading}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-medium whitespace-nowrap transition cursor-pointer disabled:opacity-50 ${
-                isLight
-                  ? "bg-[#F6F7FA] hover:bg-[#ECEFF5] border-[#E2E6EE] text-[#18202B]"
-                  : "bg-[#222938] hover:bg-[#2B3344] border-[#2B3344] text-[#F1F3F8]"
-              }`}
+              className={`px-2.5 py-1 ${
+                isLight ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-rose-600/25 border border-rose-500/20 text-rose-300"
+              } rounded-lg text-[10px] font-mono font-bold whitespace-nowrap transition cursor-pointer disabled:opacity-50`}
             >
-              Step-by-Step Model Answer
+              ❌ Pinpoint Lost Marks
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSend("✨ Provide the 100% full-mark model answer with complete step-by-step mathematical working and syllabus keywords.")}
+              disabled={isAiLoading}
+              className={`px-2.5 py-1 ${
+                isLight ? "bg-[#FAF8F5] hover:bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#151c30] hover:bg-amber-600/25 border border-amber-500/20 text-amber-300"
+              } rounded-lg text-[10px] font-mono font-bold whitespace-nowrap transition cursor-pointer disabled:opacity-50`}
+            >
+              ✨ 100% Model Answer
             </button>
           </div>
 
@@ -1879,38 +1773,118 @@ export default function AiScholarTab({
           {attachedImages.length > 0 && (
             <div className="pt-2 flex items-center gap-2 overflow-x-auto select-none">
               {attachedImages.map((img, idx) => (
-                <div
-                  key={idx}
-                  className={`relative group w-12 h-12 rounded-xl border overflow-hidden shrink-0 ${
-                    isLight ? "border-[#D0D7E2]" : "border-[#2B3344]"
-                  }`}
-                >
+                <div key={idx} className="relative group w-12 h-12 rounded-xl border border-[#E8D7C9] overflow-hidden shrink-0 shadow-2xs">
                   <img
                     src={img}
                     alt={`Attachment ${idx + 1}`}
                     className="w-full h-full object-cover cursor-pointer"
-                    onClick={() =>
-                      setPreviewModalFile({
-                        name: `Attached Image ${idx + 1}`,
-                        type: "image/jpeg",
-                        previewUrl: img
-                      })
-                    }
+                    onClick={() => setPreviewModalFile({
+                      name: `Attached Image ${idx + 1}`,
+                      type: "image/jpeg",
+                      previewUrl: img
+                    })}
                     referrerPolicy="no-referrer"
                   />
+                  <div
+                    onClick={() => setPreviewModalFile({
+                      name: `Attached Image ${idx + 1}`,
+                      type: "image/jpeg",
+                      previewUrl: img
+                    })}
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white cursor-pointer"
+                    title="Preview"
+                  >
+                    <Eye size={12} />
+                  </div>
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setAttachedImages((prev) => prev.filter((_, i) => i !== idx));
+                      setAttachedImages(prev => prev.filter((_, i) => i !== idx));
                     }}
-                    aria-label={`Remove image ${idx + 1}`}
-                    className="absolute top-0.5 right-0.5 w-4 h-4 bg-[#C93B3B] text-white rounded-full flex items-center justify-center text-[9px] cursor-pointer"
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-rose-600 hover:bg-rose-700 text-white rounded-full flex items-center justify-center text-[9px] cursor-pointer shadow-xs"
+                    title="Remove"
                   >
                     <X size={9} />
                   </button>
                 </div>
               ))}
+              <div className="flex items-center gap-2 pl-1">
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalFile({
+                    name: `Attached Photo (1 of ${attachedImages.length})`,
+                    type: "image/jpeg",
+                    previewUrl: attachedImages[0]
+                  })}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#C96F55]/10 text-[#C96F55] hover:bg-[#C96F55]/20 border border-[#C96F55]/20 text-[10px] font-mono font-bold transition cursor-pointer shrink-0 shadow-2xs"
+                  title="Open full photo preview with zoom and rotation"
+                >
+                  <Eye size={12} />
+                  <span>Preview Photo ({attachedImages.length})</span>
+                </button>
+                <span className="text-[10px] font-mono text-[#77736B]">
+                  Click photo or button to preview
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Attached Files Preview Strip */}
+          {activeThread.attachedFiles && activeThread.attachedFiles.length > 0 && (
+            <div className="pt-2 flex items-center gap-2 overflow-x-auto select-none">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] font-mono text-[#77736B] flex items-center gap-1">
+                  <FileText size={12} className="text-[#C96F55]" />
+                  <span>Files ({activeThread.attachedFiles.length}):</span>
+                </span>
+              </div>
+              {activeThread.attachedFiles.map((f, idx) => (
+                <div
+                  key={f.id || idx}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-mono transition shrink-0 ${
+                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-[#12192B] border-white/10 text-white"
+                  }`}
+                >
+                  <span
+                    onClick={() => setPreviewModalFile({
+                      name: f.name,
+                      type: f.type,
+                      content: f.content,
+                      previewUrl: f.previewUrl,
+                      base64: f.dataUrl
+                    })}
+                    className="cursor-pointer hover:underline truncate max-w-[130px]"
+                    title={`Click to preview: ${f.name}`}
+                  >
+                    {f.name}
+                  </span>
+                  <span className="text-[9px] text-[#77736B]">({formatFileSize(f.size)})</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setThreads(prev => prev.map(t => {
+                        if (t.id === activeThread.id) {
+                          const updated = (t.attachedFiles || []).filter(item => item.id !== f.id);
+                          return { ...t, attachedFiles: updated };
+                        }
+                        return t;
+                      }));
+                    }}
+                    className="text-rose-500 hover:text-rose-700 cursor-pointer p-0.5"
+                    title="Remove file"
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1 px-2 py-1 rounded-xl border border-dashed border-[#C96F55]/40 text-[10px] font-mono text-[#C96F55] hover:bg-[#C96F55]/10 cursor-pointer shrink-0"
+              >
+                <Plus size={10} /> Add files
+              </button>
             </div>
           )}
 
@@ -1919,19 +1893,16 @@ export default function AiScholarTab({
             <button
               type="button"
               onClick={() => imageInputRef.current?.click()}
-              aria-label="Attach study photos"
-              className={`p-2.5 rounded-xl border transition flex flex-col items-center justify-center shrink-0 w-13 h-13 cursor-pointer ${
-                isLight
-                  ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#596474] hover:text-[#18202B] hover:bg-[#ECEFF5]"
-                  : "bg-[#222938] border-[#2B3344] text-[#B7C0CF] hover:text-[#F1F3F8]"
-              }`}
+              className={`p-3 ${
+                isLight ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]" : "bg-[#12192B] border border-white/10 text-slate-400 hover:text-white"
+              } rounded-2xl transition flex flex-col items-center justify-center shrink-0 w-14 h-14 cursor-pointer relative`}
               title="Attach study photos"
               disabled={isAiLoading}
             >
-              <ImageIcon size={17} />
-              <span className="text-[10px] font-medium mt-0.5">Photo</span>
+              <ImageIcon size={18} />
+              <span className="text-[8px] font-mono font-bold mt-0.5">+ Photos</span>
             </button>
-            <input
+            <input 
               type="file"
               ref={imageInputRef}
               onChange={handleImageSelect}
@@ -1943,19 +1914,16 @@ export default function AiScholarTab({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              aria-label="Attach PDF or text files"
-              className={`p-2.5 rounded-xl border transition flex flex-col items-center justify-center shrink-0 w-13 h-13 cursor-pointer ${
-                isLight
-                  ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#596474] hover:text-[#18202B] hover:bg-[#ECEFF5]"
-                  : "bg-[#222938] border-[#2B3344] text-[#B7C0CF] hover:text-[#F1F3F8]"
-              }`}
-              title="Attach past papers or notes (PDF/Text)"
+              className={`p-3 ${
+                isLight ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#77736B] hover:text-[#1D1D1B]" : "bg-[#12192B] border border-white/10 text-slate-400 hover:text-white"
+              } rounded-2xl transition flex flex-col items-center justify-center shrink-0 w-14 h-14 cursor-pointer relative`}
+              title="Attach past papers, mark schemes & notes (PDF/Text/Docs)"
               disabled={isAiLoading}
             >
-              <FileUp size={17} />
-              <span className="text-[10px] font-medium mt-0.5">File</span>
+              <FileUp size={18} />
+              <span className="text-[8px] font-mono font-bold mt-0.5">+ Files</span>
             </button>
-            <input
+            <input 
               type="file"
               ref={fileInputRef}
               onChange={handleFileInputChange}
@@ -1969,35 +1937,31 @@ export default function AiScholarTab({
               onChange={(e) => setInputVal(e.target.value)}
               onKeyDown={handleKeyPress}
               onPaste={handlePaste}
-              aria-label="Question or answer input"
-              placeholder="Paste an exam question, your working, or ask a syllabus question..."
-              className={`flex-1 w-full px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm transition resize-none h-13 focus:outline-none ${
-                isLight
-                  ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] placeholder-[#7A8699] focus:bg-white focus:border-[#5F55C8]"
-                  : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] placeholder-[#8590A2] focus:border-[#A99BFF]"
-              }`}
+              placeholder="Paste IGCSE question & answer, attach photos or notes..."
+              className={`flex-1 w-full px-4 py-3 ${
+                isLight 
+                  ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] placeholder-[#9B9890] focus:border-[#C96F55]" 
+                  : "bg-[#12192B] border border-white/10 text-white placeholder-slate-600 focus:border-indigo-500"
+              } rounded-2xl text-base sm:text-xs transition resize-none h-14 focus:outline-none`}
               disabled={isAiLoading}
               rows={2}
             />
 
             <button
-              type="button"
               onClick={() => handleSend()}
               id="ai-scholar-chat-send-btn"
-              aria-label="Send message"
-              className="w-13 h-13 shrink-0 rounded-xl bg-[#5F55C8] hover:bg-[#4E45B0] text-white flex items-center justify-center transition cursor-pointer shadow-xs disabled:opacity-40"
-              disabled={
-                isAiLoading ||
-                (!inputVal.trim() &&
-                  attachedImages.length === 0 &&
-                  (!activeThread.attachedFiles || activeThread.attachedFiles.length === 0))
-              }
-              title="Send message"
+              className={`w-14 h-14 shrink-0 rounded-2xl ${
+                isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500"
+              } text-white flex items-center justify-center transition cursor-pointer shadow-xs disabled:opacity-50`}
+              disabled={isAiLoading || (!inputVal.trim() && attachedImages.length === 0 && (!activeThread.attachedFiles || activeThread.attachedFiles.length === 0))}
+              title="Send to Ai examiner"
             >
               <Send size={16} />
             </button>
           </div>
+
         </div>
+
       </div>
 
       {/* File Preview Modal */}
@@ -2008,7 +1972,9 @@ export default function AiScholarTab({
         isLight={isLight}
       />
 
-      {/* Domain & DNS Modal */}
+
+
+      {/* CUSTOM DNS & DOMAIN HUB MODAL */}
       <DomainDnsModal
         isOpen={showDnsHubModal}
         onClose={() => setShowDnsHubModal(false)}

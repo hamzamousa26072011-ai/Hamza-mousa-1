@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React from "react";
 import { 
   Flame, 
   ArrowRight, 
@@ -7,28 +7,28 @@ import {
   RotateCcw,
   Clock, 
   BookOpen, 
+  Target,
+  FileCheck,
   CheckCircle2,
-  Plus,
-  Trash2,
+  Sparkles,
+  Award,
+  Brain,
+  Coffee,
+  Trees,
+  GraduationCap,
+  Compass,
+  Zap,
+  CheckSquare,
+  TrendingUp,
   CalendarClock,
   CalendarCheck,
-  Timer,
-  Compass,
-  Check,
-  X
+  Timer
 } from "lucide-react";
-import { Task, ExamItem, HabitItem, HabitDayLog } from "../types";
+import { Task } from "../types";
 import { FlipClockTimer } from "./FlipClockTimer";
 
 interface DashboardTabProps {
   tasks: Task[];
-  onAddTask?: (newTask: Omit<Task, "id" | "completed">) => void;
-  onToggleTask?: (id: string) => void;
-  onDeleteTask?: (id: string) => void;
-  subjects?: string[];
-  exams?: ExamItem[];
-  habits?: HabitItem[];
-  habitLogs?: Record<string, HabitDayLog>;
   focusModeActive: boolean;
   focusTimeRemaining: string;
   focusMinutesSelected: number;
@@ -42,18 +42,10 @@ interface DashboardTabProps {
   isPaused?: boolean;
   pomodoroCount?: number;
   themeMode?: "light" | "dark";
-  currentUser?: any;
 }
 
 export default function DashboardTab({
   tasks,
-  onAddTask,
-  onToggleTask,
-  onDeleteTask,
-  subjects = ["Mathematics", "Physics", "Chemistry", "English"],
-  exams = [],
-  habits = [],
-  habitLogs = {},
   focusModeActive,
   focusTimeRemaining,
   focusMinutesSelected,
@@ -68,804 +60,541 @@ export default function DashboardTab({
   pomodoroCount = 0,
   themeMode = "dark"
 }: DashboardTabProps) {
+
   const isLight = themeMode === "light";
 
-  // Quick Task Creation State
-  const [isAddingTask, setIsAddingTask] = useState(false);
-  const [taskTitle, setTaskTitle] = useState("");
-  const [taskSubject, setTaskSubject] = useState(subjects[0] || "General Study");
-  const [taskPriority, setTaskPriority] = useState<Task["priority"]>("Scheduled");
-  const [taskDueDate, setTaskDueDate] = useState("");
-
-  // Formatted Today Date
-  const todayFormatted = useMemo(() => {
-    return new Date().toLocaleDateString(undefined, {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-  }, []);
-
-  const todayYMD = useMemo(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  }, []);
-
-  // Task progress calculations (never show 0/0 = 0% as a measured score)
+  // Calculations for progress indicators
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((t) => t.completed).length;
-  const pendingTasks = tasks.filter((t) => !t.completed);
-  const completionPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : null;
+  const completedTasks = tasks.filter(t => t.completed).length;
+  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const pendingTasks = tasks.filter(t => !t.completed);
 
-  // Next upcoming exam from real user exam list
-  const nextUpcomingExam = useMemo(() => {
-    const nowMs = Date.now();
-    const upcoming = exams
-      .map((ex) => {
-        const target = new Date(`${ex.examDate}T${ex.examTime || "09:00"}:00`).getTime();
-        const diffMs = target - nowMs;
-        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        return { exam: ex, target, diffMs, days, hours };
-      })
-      .filter((item) => !isNaN(item.target) && item.diffMs > 0)
-      .sort((a, b) => {
-        if (a.exam.isPinned && !b.exam.isPinned) return -1;
-        if (!a.exam.isPinned && b.exam.isPinned) return 1;
-        return a.target - b.target;
-      });
-    return upcoming[0] || null;
-  }, [exams]);
-
-  // Today's habit completion count from real user habit logs
-  const todayHabitsSummary = useMemo(() => {
-    const total = habits.length;
-    if (total === 0) return { completed: 0, total: 0 };
-    const log = habitLogs[todayYMD];
-    let completed = 0;
-    if (log?.completedHabits) {
-      habits.forEach((h) => {
-        if (log.completedHabits[h.id]) completed++;
-      });
+  // Render priority bullet styles
+  const getPriorityStyle = (priority: string) => {
+    if (isLight) {
+      switch (priority) {
+        case "Urgent/High":
+          return "bg-[#F5E2E2] text-[#B85C5C] border border-[#F5E2E2]";
+        case "Scheduled":
+          return "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]";
+        default:
+          return "bg-[#E3EEE5] text-[#66856D] border border-[#C5DAC9]";
+      }
     }
-    return { completed, total };
-  }, [habits, habitLogs, todayYMD]);
-
-  const handleCreateTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!taskTitle.trim() || !onAddTask) return;
-    onAddTask({
-      title: taskTitle.trim(),
-      subject: taskSubject || "General Study",
-      examDate: taskDueDate || todayYMD,
-      dueDate: taskDueDate || undefined,
-      priority: taskPriority,
-      details: ""
-    });
-    setTaskTitle("");
-    setTaskDueDate("");
-    setIsAddingTask(false);
+    switch (priority) {
+      case "Urgent/High":
+        return "bg-rose-500/15 text-rose-300 border border-rose-500/30";
+      case "Scheduled":
+        return "bg-[#C96F55]/20 text-[#E0C6B5] border border-[#C96F55]/30";
+      default:
+        return "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30";
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. TODAY HEADER: Concise greeting, date, and truthful summary metrics */}
-      <section
-        aria-label="Today summary"
-        className={`rounded-2xl border p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5 ${
-          isLight
-            ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
-            : "bg-[#191E28] border-[#283040] text-[#F1F3F8]"
-        }`}
-      >
-        <div className="space-y-1">
-          <p className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-            {todayFormatted}
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Today&apos;s Workspace
-          </h1>
-          <p className={`text-sm ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-            {pendingTasks.length > 0
-              ? `You have ${pendingTasks.length} pending ${pendingTasks.length === 1 ? "task" : "tasks"} to focus on today.`
-              : nextUpcomingExam
-              ? `Next exam: ${nextUpcomingExam.exam.title} in ${nextUpcomingExam.days}d ${nextUpcomingExam.hours}h.`
-              : "Plan your study tasks, track upcoming exams, or start a timed focus session."}
-          </p>
-        </div>
-
-        {/* Truthful Status Indicators */}
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          <div
-            className={`px-4 py-2.5 rounded-xl border flex items-center gap-3 ${
-              isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#283040]"
-            }`}
-          >
-            <Flame size={18} className="text-amber-500 shrink-0" />
-            <div>
-              <span className={`block text-[11px] font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                Study Streak
-              </span>
-              <span className="text-sm font-bold font-mono tabular-nums">
-                {streak} {streak === 1 ? "day" : "days"}
-              </span>
-            </div>
-          </div>
-
-          <div
-            className={`px-4 py-2.5 rounded-xl border flex items-center gap-3 ${
-              isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#283040]"
-            }`}
-          >
-            <Clock size={18} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-            <div>
-              <span className={`block text-[11px] font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                Focus Sessions
-              </span>
-              <span className="text-sm font-bold font-mono tabular-nums">
-                {pomodoroCount} completed
-              </span>
-            </div>
-          </div>
-
-          <div
-            className={`px-4 py-2.5 rounded-xl border flex items-center gap-3 ${
-              isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#283040]"
-            }`}
-          >
-            <CalendarCheck size={18} className={isLight ? "text-[#15803D]" : "text-[#34D399]"} />
-            <div>
-              <span className={`block text-[11px] font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                Today&apos;s Habits
-              </span>
-              <span className="text-sm font-bold font-mono tabular-nums">
-                {todayHabitsSummary.total > 0
-                  ? `${todayHabitsSummary.completed} / ${todayHabitsSummary.total}`
-                  : "None set"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. PRIMARY WORKSPACE GRID: Today's Tasks (7 cols) + Focus Session Timer (5 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
+      {/* 1. SEAMLESS TOP GREETING BANNER WITH DYNAMIC METRICS */}
+      <div className={`relative overflow-hidden ${
+        isLight 
+          ? "bg-[#FFFFFF] border border-[#E8D7C9] text-[#1D1D1B] shadow-2xs" 
+          : "bg-[#0A0714]/85 border border-white/10 text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)] backdrop-blur-2xl"
+      } p-6 md:p-8 rounded-3xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6`}>
         
-        {/* LEFT COLUMN (7 cols): TODAY'S TASKS */}
-        <section
-          aria-label="Today's study tasks"
-          className={`lg:col-span-7 rounded-2xl border p-5 sm:p-6 flex flex-col justify-between gap-5 ${
-            isLight
-              ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
-              : "bg-[#191E28] border-[#283040] text-[#F1F3F8]"
-          }`}
-        >
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-inherit">
-              <div>
-                <h2 className="text-lg font-bold tracking-tight">Today&apos;s Tasks</h2>
-                <p className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                  {totalTasks > 0
-                    ? `${completedTasks} of ${totalTasks} completed (${completionPct}%)`
-                    : "Break your study plan into clear, manageable tasks"}
-                </p>
-              </div>
-
-              {onAddTask && !isAddingTask && (
-                <button
-                  type="button"
-                  onClick={() => setIsAddingTask(true)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
-                    isLight
-                      ? "bg-[#5F55C8] hover:bg-[#4E45B0] text-white"
-                      : "bg-[#6D5DF6] hover:bg-[#5B4BE8] text-white"
-                  }`}
-                >
-                  <Plus size={15} />
-                  <span>Add Task</span>
-                </button>
-              )}
-            </div>
-
-            {/* Progress Bar (Only rendered when there is at least 1 task) */}
-            {totalTasks > 0 && completionPct !== null && (
-              <div className="space-y-1.5">
-                <div
-                  className={`w-full h-2 rounded-full overflow-hidden ${
-                    isLight ? "bg-[#F0F2F7]" : "bg-[#222938]"
-                  }`}
-                >
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${
-                      completionPct === 100
-                        ? "bg-[#15803D] dark:bg-[#34D399]"
-                        : isLight
-                        ? "bg-[#5F55C8]"
-                        : "bg-[#6D5DF6]"
-                    }`}
-                    style={{ width: `${completionPct}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Inline Add Task Form */}
-            {isAddingTask && onAddTask && (
-              <form
-                onSubmit={handleCreateTask}
-                className={`p-4 rounded-xl border space-y-3 ${
-                  isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#222938] border-[#364054]"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold">New Study Task</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingTask(false)}
-                    aria-label="Cancel adding task"
-                    className={`p-1 rounded-lg cursor-pointer ${
-                      isLight ? "text-[#596474] hover:text-[#18202B]" : "text-[#B7C0CF] hover:text-[#F1F3F8]"
-                    }`}
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-
-                <div>
-                  <label htmlFor="dashboard-task-title" className="sr-only">
-                    Task title
-                  </label>
-                  <input
-                    id="dashboard-task-title"
-                    type="text"
-                    required
-                    value={taskTitle}
-                    onChange={(e) => setTaskTitle(e.target.value)}
-                    placeholder="e.g., Solve Past Paper 4 Variant 2 (Questions 1–5)"
-                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition ${
-                      isLight
-                        ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#18202B] focus:border-[#5F55C8]"
-                        : "bg-[#10131A] border-[#364054] text-[#F1F3F8] focus:border-[#A99BFF]"
-                    }`}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  <div>
-                    <label className={`block text-[11px] font-medium mb-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                      Subject
-                    </label>
-                    <select
-                      value={taskSubject}
-                      onChange={(e) => setTaskSubject(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-lg border text-xs outline-none ${
-                        isLight
-                          ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#18202B]"
-                          : "bg-[#10131A] border-[#364054] text-[#F1F3F8]"
-                      }`}
-                    >
-                      {subjects.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                      <option value="General Study">General Study</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className={`block text-[11px] font-medium mb-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                      Priority
-                    </label>
-                    <select
-                      value={taskPriority}
-                      onChange={(e) => setTaskPriority(e.target.value as Task["priority"])}
-                      className={`w-full px-3 py-2 rounded-lg border text-xs outline-none ${
-                        isLight
-                          ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#18202B]"
-                          : "bg-[#10131A] border-[#364054] text-[#F1F3F8]"
-                      }`}
-                    >
-                      <option value="Urgent/High">High priority</option>
-                      <option value="Scheduled">Standard</option>
-                      <option value="Low">Low priority</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className={`block text-[11px] font-medium mb-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                      Target Date (Optional)
-                    </label>
-                    <input
-                      type="date"
-                      value={taskDueDate}
-                      onChange={(e) => setTaskDueDate(e.target.value)}
-                      className={`w-full px-3 py-2 rounded-lg border text-xs outline-none ${
-                        isLight
-                          ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#18202B]"
-                          : "bg-[#10131A] border-[#364054] text-[#F1F3F8]"
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingTask(false)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border cursor-pointer ${
-                      isLight
-                        ? "bg-[#FFFFFF] border-[#CBD2E0] text-[#596474] hover:text-[#18202B]"
-                        : "bg-[#191E28] border-[#364054] text-[#B7C0CF] hover:text-[#F1F3F8]"
-                    }`}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className={`px-4 py-1.5 rounded-lg text-xs font-semibold text-white cursor-pointer ${
-                      isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
-                    }`}
-                  >
-                    Save Task
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* Task List or Useful First-Run Empty State */}
-            {tasks.length === 0 ? (
-              <div
-                className={`p-6 rounded-xl border border-dashed text-center space-y-3 ${
-                  isLight
-                    ? "bg-[#F6F7FA] border-[#CBD2E0]"
-                    : "bg-[#10131A]/60 border-[#364054]"
-                }`}
-              >
-                <div className="space-y-1 max-w-md mx-auto">
-                  <h3 className="text-sm font-semibold">No study tasks scheduled yet</h3>
-                  <p className={`text-xs leading-relaxed ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                    Add the specific chapters, past papers, or problem sets you plan to complete today.
-                  </p>
-                </div>
-                {onAddTask && !isAddingTask && (
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingTask(true)}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer ${
-                      isLight
-                        ? "bg-[#5F55C8] hover:bg-[#4E45B0] text-white"
-                        : "bg-[#6D5DF6] hover:bg-[#5B4BE8] text-white"
-                    }`}
-                  >
-                    <Plus size={14} />
-                    <span>Create your first task</span>
-                  </button>
-                )}
-              </div>
-            ) : (
-              <ul className="divide-y divide-inherit max-h-[320px] overflow-y-auto pr-1">
-                {tasks.map((task) => {
-                  const priorityLabel =
-                    task.priority === "Urgent/High"
-                      ? "High priority"
-                      : task.priority === "Low"
-                      ? "Low priority"
-                      : "Standard";
-
-                  return (
-                    <li
-                      key={task.id}
-                      className="py-3 first:pt-1 last:pb-1 flex items-start justify-between gap-3 group"
-                    >
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
-                        <button
-                          type="button"
-                          onClick={() => onToggleTask?.(task.id)}
-                          aria-label={
-                            task.completed
-                              ? `Mark "${task.title}" as incomplete`
-                              : `Mark "${task.title}" as completed`
-                          }
-                          aria-pressed={task.completed}
-                          className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
-                            task.completed
-                              ? isLight
-                                ? "bg-[#5F55C8] border-[#5F55C8] text-white"
-                                : "bg-[#6D5DF6] border-[#6D5DF6] text-white"
-                              : isLight
-                              ? "border-[#CBD2E0] hover:border-[#5F55C8] bg-white"
-                              : "border-[#364054] hover:border-[#A99BFF] bg-[#10131A]"
-                          }`}
-                        >
-                          {task.completed && <Check size={12} strokeWidth={3} />}
-                        </button>
-
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className={`text-sm font-medium leading-snug break-words ${
-                              task.completed
-                                ? isLight
-                                  ? "line-through text-[#768295]"
-                                  : "line-through text-[#8592A6]"
-                                : isLight
-                                ? "text-[#18202B]"
-                                : "text-[#F1F3F8]"
-                            }`}
-                          >
-                            {task.title}
-                          </p>
-                          {/* Unboxed clean metadata with typographic separators */}
-                          <div
-                            className={`flex flex-wrap items-center gap-1.5 mt-1 text-xs ${
-                              isLight ? "text-[#596474]" : "text-[#B7C0CF]"
-                            }`}
-                          >
-                            <span>{task.subject}</span>
-                            <span aria-hidden="true">·</span>
-                            <span
-                              className={
-                                task.priority === "Urgent/High"
-                                  ? isLight
-                                    ? "text-[#BE123C] font-medium"
-                                    : "text-[#FB7185] font-medium"
-                                  : ""
-                              }
-                            >
-                              {priorityLabel}
-                            </span>
-                            {task.dueDate && (
-                              <>
-                                <span aria-hidden="true">·</span>
-                                <span className="font-mono">Due {task.dueDate}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {onDeleteTask && (
-                        <button
-                          type="button"
-                          onClick={() => onDeleteTask(task.id)}
-                          aria-label={`Delete task "${task.title}"`}
-                          title="Delete task"
-                          className={`p-1.5 rounded-lg opacity-70 group-hover:opacity-100 transition-colors cursor-pointer shrink-0 ${
-                            isLight
-                              ? "text-[#596474] hover:text-[#BE123C] hover:bg-[#FFF1F2]"
-                              : "text-[#B7C0CF] hover:text-[#FB7185] hover:bg-[#FB7185]/10"
-                          }`}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-
-          {/* Footer link to Habit Tracker */}
-          <div className="pt-3 border-t border-inherit flex items-center justify-between text-xs">
-            <span className={isLight ? "text-[#596474]" : "text-[#B7C0CF]"}>
-              {todayHabitsSummary.total > 0
-                ? `${todayHabitsSummary.completed} of ${todayHabitsSummary.total} daily habits checked today`
-                : "Track recurring daily revision habits"}
+        {/* Ambient background glow inside cards in dark mode */}
+        {!isLight && (
+          <>
+            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#8B5CF6]/20 via-[#A855F7]/15 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+            <div className="absolute -left-10 -bottom-10 w-52 h-52 bg-[#7C3AED]/15 rounded-full blur-3xl pointer-events-none -z-10" />
+          </>
+        )}
+        
+        <div>
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-mono font-bold tracking-widest uppercase flex items-center gap-1.5 ${
+              isLight 
+                ? "text-[#C25E42] bg-[#FFF2ED] border border-[#F2D5CA]" 
+                : "text-[#C084FC] bg-[#8B5CF6]/15 border border-[#8B5CF6]/35"
+            } px-2.5 py-1 rounded-lg`}>
+              <Sparkles size={13} className={isLight ? "text-[#C25E42]" : "text-[#A855F7]"} />
+              <span>ENGEZ NAFSAK ACADEMY</span>
             </span>
-            <button
-              type="button"
-              onClick={() => onNavigateTab("habits")}
-              id="dashboard-open-habits-btn"
-              className={`font-semibold inline-flex items-center gap-1 cursor-pointer ${
-                isLight ? "text-[#5F55C8] hover:text-[#4E45B0]" : "text-[#A99BFF] hover:text-white"
-              }`}
-            >
-              <span>Open Habit Tracker</span>
-              <ArrowRight size={13} />
-            </button>
+            <span className={`${
+              isLight 
+                ? "text-[#4D7C5B] bg-[#EBF4ED] border border-[#D3E6D7]" 
+                : "text-emerald-400 bg-emerald-500/15 border border-emerald-500/30"
+            } px-2.5 py-1 rounded-lg text-[10px] font-mono tracking-wider font-bold flex items-center gap-1.5`}>
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
+              <span>STUDY ACTIVE</span>
+            </span>
           </div>
-        </section>
 
-        {/* RIGHT COLUMN (5 cols): COMPACT FOCUS TIMER CARD */}
-        <section
-          aria-label="Focus session timer"
-          className={`lg:col-span-5 rounded-2xl border p-5 sm:p-6 flex flex-col justify-between gap-5 ${
-            isLight
-              ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
-              : "bg-[#191E28] border-[#283040] text-[#F1F3F8]"
-          }`}
-        >
-          <div className="flex items-start justify-between gap-3">
+          <h1 className={`text-3xl md:text-4xl font-extrabold ${isLight ? "text-[#1A1614]" : "text-white"} mt-3 tracking-tight`}>
+            Yalla, <span className={`${isLight ? "bg-gradient-to-r from-[#C25E42] via-[#D97757] to-[#C25E42]" : "bg-gradient-to-r from-[#A855F7] via-[#C084FC] to-[#DDD6FE]"} text-transparent bg-clip-text font-black inline-block`}>engez nafsak</span> today! ⚡
+          </h1>
+          <p className={`text-sm md:text-base mt-2 tracking-tight flex flex-wrap items-center gap-3 font-semibold ${
+            isLight ? "text-[#82776E]" : "text-[#C4B5FD]/75"
+          }`}>
+            <span className={isLight ? "text-[#82776E] font-medium" : "text-[#B8AFA6] font-medium"}>
+              A road to a better life without procrastination 🚀
+            </span>
+          </p>
+        </div>
+
+        {/* Global Streak / Focus Counter Block */}
+        <div className={`flex items-center gap-4 ${
+          isLight 
+            ? "bg-[#FFFFFF] border border-[#EBE4DC] shadow-xs" 
+            : "bg-[#101322] border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+        } px-5 py-3.5 rounded-2xl self-stretch lg:self-auto justify-around lg:justify-start`}>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-orange-500 text-white shadow-xs flex items-center justify-center">
+              <Flame size={22} className="fill-current animate-bounce" />
+            </div>
             <div>
-              <h2 className="text-lg font-bold tracking-tight">Focus Timer</h2>
-              <p className={`text-xs mt-0.5 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                {focusModeActive
-                  ? pomodoroMode === "work"
-                    ? "Active focus session in progress"
-                    : "Break interval in progress"
-                  : isPaused
-                  ? "Session paused — resume when ready"
-                  : `${focusMinutesSelected}-minute study block`}
-              </p>
+              <p className={`text-[9px] font-mono ${isLight ? "text-[#82776E]" : "text-[#C4B5FD]/75"} uppercase tracking-tight font-bold`}>Streak</p>
+              <h3 className={`text-lg font-black ${isLight ? "text-[#1A1614]" : "text-white"}`}>{streak} Days</h3>
             </div>
-
-            <span
-              className={`text-xs font-medium px-2.5 py-1 rounded-lg border ${
-                focusModeActive
-                  ? isLight
-                    ? "bg-[#ECFDF5] border-[#A7F3D0] text-[#15803D]"
-                    : "bg-[#10B981]/15 border-[#34D399]/30 text-[#34D399]"
-                  : isPaused
-                  ? isLight
-                    ? "bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]"
-                    : "bg-[#F59E0B]/15 border-[#FBBF24]/30 text-[#FBBF24]"
-                  : isLight
-                  ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#596474]"
-                  : "bg-[#222938] border-[#283040] text-[#B7C0CF]"
-              }`}
-            >
-              {focusModeActive ? "Running" : isPaused ? "Paused" : "Ready"}
-            </span>
           </div>
+          
+          <div className={`w-px h-10 ${isLight ? "bg-[#EBE4DC]" : "bg-white/10"}`} />
 
-          {/* Compact, overflow-safe time display */}
-          <div
-            className={`py-5 px-3 rounded-xl border flex flex-col items-center justify-center overflow-hidden ${
-              isLight ? "bg-[#F6F7FA] border-[#E2E6EF]" : "bg-[#10131A] border-[#283040]"
-            }`}
-          >
-            <FlipClockTimer
-              timeRemaining={focusTimeRemaining}
-              size="sm"
-              themeMode={themeMode}
-              isPaused={isPaused}
-            />
+          <div className="flex items-center gap-3">
+            <div className={`w-11 h-11 rounded-xl ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6] shadow-lg shadow-[#8B5CF6]/30"} text-white shadow-xs flex items-center justify-center`}>
+              <Award size={22} className="animate-pulse" />
+            </div>
+            <div>
+              <p className={`text-[9px] font-mono ${isLight ? "text-[#82776E]" : "text-[#C4B5FD]/75"} uppercase tracking-tight font-bold`}>Focus Blocks</p>
+              <h3 className={`text-lg font-black ${isLight ? "text-[#1A1614]" : "text-white"}`}>{pomodoroCount} Done</h3>
+            </div>
           </div>
-
-          {/* Primary Timer Controls */}
-          <div className="flex items-center gap-2.5">
-            {focusModeActive ? (
-              <button
-                type="button"
-                onClick={onPauseFocus || onStopFocus}
-                id="dashboard-timer-pause-btn"
-                className={`flex-1 min-h-[42px] py-2.5 px-4 rounded-xl text-xs font-semibold border transition-colors flex items-center justify-center gap-2 cursor-pointer ${
-                  isLight
-                    ? "bg-[#FFFBEB] hover:bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]"
-                    : "bg-[#F59E0B]/15 hover:bg-[#F59E0B]/25 text-[#FBBF24] border-[#FBBF24]/30"
-                }`}
-              >
-                <Pause size={14} fill="currentColor" />
-                <span>Pause Session</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onStartFocus}
-                id="dashboard-timer-start-btn"
-                className={`flex-1 min-h-[42px] py-2.5 px-4 rounded-xl text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2 cursor-pointer ${
-                  isLight
-                    ? "bg-[#5F55C8] hover:bg-[#4E45B0]"
-                    : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
-                }`}
-              >
-                <Play size={14} fill="currentColor" />
-                <span>{isPaused ? "Resume Session" : "Start Focus Session"}</span>
-              </button>
-            )}
-
-            {(isPaused || focusModeActive) && onResetFocus && (
-              <button
-                type="button"
-                onClick={onResetFocus}
-                id="dashboard-timer-reset-btn"
-                aria-label="Reset timer"
-                title="Reset timer"
-                className={`min-h-[42px] px-3.5 rounded-xl border transition-colors flex items-center justify-center cursor-pointer ${
-                  isLight
-                    ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] text-[#596474] hover:text-[#18202B] border-[#E2E6EF]"
-                    : "bg-[#222938] hover:bg-[#2A3244] text-[#B7C0CF] hover:text-[#F1F3F8] border-[#283040]"
-                }`}
-              >
-                <RotateCcw size={15} />
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => onNavigateTab("focus")}
-              id="dashboard-timer-navigate-btn"
-              aria-label="Open full timer settings"
-              title="Open full timer view"
-              className={`min-h-[42px] px-3.5 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-xs font-medium cursor-pointer ${
-                isLight
-                  ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] text-[#596474] hover:text-[#18202B] border-[#E2E6EF]"
-                  : "bg-[#222938] hover:bg-[#2A3244] text-[#B7C0CF] hover:text-[#F1F3F8] border-[#283040]"
-              }`}
-            >
-              <Timer size={15} />
-              <span className="hidden sm:inline">Full Timer</span>
-            </button>
-          </div>
-        </section>
+        </div>
       </div>
 
-      {/* 3. SECONDARY ROW: NEXT UPCOMING EXAM (7 cols) + STUDY TOOLS DIRECTORY (5 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      {/* 2. THE ULTIMATE BENTO GRID WORKSPACE */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 sm:gap-6">
         
-        {/* NEXT UPCOMING EXAM CARD */}
-        <section
-          aria-label="Upcoming exam countdown"
-          className={`lg:col-span-7 rounded-2xl border p-5 sm:p-6 flex flex-col justify-between gap-4 ${
-            isLight
-              ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
-              : "bg-[#191E28] border-[#283040] text-[#F1F3F8]"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold tracking-tight">Upcoming Exam</h2>
-              <p className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                {exams.length > 0
-                  ? `${exams.length} ${exams.length === 1 ? "exam" : "exams"} tracked in your schedule`
-                  : "Add your exam dates to track remaining preparation time"}
-              </p>
+        {/* TIER A: AI PRIORITIZER TASK MATRIX (Spans 4 Columns on desktop, 1 on tablet) */}
+        <div className={`md:col-span-1 lg:col-span-4 ${
+          isLight 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs" 
+            : "bg-[#0A0714]/85 border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+        } rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden h-fit md:min-h-[300px]`}>
+          {!isLight && <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B5CF6]/10 rounded-full blur-2xl pointer-events-none" />}
+          
+          <div>
+            <div className={`flex justify-between items-center mb-5 border-b ${isLight ? "border-[#E8D7C9]" : "border-white/10"} pb-3`}>
+              <div>
+                <h2 className={`text-md font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"} tracking-wide font-sans`}>Your Tasks</h2>
+                <p className={`text-[10px] font-mono ${isLight ? "text-[#C96F55]" : "text-[#C084FC]"} uppercase tracking-wider font-semibold`}>Priority Action Queue</p>
+              </div>
+              <button 
+                onClick={() => onNavigateTab("habits")}
+                id="dashboard-go-habits-btn"
+                className={`p-1.5 rounded-lg ${
+                  isLight 
+                    ? "hover:bg-[#F0EEE8] text-[#C96F55] hover:text-[#B85F48]" 
+                    : "hover:bg-[#1A1432] text-[#C4B5FD] hover:text-white"
+                } transition-all cursor-pointer flex items-center gap-1.5 text-xs font-mono font-bold`}
+              >
+                <span>View habits</span>
+                <ArrowRight size={14} className={isLight ? "text-[#C96F55]" : ""} />
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => onNavigateTab("countdown")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer flex items-center gap-1.5 ${
-                isLight
-                  ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
-                  : "bg-[#222938] hover:bg-[#2A3244] border-[#283040] text-[#F1F3F8]"
-              }`}
-            >
-              <CalendarClock size={14} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-              <span>{exams.length > 0 ? "Manage Exams" : "Add Exam"}</span>
-            </button>
+            {/* Micro Task Queue */}
+            <div className="space-y-3 max-h-[170px] overflow-y-auto pr-1">
+              {tasks.length === 0 ? (
+                <div className={`p-8 text-center ${
+                  isLight ? "text-[#77736B] border border-dashed border-[#E8D7C9] bg-[#FAF8F5]" : "text-[#C4B5FD]/75 border border-dashed border-white/10 bg-[#120E22]"
+                } rounded-2xl`}>
+                  <p className="text-xs font-mono">No assignments today.</p>
+                  <p className={`text-[10px] mt-1 ${isLight ? "text-[#9B9890]" : "text-[#8B82A8]"}`}>You're all caught up!</p>
+                </div>
+              ) : (
+                tasks.slice(0, 3).map((task) => (
+                  <div 
+                    key={task.id}
+                    className={`p-3 rounded-2xl border transition duration-300 relative group flex gap-3 items-start ${
+                      isLight 
+                        ? "border-[#E8D7C9] bg-[#FAF8F5]" 
+                        : "border-white/10 bg-[#120E22]"
+                    } ${task.completed ? "opacity-60" : ""}`}
+                  >
+                    <div className="pt-0.5 shrink-0">
+                      <div className={`w-2 h-2 rounded-full ${
+                        task.completed ? "bg-slate-400" : (isLight ? "bg-[#C96F55]" : "bg-[#8B5CF6]")
+                      }`} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`text-xs font-semibold ${isLight ? "text-[#1D1D1B]" : "text-white"} block truncate ${task.completed ? "line-through text-[#857C74]" : ""}`}>
+                        {task.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className={`text-[9px] font-mono ${
+                          isLight 
+                            ? "text-[#77736B] bg-[#FFFFFF] border border-[#E8D7C9]" 
+                            : "text-[#C4B5FD] bg-[#0A0714] border border-white/10"
+                        } px-2 py-0.5 rounded max-w-[120px] truncate`}>
+                          {task.subject}
+                        </span>
+                        <span className={`text-[8px] font-mono px-2 py-0.5 rounded ${getPriorityStyle(task.priority)}`}>
+                          {task.priority.replace("/High", "")}
+                        </span>
+                        {task.dueDate && (
+                          <span className={`text-[8px] font-mono ${isLight ? "text-[#C96F55]" : "text-[#C084FC]"} font-extrabold flex items-center gap-1 max-w-[110px] truncate`}>
+                            <span className="shrink-0 text-[10px]">⏱️</span>
+                            <span className="truncate">{task.dueDate.split("-").slice(1).join("/")} {task.dueTime}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
-          {nextUpcomingExam ? (
-            <div
-              className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                nextUpcomingExam.days > 10
-                  ? isLight
-                    ? "bg-[#ECFDF5]/70 border-[#A7F3D0]"
-                    : "bg-[#10B981]/10 border-[#34D399]/30"
-                  : nextUpcomingExam.days < 2
-                  ? isLight
-                    ? "bg-[#FFF1F2] border-[#FECDD3]"
-                    : "bg-[#F43F5E]/10 border-[#FB7185]/30"
-                  : isLight
-                  ? "bg-[#FFFBEB] border-[#FDE68A]"
-                  : "bg-[#F59E0B]/10 border-[#FBBF24]/30"
-              }`}
-            >
-              <div className="space-y-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span
-                    className={`font-semibold ${
-                      nextUpcomingExam.days > 10
-                        ? isLight
-                          ? "text-[#15803D]"
-                          : "text-[#34D399]"
-                        : nextUpcomingExam.days < 2
-                        ? isLight
-                          ? "text-[#BE123C]"
-                          : "text-[#FB7185]"
-                        : isLight
-                        ? "text-[#B45309]"
-                        : "text-[#FBBF24]"
-                    }`}
-                  >
-                    {nextUpcomingExam.days > 10
-                      ? "On track (10+ days)"
-                      : nextUpcomingExam.days < 2
-                      ? "Urgent (Within 48h)"
-                      : "Approaching (2–10 days)"}
-                  </span>
-                  {nextUpcomingExam.exam.paperCode && (
-                    <>
-                      <span aria-hidden="true">·</span>
-                      <span className="font-mono">{nextUpcomingExam.exam.paperCode}</span>
-                    </>
-                  )}
-                  {nextUpcomingExam.exam.targetGrade && (
-                    <>
-                      <span aria-hidden="true">·</span>
-                      <span>Target: {nextUpcomingExam.exam.targetGrade}</span>
-                    </>
-                  )}
-                </div>
+          <button
+            onClick={() => onNavigateTab("habits")}
+            id="dashboard-open-habits-btn"
+            className={`w-full py-2.5 mt-4 ${
+              isLight 
+                ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E8D7C9]" 
+                : "bg-[#120E22] hover:bg-[#1A1432] text-white border border-white/10"
+            } rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-2`}
+          >
+            <span>Open Habit Tracker</span>
+            <ArrowRight size={14} strokeWidth={2.5} className={isLight ? "text-[#C96F55]" : ""} />
+          </button>
+        </div>
 
-                <h3 className="text-base font-bold truncate">{nextUpcomingExam.exam.title}</h3>
-                <p className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                  {nextUpcomingExam.exam.examDate} at {nextUpcomingExam.exam.examTime || "09:00"}
-                </p>
-              </div>
+        {/* TIER B: SCHOLAR WORKSPACE PROGRESS CIRCLE (Spans 8 Columns on desktop, 1 on tablet) */}
+        <div className={`md:col-span-1 lg:col-span-8 ${
+          isLight 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs" 
+            : "bg-[#0A0714]/85 border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+        } rounded-3xl p-6 flex flex-col justify-between relative min-h-[300px] overflow-hidden`}>
+          {!isLight && (
+            <>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#8B5CF6]/15 via-[#A855F7]/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -left-20 -bottom-10 w-44 h-44 bg-[#8B5CF6]/10 rounded-full blur-2xl pointer-events-none" />
+            </>
+          )}
+          
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className={`text-md font-bold ${isLight ? "text-[#1D1D1B]" : "text-[#FAF8F5]"} tracking-wide font-sans`}>Daily Target Progress</h2>
+              <p className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-[#B8AFA6]"} uppercase tracking-widest font-semibold`}>Scholarship KPIs & Milestone Sync</p>
+            </div>
+            <div className={`px-3 py-1 ${
+              isLight 
+                ? "bg-[#E3EEE5] border border-[#C5DAC9] text-[#66856D]" 
+                : "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
+            } text-[10px] font-mono rounded-lg font-bold`}>
+              {completedTasks}/{totalTasks} COMPLETED
+            </div>
+          </div>
 
-              <div className="flex items-center gap-3 shrink-0 font-mono tabular-nums">
-                <div className="text-right">
-                  <span className="text-2xl font-bold block leading-none">
-                    {nextUpcomingExam.days}d {nextUpcomingExam.hours}h
-                  </span>
-                  <span className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                    remaining
-                  </span>
-                </div>
+          {/* Central Progress Core */}
+          <div className="flex flex-col sm:flex-row items-center gap-8 my-4 self-center md:self-auto w-full justify-around">
+            <div className="relative flex items-center justify-center shrink-0">
+              <svg className="w-28 h-28 transform -rotate-90">
+                <defs>
+                  <linearGradient id="dashboardCircleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#C96F55" />
+                    <stop offset="100%" stopColor="#DE7A5E" />
+                  </linearGradient>
+                </defs>
+                {/* Background path */}
+                <circle
+                  cx="56"
+                  cy="56"
+                  r="44"
+                  className={isLight ? "stroke-[#E8D7C9] fill-transparent" : "stroke-[#38312B] fill-transparent"}
+                  strokeWidth="8"
+                />
+                {/* Dynamic progress track */}
+                <circle
+                  cx="56"
+                  cy="56"
+                  r="44"
+                  stroke="url(#dashboardCircleGrad)"
+                  className="fill-transparent transition-all duration-1000"
+                  strokeWidth="8"
+                  strokeDasharray={2 * Math.PI * 44}
+                  strokeDashoffset={2 * Math.PI * 44 * (1 - progressPercent / 100)}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center justify-center">
+                <span className={`text-2xl font-black ${isLight ? "text-[#1D1D1B]" : "text-[#FAF8F5]"}`}>{progressPercent}%</span>
+                <span className={`text-[8px] font-mono tracking-widest ${isLight ? "text-[#77736B]" : "text-[#B8AFA6]"} uppercase`}>DONE</span>
               </div>
             </div>
-          ) : (
-            <div
-              className={`p-5 rounded-xl border border-dashed text-center space-y-2 ${
-                isLight ? "bg-[#F6F7FA] border-[#CBD2E0]" : "bg-[#10131A]/60 border-[#364054]"
-              }`}
-            >
-              <p className="text-sm font-medium">No upcoming exams configured</p>
-              <p className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                Add your paper dates to see live countdowns and organize your revision schedule.
+
+            <div className="space-y-2 text-center sm:text-left max-w-sm">
+              <h4 className={`text-base font-extrabold text-[#C96F55]`}>
+                {progressPercent >= 100 ? "Goal Accomplished! 🎉" : progressPercent >= 50 ? "Superb Progress! 👍" : "Let's complete your remaining goals! 🔥"}
+              </h4>
+              <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-[#B8AFA6]"} leading-relaxed font-sans`}>
+                Consistent daily sessions build unstoppable academic momentum. Complete your tasks, solve past papers, and keep your daily streak alive.
               </p>
             </div>
-          )}
-        </section>
+          </div>
 
-        {/* STUDY WORKSPACE SHORTCUTS */}
-        <section
-          aria-label="Study tools"
-          className={`lg:col-span-5 rounded-2xl border p-5 sm:p-6 flex flex-col justify-between gap-4 ${
-            isLight
-              ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
-              : "bg-[#191E28] border-[#283040] text-[#F1F3F8]"
-          }`}
-        >
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">Study Tools</h2>
-            <p className={`text-xs ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              Direct access to your revision resources
+          <div className={`${
+            isLight 
+              ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#77736B]" 
+              : "bg-[#28231F] border border-[#38312B] text-[#B8AFA6]"
+          } p-2.5 rounded-xl text-[9px] font-mono text-center uppercase tracking-wider font-semibold flex items-center justify-center gap-2`}>
+            <TrendingUp size={12} className={isLight ? "text-[#66856D]" : "text-emerald-400"} />
+            <span>ESTIMATED GRADE BOUNDARIES: TARGET GRADE A* / 9.0 READY</span>
+          </div>
+        </div>
+
+        {/* TIER D: THE FOCUS TIMER BLOCK (Spans 4 Columns on desktop, 1 on tablet) */}
+        <div className={`md:col-span-1 lg:col-span-4 rounded-3xl p-6 flex flex-col justify-between shadow-2xs relative overflow-hidden min-h-[260px] transition-all duration-300 ${
+          isLight
+            ? "bg-[#FFFFFF] border border-[#E8D7C9]"
+            : "bg-[#0A0714]/85 border border-white/10 text-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.85)]"
+        }`}>
+          {!isLight && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-tr from-[#8B5CF6]/20 via-[#A855F7]/15 to-transparent rounded-full pointer-events-none -z-10 blur-2xl" />
+          )}
+          
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[9px] font-mono uppercase tracking-widest font-black leading-none ${
+                  isLight 
+                    ? "bg-[#FFF1EC] text-[#C96F55] border border-[#E8D7C9]" 
+                    : "text-[#C084FC] bg-[#8B5CF6]/15 border border-[#8B5CF6]/35"
+                } px-2 py-0.5 rounded-md flex items-center gap-1`}>
+                  <Timer size={10} />
+                  <span>{focusModeActive ? "Timer Active" : "Timer Ready"}</span>
+                </span>
+                {pomodoroCount > 0 && (
+                  <span className={`text-[8px] font-mono ${
+                    isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E8D7C9]" : "text-white bg-white/10 border border-white/15"
+                  } px-1.5 py-0.5 rounded font-bold`}>
+                    🍅 {pomodoroCount}
+                  </span>
+                )}
+              </div>
+              <h2 className={`text-md font-extrabold ${isLight ? "text-[#1D1D1B]" : "text-white"} tracking-wide mt-2 font-sans`}>Study Timer</h2>
+            </div>
+            
+            <div className={`flex items-center gap-1.5 py-1 px-2.5 rounded-full border text-[8px] font-mono tracking-widest uppercase font-bold ${
+              isLight
+                ? focusModeActive
+                  ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#C96F55]"
+                  : isPaused
+                  ? "bg-[#F4E9D0] border-[#B98A4A]/30 text-[#B98A4A]"
+                  : "bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B]"
+                : focusModeActive
+                ? "bg-[#8B5CF6]/25 border-[#8B5CF6]/45 text-[#C084FC]"
+                : isPaused
+                ? "bg-amber-900/40 border-amber-500/40 text-amber-200 animate-pulse"
+                : "bg-white/5 border-white/10 text-[#C4B5FD]/75"
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                focusModeActive 
+                  ? "bg-[#8B5CF6] animate-ping" 
+                  : isPaused 
+                  ? "bg-amber-400" 
+                  : isLight ? "bg-[#77736B]" : "bg-slate-400"
+              }`} />
+              <span>{focusModeActive ? "STUDYING" : isPaused ? "PAUSED" : "READY"}</span>
+            </div>
+          </div>
+
+          {/* Centered digits show with Flip Number Timer */}
+          <div className="my-3 text-center">
+            <FlipClockTimer 
+              timeRemaining={focusTimeRemaining} 
+              size="md" 
+              themeMode={themeMode} 
+              isPaused={isPaused} 
+            />
+            <p className={`text-[9px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase tracking-widest font-bold mt-2`}>
+              {focusModeActive 
+                ? (pomodoroMode === "work" ? "Deep focus interval active" : "Recovery interval active") 
+                : isPaused 
+                ? "Paused — click Resume when ready" 
+                : `Block duration: ${focusMinutesSelected}m`}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => onNavigateTab("scholar")}
-              className={`p-3.5 rounded-xl border text-left transition-colors cursor-pointer flex flex-col justify-between gap-2 ${
-                isLight
-                  ? "bg-[#F6F7FA] hover:bg-[#F0EEFF] border-[#E2E6EF] hover:border-[#D8D3F8]"
-                  : "bg-[#222938] hover:bg-[#2A3244] border-[#283040] hover:border-[#6D5DF6]/40"
-              }`}
-            >
-              <BookOpen size={18} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-              <div>
-                <h3 className="text-xs font-bold">AI Tutor</h3>
-                <p className={`text-[11px] mt-0.5 leading-snug ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                  Upload past papers or ask step-by-step subject questions
-                </p>
-              </div>
-            </button>
+          <div className="flex gap-2">
+            {focusModeActive ? (
+              <button
+                onClick={onPauseFocus || onStopFocus}
+                id="dashboard-timer-pause-btn"
+                className={`flex-1 py-2.5 ${
+                  isLight 
+                    ? "bg-[#FFF1EC] hover:bg-[#F0D4C8] text-[#C96F55] border border-[#E8D7C9]" 
+                    : "bg-[#8B5CF6]/20 hover:bg-[#8B5CF6]/30 text-[#C084FC] border border-[#8B5CF6]/40"
+                } rounded-xl text-xs font-mono font-bold uppercase transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer`}
+              >
+                <Pause size={13} fill="currentColor" />
+                <span>Pause</span>
+              </button>
+            ) : (
+              <button
+                onClick={onStartFocus}
+                id="dashboard-timer-start-btn"
+                className={`flex-1 py-2.5 ${
+                  isLight 
+                    ? "bg-[#C96F55] hover:bg-[#B85F48] shadow-md shadow-[#C96F55]/20 text-white" 
+                    : "bg-[#7C3AED] hover:bg-[#6D28D9] shadow-lg shadow-[#7C3AED]/35 text-white"
+                } rounded-xl text-xs font-mono font-extrabold uppercase transition duration-200 flex items-center justify-center gap-1.5 cursor-pointer`}
+              >
+                <Play size={13} fill="currentColor" />
+                <span>{isPaused ? "Resume" : "Start"}</span>
+              </button>
+            )}
 
+            {isPaused && onResetFocus && (
+              <button
+                onClick={onResetFocus}
+                id="dashboard-timer-reset-btn"
+                className={`px-3 rounded-xl ${
+                  isLight 
+                    ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E8D7C9]" 
+                    : "bg-[#120E22] hover:bg-[#1A1432] text-white border border-white/10"
+                } transition font-mono text-xs cursor-pointer flex items-center justify-center`}
+                title="Reset timer"
+              >
+                <RotateCcw size={14} />
+              </button>
+            )}
+            
             <button
-              type="button"
-              onClick={() => onNavigateTab("apps")}
-              className={`p-3.5 rounded-xl border text-left transition-colors cursor-pointer flex flex-col justify-between gap-2 ${
-                isLight
-                  ? "bg-[#F6F7FA] hover:bg-[#F0EEFF] border-[#E2E6EF] hover:border-[#D8D3F8]"
-                  : "bg-[#222938] hover:bg-[#2A3244] border-[#283040] hover:border-[#6D5DF6]/40"
-              }`}
+              onClick={() => onNavigateTab("focus")}
+              id="dashboard-timer-navigate-btn"
+              className={`px-3 rounded-xl ${
+                isLight 
+                  ? "bg-[#F0EEE8] hover:bg-[#E8D7C9] text-[#1D1D1B] border border-[#E8D7C9]" 
+                  : "bg-[#120E22] hover:bg-[#1A1432] text-white border border-white/10"
+              } transition font-mono text-xs cursor-pointer flex items-center justify-center`}
+              title="Open full Pomodoro settings & cycles"
             >
-              <Compass size={18} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-              <div>
-                <h3 className="text-xs font-bold">Study Apps</h3>
-                <p className={`text-[11px] mt-0.5 leading-snug ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                  Launch Desmos, Khan Academy, Quizlet & custom links
-                </p>
-              </div>
+              <Clock size={15} />
             </button>
           </div>
-        </section>
+        </div>
+
+        {/* TIER E: EXAM READINESS & REVISION HUB (Spans 8 Columns on desktop, 1 on tablet) */}
+        <div className={`md:col-span-1 lg:col-span-8 ${
+          isLight 
+            ? "bg-[#FFFFFF] border border-[#E8D7C9] shadow-2xs" 
+            : "bg-[#0A0714]/85 border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+        } rounded-3xl p-6 flex flex-col justify-between min-h-[260px] relative overflow-hidden`}>
+          {!isLight && <div className="absolute top-0 right-0 w-48 h-48 bg-[#8B5CF6]/10 rounded-full blur-3xl pointer-events-none" />}
+          
+          <div>
+            <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isLight ? "border-[#E8D7C9]" : "border-white/10"}`}>
+              <div>
+                <h2 className={`text-md font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"} tracking-wide flex items-center gap-2 font-sans`}>
+                  <span>Exam Readiness & Quick Launch</span>
+                  <Sparkles size={14} className={isLight ? "text-[#C96F55]" : "text-[#A855F7]"} />
+                </h2>
+                <p className={`text-[10px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase tracking-widest font-semibold`}>High-Yield Revision Pathways</p>
+              </div>
+              <span className={`text-[10px] font-mono ${
+                isLight 
+                  ? "text-[#66856D] bg-[#E3EEE5] border border-[#C5DAC9]" 
+                  : "text-emerald-400 bg-emerald-500/15 border border-emerald-500/30"
+              } font-bold py-1 px-2.5 rounded-lg flex items-center gap-1.5`}>
+                <GraduationCap size={13} />
+                <span>Cambridge • Edexcel • SAT</span>
+              </span>
+            </div>
+
+            {/* Grid of study accelerators */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                onClick={() => onNavigateTab("countdown")}
+                className={`p-4 ${
+                  isLight 
+                    ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border border-[#E8D7C9] hover:border-[#C96F55]/30" 
+                    : "bg-[#120E22] hover:bg-[#1A1432] border border-white/10 hover:border-[#8B5CF6]/50 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+                } rounded-2xl text-left transition group cursor-pointer flex items-start gap-3.5`}
+              >
+                <div className={`w-10 h-10 rounded-xl ${isLight ? "bg-[#C96F55]/20 border border-[#C96F55]/30 text-[#C96F55]" : "bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[#C084FC]"} flex items-center justify-center shrink-0 group-hover:scale-105 transition`}>
+                  <CalendarClock size={18} />
+                </div>
+                <div>
+                  <h4 className={`text-xs font-bold ${
+                    isLight ? "text-[#1D1D1B] group-hover:text-[#C96F55]" : "text-white group-hover:text-[#C084FC]"
+                  } transition`}>Exam Countdown</h4>
+                  <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} mt-1 leading-snug`}>
+                    Live countdowns, season timeline, study buddies & leaderboard.
+                  </p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNavigateTab("scholar")}
+                className={`p-4 ${
+                  isLight 
+                    ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border border-[#E8D7C9] hover:border-[#C96F55]/30" 
+                    : "bg-[#120E22] hover:bg-[#1A1432] border border-white/10 hover:border-[#8B5CF6]/50 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+                } rounded-2xl text-left transition group cursor-pointer flex items-start gap-3.5`}
+              >
+                <div className={`w-10 h-10 rounded-xl ${isLight ? "bg-[#C96F55]/20 border border-[#C96F55]/30 text-[#C96F55]" : "bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[#C084FC]"} flex items-center justify-center shrink-0 group-hover:scale-105 transition`}>
+                  <Brain size={18} />
+                </div>
+                <div>
+                  <h4 className={`text-xs font-bold ${
+                    isLight ? "text-[#1D1D1B] group-hover:text-[#C96F55]" : "text-white group-hover:text-[#C084FC]"
+                  } transition`}>AI Tutor</h4>
+                  <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} mt-1 leading-snug`}>
+                    Instant step-by-step tutoring powered by Gemini 3.8 Flash, IGCSE mark schemes & model answers.
+                  </p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNavigateTab("habits")}
+                className={`p-4 ${
+                  isLight 
+                    ? "bg-[#FAF8F5] hover:bg-[#F0EEE8] border border-[#E8D7C9] hover:border-[#C96F55]/30" 
+                    : "bg-[#120E22] hover:bg-[#1A1432] border border-white/10 hover:border-[#8B5CF6]/50 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+                } rounded-2xl text-left transition group cursor-pointer flex items-start gap-3.5`}
+              >
+                <div className={`w-10 h-10 rounded-xl ${isLight ? "bg-[#C96F55]/20 border border-[#C96F55]/30 text-[#C96F55]" : "bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 text-[#C084FC]"} flex items-center justify-center shrink-0 group-hover:scale-105 transition`}>
+                  <CalendarCheck size={18} />
+                </div>
+                <div>
+                  <h4 className={`text-xs font-bold ${
+                    isLight ? "text-[#1D1D1B] group-hover:text-[#C96F55]" : "text-white group-hover:text-[#C084FC]"
+                  } transition`}>Habit Tracker</h4>
+                  <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} mt-1 leading-snug`}>
+                    Build daily study discipline, track streaks & maintain consistent revision momentum.
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div className={`flex items-center justify-between mt-4 pt-3 border-t ${
+            isLight ? "border-[#E8D7C9] text-[#77736B]" : "border-white/10 text-[#C4B5FD]/75"
+          } text-[10px] font-mono`}>
+            <span className="flex items-center gap-1.5">
+              <Zap size={11} className={isLight ? "text-[#C96F55]" : "text-[#8B5CF6]"} />
+              <span>Target: 2 hours of deliberate revision daily</span>
+            </span>
+            <button 
+              onClick={() => onNavigateTab("scholar")}
+              className={`${isLight ? "text-[#C96F55] hover:text-[#D98A73]" : "text-[#C084FC] hover:text-white"} font-bold transition cursor-pointer flex items-center gap-1`}
+            >
+              <span>Open AI Tutor</span>
+              <ArrowRight size={12} className={isLight ? "text-[#C96F55]" : ""} />
+            </button>
+          </div>
+        </div>
 
       </div>
     </div>
