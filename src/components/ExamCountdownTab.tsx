@@ -711,8 +711,8 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 } else if (chosenColor === "sunset") {
                   cardBg = isLight ? "bg-[#FFF7ED]" : "bg-[#261208]/90 border-[#FB923C]/35 shadow-[0_8px_30px_rgba(251,146,60,0.18)]";
                   borderColor = isLight ? "border-[#FED7AA]" : "border-[#FB923C]/40";
-                  titleColor = isLight ? "text-[#C2410C]" : "text-[#FED7AA]";
-                  pillBg = isLight ? "bg-[#FFEDD5]" : "bg-orange-500/20";
+                  titleColor = isLight ? "text-[#B25136]" : "text-[#FED7AA]";
+                  pillBg = isLight ? "bg-[#FFF2ED]" : "bg-orange-500/20";
                 } else if (chosenColor === "golden") {
                   cardBg = isLight ? "bg-[#FEFCE8]" : "bg-[#241C06]/90 border-[#FACC15]/35 shadow-[0_8px_30px_rgba(250,204,21,0.18)]";
                   borderColor = isLight ? "border-[#FEF08A]" : "border-[#FACC15]/40";

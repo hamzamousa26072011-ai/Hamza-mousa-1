@@ -387,9 +387,9 @@ export default function DashboardTab({
             <div className={`flex items-center gap-1.5 py-1 px-2.5 rounded-full border text-[8px] font-mono tracking-widest uppercase font-bold ${
               isLight
                 ? focusModeActive
-                  ? "bg-[#FFF1EC] border-[#F2D5CA] text-[#EA580C]"
+                  ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#C25E42]"
                   : isPaused
-                  ? "bg-[#FFF1EC] border-[#F2D5CA] text-[#EA580C]"
+                  ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#C25E42]"
                   : "bg-[#F0EEE8] border-[#E8D7C9] text-[#77736B]"
                 : focusModeActive
                 ? "bg-[#8B5CF6]/25 border-[#8B5CF6]/45 text-[#C084FC]"
@@ -399,9 +399,9 @@ export default function DashboardTab({
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${
                 focusModeActive 
-                  ? (isLight ? "bg-[#EA580C] animate-ping" : "bg-[#8B5CF6] animate-ping")
+                  ? (isLight ? "bg-[#C25E42] animate-ping" : "bg-[#8B5CF6] animate-ping")
                   : isPaused 
-                  ? (isLight ? "bg-[#EA580C]" : "bg-[#A855F7]")
+                  ? (isLight ? "bg-[#C25E42]" : "bg-[#A855F7]")
                   : isLight ? "bg-[#77736B]" : "bg-slate-400"
               }`} />
               <span>{focusModeActive ? "STUDYING" : isPaused ? "PAUSED" : "READY"}</span>

@@ -212,7 +212,7 @@ export default function Sidebar({
                 />
               ) : (
                 <div className={`w-7 h-7 rounded-full ${
-                  isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+                  isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
                 } flex items-center justify-center shrink-0 text-xs font-bold`}>
                   <UserIcon size={14} />
                 </div>
@@ -251,7 +251,7 @@ export default function Sidebar({
             title="Log In to save details"
             className={`w-full py-2.5 ${
               isLight
-                ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-[0_4px_16px_rgba(234,88,12,0.3)]"
+                ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[0_4px_16px_rgba(194,94,66,0.3)]"
                 : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_16px_rgba(139,92,246,0.35)]"
             } text-white rounded-xl text-xs font-sans font-bold transition cursor-pointer flex items-center justify-center shadow-xs ${
               isCollapsed ? "h-10 w-10 p-0 rounded-xl" : "px-3 gap-2"
@@ -267,16 +267,16 @@ export default function Sidebar({
       <div className="mt-auto flex flex-col items-center gap-3 w-full px-3">
         {focusModeActive ? (
           <div className={`flex items-center gap-2 ${isCollapsed ? "flex-col" : `flex-row ${isLight ? "bg-[#FFF7ED] border border-[#FED7AA]" : "bg-[#8B5CF6]/15 border border-[#8B5CF6]/30"} rounded-xl px-3 py-2 w-full justify-center`}`}>
-            <div className={`w-7 h-7 rounded-full ${isLight ? "bg-orange-100 border border-orange-200 text-[#EA580C]" : "bg-[#8B5CF6]/20 border border-[#8B5CF6]/35 text-[#C084FC]"} flex items-center justify-center animate-pulse shrink-0`}>
+            <div className={`w-7 h-7 rounded-full ${isLight ? "bg-[#FFF2ED] border border-[#F0D5CC] text-[#C25E42]" : "bg-[#8B5CF6]/20 border border-[#8B5CF6]/35 text-[#C084FC]"} flex items-center justify-center animate-pulse shrink-0`}>
               <Lock size={13} />
             </div>
-            <span className={`text-xs font-mono ${isLight ? "text-[#EA580C]" : "text-[#C084FC]"} font-black tracking-tight shrink-0`}>
+            <span className={`text-xs font-mono ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"} font-black tracking-tight shrink-0`}>
               {focusTimeRemaining}
             </span>
           </div>
         ) : (
-          <div className={`p-2 ${isLight ? "text-[#736B63] hover:text-[#EA580C]" : "text-slate-400 hover:text-[#C084FC]"} cursor-help flex items-center gap-2`} title="Calibration: IGCSE, SAT & College Specs">
-            <Sparkles size={16} className={`shrink-0 ${isLight ? "text-[#EA580C]" : "text-[#C084FC]"}`} />
+          <div className={`p-2 ${isLight ? "text-[#736B63] hover:text-[#C25E42]" : "text-slate-400 hover:text-[#C084FC]"} cursor-help flex items-center gap-2`} title="Calibration: IGCSE, SAT & College Specs">
+            <Sparkles size={16} className={`shrink-0 ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"}`} />
             {!isCollapsed && (
               <span className={`text-[10px] font-mono uppercase tracking-widest font-bold ${isLight ? "text-[#736B63]" : "text-[#94A3B8]"}`}>CALIBRATED</span>
             )}

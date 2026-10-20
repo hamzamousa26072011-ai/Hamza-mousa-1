@@ -66,7 +66,7 @@ export default function UserGuideModal({
       title: "Welcome to Engez Nafsak (إنجز نفسك)",
       subtitle: "A calm, focused academic workspace for planning exams, study habits, and timed revision sessions.",
       icon: Sparkles,
-      accentColor: "#5F55C8",
+      accentColor: "#C25E42",
       points: [
         {
           title: "Today View & Tasks",
@@ -140,7 +140,7 @@ export default function UserGuideModal({
       title: "Focus Timer & Exam Paper Presets",
       subtitle: "Practice under real paper durations or run structured Pomodoro study intervals.",
       icon: Timer,
-      accentColor: "#5F55C8",
+      accentColor: "#C25E42",
       points: [
         {
           title: "Exam Paper Presets",
@@ -158,7 +158,7 @@ export default function UserGuideModal({
       preview: (
         <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"} space-y-2`}>
           <div className="flex items-center justify-between text-xs">
-            <span className={`font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>Paper 2 Preset (45m)</span>
+            <span className={`font-semibold ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"}`}>Paper 2 Preset (45m)</span>
             <span className={`flex items-center gap-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
               <Volume2 size={12} /> Rain Ambience
             </span>
@@ -203,7 +203,7 @@ export default function UserGuideModal({
       title: "AI Tutor & Mark Scheme Assistant",
       subtitle: "Upload past paper questions or notes for step-by-step explanations.",
       icon: GraduationCap,
-      accentColor: "#5F55C8",
+      accentColor: "#C25E42",
       points: [
         {
           title: "Attach Questions or Working",
@@ -216,7 +216,7 @@ export default function UserGuideModal({
       ],
       preview: (
         <div className={`p-3.5 rounded-xl border ${isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"} space-y-1.5 text-xs`}>
-          <div className={`font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
+          <div className={`font-semibold ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"}`}>
             Example Prompt
           </div>
           <p className={isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}>
@@ -272,7 +272,7 @@ export default function UserGuideModal({
         >
           {/* Top Actions: Skip Guide & Close */}
           <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-inherit">
-            <span className={`text-xs font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
+            <span className={`text-xs font-semibold ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"}`}>
               {currentStep.badge}
             </span>
             <div className="flex items-center gap-2">
@@ -316,7 +316,7 @@ export default function UserGuideModal({
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isLight ? "bg-[#EFEEFA] text-[#5F55C8]" : "bg-[#222938] text-[#A99BFF]"
+                      isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#222938] text-[#C084FC]"
                     }`}
                   >
                     <StepIcon size={20} />
@@ -335,7 +335,7 @@ export default function UserGuideModal({
                 <div className="space-y-2.5 pt-1">
                   {currentStep.points.map((pt, idx) => (
                     <div key={idx} className="flex items-start gap-2.5">
-                      <CheckCircle2 size={15} className={`shrink-0 mt-0.5 ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`} />
+                      <CheckCircle2 size={15} className={`shrink-0 mt-0.5 ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"}`} />
                       <div className="text-xs leading-relaxed">
                         <span className={`font-bold ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
                           {pt.title}:{" "}
@@ -366,7 +366,7 @@ export default function UserGuideModal({
                   onClick={() => setCurrentStepIndex(idx)}
                   className={`h-2 rounded-full transition-all cursor-pointer ${
                     currentStepIndex === idx
-                      ? "w-6 bg-[#5F55C8]"
+                      ? "w-6 bg-[#C25E42]"
                       : isLight
                       ? "w-2 bg-[#D0D7E2]"
                       : "w-2 bg-[#2B3344]"
@@ -397,7 +397,7 @@ export default function UserGuideModal({
               <button
                 type="button"
                 onClick={handleNext}
-                className="min-h-[38px] px-4 py-1.5 rounded-xl text-xs font-semibold bg-[#5F55C8] hover:bg-[#4E45B0] text-white transition cursor-pointer flex items-center gap-1.5"
+                className="min-h-[38px] px-4 py-1.5 rounded-xl text-xs font-semibold bg-[#C25E42] hover:bg-[#B25136] text-white transition cursor-pointer flex items-center gap-1.5"
               >
                 <span>{isLastStep ? "Open Workspace" : "Next"}</span>
                 {isLastStep ? <CheckCircle2 size={14} /> : <ArrowRight size={14} />}

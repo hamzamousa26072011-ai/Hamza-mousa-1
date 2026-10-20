@@ -1076,10 +1076,10 @@ export default function AiScholarTab({
               <h1 className={`text-xl sm:text-2xl font-black ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>AI Tutor</h1>
               <span className={`text-[10px] font-mono font-bold ${
                 isLight 
-                  ? "bg-orange-50 border border-orange-300 text-orange-900" 
+                  ? "bg-[#FFF2ED] border border-[#F0D5CC] text-[#B25136]" 
                   : "bg-purple-950/40 border border-purple-700/60 text-purple-300"
               } px-2 py-0.5 rounded-md uppercase flex items-center gap-1.5`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${isLight ? "bg-orange-500" : "bg-purple-500"} animate-pulse`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-purple-500"} animate-pulse`} />
                 IGCSE Examiner & Tutor
               </span>
             </div>

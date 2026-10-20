@@ -146,19 +146,19 @@ export default function HabitCompletionChart({
       <div
         className={`p-3 rounded-xl border shadow-xl backdrop-blur-md text-xs z-50 min-w-[200px] max-w-[280px] transition-all ${
           isLight
-            ? "bg-white/95 border-[#E2E6EF] text-[#18202B] shadow-orange-500/10"
+            ? "bg-white/95 border-[#E2E6EF] text-[#18202B] shadow-[#C25E42]/10"
             : "bg-[#181D28]/95 border-[#2E374A] text-[#F1F3F8] shadow-black/40"
         }`}
       >
         <div className="flex items-center justify-between pb-2 mb-2 border-b border-inherit">
           <div className="flex items-center gap-1.5 font-semibold">
-            <Calendar size={13} className={isLight ? "text-[#EA580C]" : "text-[#8B5CF6]"} />
+            <Calendar size={13} className={isLight ? "text-[#C25E42]" : "text-[#8B5CF6]"} />
             <span>{data.fullDateLabel}</span>
           </div>
           {data.isToday && (
             <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded-md border ${
               isLight
-                ? "bg-orange-100 text-[#C2410C] border-orange-200"
+                ? "bg-[#FFF2ED] text-[#B25136] border-[#F0D5CC]"
                 : "bg-[#8B5CF6]/20 text-[#A78BFA] border-[#8B5CF6]/30"
             }`}>
               Today
@@ -169,7 +169,7 @@ export default function HabitCompletionChart({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className={isLight ? "text-[#596474]" : "text-[#94A3B8]"}>Completed:</span>
-            <span className={`font-mono font-bold text-sm ${isLight ? "text-[#EA580C]" : "text-[#8B5CF6]"}`}>
+            <span className={`font-mono font-bold text-sm ${isLight ? "text-[#C25E42]" : "text-[#8B5CF6]"}`}>
               {data.completed} / {data.total}
               <span className="text-[11px] font-normal ml-1 opacity-80">({data.rate}%)</span>
             </span>
@@ -180,7 +180,7 @@ export default function HabitCompletionChart({
             <div
               className={`h-full rounded-full transition-all duration-300 ${
                 isLight
-                  ? "bg-gradient-to-r from-[#EA580C] to-[#FB923C]"
+                  ? "bg-gradient-to-r from-[#C25E42] to-[#FB923C]"
                   : "bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA]"
               }`}
               style={{ width: `${Math.min(100, data.rate)}%` }}
@@ -198,7 +198,7 @@ export default function HabitCompletionChart({
                   <span
                     key={idx}
                     className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                      isLight ? "bg-orange-50 text-[#C2410C] border border-orange-200/60" : "bg-[#8B5CF6]/20 text-[#DDD6FE]"
+                      isLight ? "bg-[#FFF2ED] text-[#B25136] border border-[#F0D5CC]/60" : "bg-[#8B5CF6]/20 text-[#DDD6FE]"
                     }`}
                   >
                     <span>{h.emoji}</span>
@@ -242,7 +242,7 @@ export default function HabitCompletionChart({
         <div className="flex items-center gap-2.5">
           <div
             className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-              isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#A78BFA]"
+              isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#A78BFA]"
             }`}
           >
             <TrendingUp size={18} />
@@ -254,7 +254,7 @@ export default function HabitCompletionChart({
               </h2>
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                  isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+                  isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
                 }`}
               >
                 Recharts
@@ -280,7 +280,7 @@ export default function HabitCompletionChart({
               className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
                 metricMode === "count"
                   ? isLight
-                    ? "bg-[#EA580C] text-white shadow-xs font-semibold"
+                    ? "bg-[#C25E42] text-white shadow-xs font-semibold"
                     : "bg-[#8B5CF6] text-white font-semibold"
                   : isLight
                   ? "text-[#596474] hover:text-[#18202B]"
@@ -295,7 +295,7 @@ export default function HabitCompletionChart({
               className={`px-2.5 py-1 rounded-md transition cursor-pointer ${
                 metricMode === "rate"
                   ? isLight
-                    ? "bg-[#EA580C] text-white shadow-xs font-semibold"
+                    ? "bg-[#C25E42] text-white shadow-xs font-semibold"
                     : "bg-[#8B5CF6] text-white font-semibold"
                   : isLight
                   ? "text-[#596474] hover:text-[#18202B]"
@@ -319,7 +319,7 @@ export default function HabitCompletionChart({
               className={`px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
                 chartType === "area"
                   ? isLight
-                    ? "bg-[#EA580C] text-white shadow-xs font-semibold"
+                    ? "bg-[#C25E42] text-white shadow-xs font-semibold"
                     : "bg-[#8B5CF6] text-white font-semibold"
                   : isLight
                   ? "text-[#596474] hover:text-[#18202B]"
@@ -336,7 +336,7 @@ export default function HabitCompletionChart({
               className={`px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1 ${
                 chartType === "bar"
                   ? isLight
-                    ? "bg-[#EA580C] text-white shadow-xs font-semibold"
+                    ? "bg-[#C25E42] text-white shadow-xs font-semibold"
                     : "bg-[#8B5CF6] text-white font-semibold"
                   : isLight
                   ? "text-[#596474] hover:text-[#18202B]"
@@ -354,21 +354,21 @@ export default function HabitCompletionChart({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-3.5">
         <div
           className={`p-2.5 rounded-xl border flex items-center gap-2.5 ${
-            isLight ? "bg-orange-50/70 border-orange-200" : "bg-[#8B5CF6]/10 border-[#8B5CF6]/25"
+            isLight ? "bg-[#FFF2ED]/70 border-[#F0D5CC]" : "bg-[#8B5CF6]/10 border-[#8B5CF6]/25"
           }`}
         >
           <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-            isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#8B5CF6]"
+            isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#8B5CF6]"
           }`}>
             <CheckCircle2 size={15} />
           </div>
           <div>
             <span className={`text-[10px] uppercase font-semibold tracking-wider block ${
-              isLight ? "text-[#C2410C]" : "text-[#C084FC]"
+              isLight ? "text-[#B25136]" : "text-[#C084FC]"
             }`}>
               7d Avg Rate
             </span>
-            <span className={`text-base font-bold font-mono ${isLight ? "text-[#EA580C]" : "text-[#8B5CF6]"}`}>
+            <span className={`text-base font-bold font-mono ${isLight ? "text-[#C25E42]" : "text-[#8B5CF6]"}`}>
               {summaryMetrics.avgRate}%
             </span>
           </div>
@@ -443,7 +443,7 @@ export default function HabitCompletionChart({
             isLight ? "bg-[#F6F7FA] border-[#CBD2E0]" : "bg-[#10131A]/60 border-[#364054]"
           }`}
         >
-          <TrendingUp size={28} className={`${isLight ? "text-[#EA580C]" : "text-[#8B5CF6]"} mb-2 opacity-60`} />
+          <TrendingUp size={28} className={`${isLight ? "text-[#C25E42]" : "text-[#8B5CF6]"} mb-2 opacity-60`} />
           <p className="text-sm font-semibold">No habits tracked yet</p>
           <p className={`text-xs mt-1 max-w-sm ${isLight ? "text-[#596474]" : "text-[#94A3B8]"}`}>
             Add your daily habits using the button above to visualize your 7-day completion trend here.
@@ -456,9 +456,9 @@ export default function HabitCompletionChart({
               <AreaChart data={chartData} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
                 <defs>
                   <linearGradient id="rechartsHabitGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={isLight ? "#EA580C" : "#8B5CF6"} stopOpacity={0.45} />
-                    <stop offset="60%" stopColor={isLight ? "#EA580C" : "#8B5CF6"} stopOpacity={0.15} />
-                    <stop offset="100%" stopColor={isLight ? "#EA580C" : "#8B5CF6"} stopOpacity={0.0} />
+                    <stop offset="0%" stopColor={isLight ? "#C25E42" : "#8B5CF6"} stopOpacity={0.45} />
+                    <stop offset="60%" stopColor={isLight ? "#C25E42" : "#8B5CF6"} stopOpacity={0.15} />
+                    <stop offset="100%" stopColor={isLight ? "#C25E42" : "#8B5CF6"} stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -508,19 +508,19 @@ export default function HabitCompletionChart({
                 <Area
                   type="monotone"
                   dataKey={metricMode === "count" ? "completed" : "rate"}
-                  stroke={isLight ? "#EA580C" : "#8B5CF6"}
+                  stroke={isLight ? "#C25E42" : "#8B5CF6"}
                   strokeWidth={2.5}
                   fillOpacity={1}
                   fill="url(#rechartsHabitGradient)"
                   activeDot={{
                     r: 6,
-                    fill: isLight ? "#EA580C" : "#8B5CF6",
+                    fill: isLight ? "#C25E42" : "#8B5CF6",
                     stroke: isLight ? "#FFFFFF" : "#191E28",
                     strokeWidth: 2
                   }}
                   dot={{
                     r: 3.5,
-                    fill: isLight ? "#C2410C" : "#A78BFA",
+                    fill: isLight ? "#B25136" : "#A78BFA",
                     strokeWidth: 1.5,
                     stroke: isLight ? "#FFFFFF" : "#191E28"
                   }}
@@ -560,7 +560,7 @@ export default function HabitCompletionChart({
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: isLight ? "#F1F5F9" : "#1E293B", opacity: 0.5 }} />
                 <Bar
                   dataKey={metricMode === "count" ? "completed" : "rate"}
-                  fill={isLight ? "#EA580C" : "#8B5CF6"}
+                  fill={isLight ? "#C25E42" : "#8B5CF6"}
                   radius={[6, 6, 0, 0]}
                   maxBarSize={44}
                 />
@@ -577,10 +577,10 @@ export default function HabitCompletionChart({
         }`}
       >
         <span className="flex items-center gap-1.5">
-          <span className={`w-2 h-2 rounded-full inline-block ${isLight ? "bg-[#EA580C]" : "bg-[#8B5CF6]"}`} />
+          <span className={`w-2 h-2 rounded-full inline-block ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"}`} />
           7-day window: {chartData[0]?.displayLabel} → {chartData[6]?.displayLabel}
         </span>
-        <span className={`font-semibold ${isLight ? "text-[#EA580C]" : "text-[#8B5CF6]"}`}>
+        <span className={`font-semibold ${isLight ? "text-[#C25E42]" : "text-[#8B5CF6]"}`}>
           {summaryMetrics.totalCompleted7d} total habits completed this week
         </span>
       </div>

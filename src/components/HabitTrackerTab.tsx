@@ -444,7 +444,7 @@ export default function HabitTrackerTab({
             type="button"
             onClick={() => setShowAddModal(true)}
             className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95 ${
-              isLight ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25" : "bg-[#6D5DF6] hover:bg-[#5B4BE8] shadow-purple-500/25"
+              isLight ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[#C25E42]/25" : "bg-[#6D5DF6] hover:bg-[#5B4BE8] shadow-purple-500/25"
             }`}
           >
             <Plus size={15} />
@@ -516,11 +516,11 @@ export default function HabitTrackerTab({
             isLight ? "bg-[#FFF7ED] border-[#FED7AA]" : "bg-[#6D5DF6]/15 border-[#6D5DF6]/35"
           }`}
         >
-          <span className={`text-xs font-semibold ${isLight ? "text-[#EA580C]" : "text-[#A99BFF]"}`}>
+          <span className={`text-xs font-semibold ${isLight ? "text-[#C25E42]" : "text-[#A99BFF]"}`}>
             Completed
           </span>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className={`text-2xl font-bold font-mono tabular-nums ${isLight ? "text-[#EA580C]" : "text-[#A99BFF]"}`}>
+            <span className={`text-2xl font-bold font-mono tabular-nums ${isLight ? "text-[#C25E42]" : "text-[#A99BFF]"}`}>
               {stats.completedCount}
             </span>
             <span className="text-xs font-mono font-semibold">{stats.completionRate}%</span>
@@ -584,7 +584,7 @@ export default function HabitTrackerTab({
               <ChevronLeft size={15} />
             </button>
             <div className="px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5">
-              <Calendar size={13} className={isLight ? "text-[#EA580C]" : "text-[#A99BFF]"} />
+              <Calendar size={13} className={isLight ? "text-[#C25E42]" : "text-[#A99BFF]"} />
               <span>{formattedAnchorDate}</span>
             </div>
             <button
@@ -694,7 +694,7 @@ export default function HabitTrackerTab({
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors flex items-center gap-1.5 cursor-pointer ${
               startDate === todayStr
                 ? isLight
-                  ? "bg-[#FFF7ED] border-[#FED7AA] text-[#EA580C]"
+                  ? "bg-[#FFF7ED] border-[#FED7AA] text-[#C25E42]"
                   : "bg-[#6D5DF6]/20 border-[#6D5DF6]/40 text-[#A99BFF]"
                 : isLight
                 ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
@@ -752,11 +752,11 @@ export default function HabitTrackerTab({
                     className={`min-w-[52px] py-2 px-2 rounded-xl border text-center transition-colors shrink-0 cursor-pointer ${
                       isSelected
                         ? isLight
-                          ? "bg-[#EA580C] border-[#EA580C] text-white"
+                          ? "bg-[#C25E42] border-[#C25E42] text-white"
                           : "bg-[#6D5DF6] border-[#6D5DF6] text-white"
                         : d.isToday
                         ? isLight
-                          ? "bg-[#FFF7ED] border-[#FED7AA] text-[#EA580C]"
+                          ? "bg-[#FFF7ED] border-[#FED7AA] text-[#C25E42]"
                           : "bg-[#6D5DF6]/15 border-[#6D5DF6]/40 text-[#A99BFF]"
                         : isLight
                         ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#18202B]"
@@ -864,7 +864,7 @@ export default function HabitTrackerTab({
               }`}
             >
               <span className="flex items-center gap-2 text-xs font-semibold">
-                <Moon size={16} className={isLight ? "text-[#EA580C]" : "text-[#A99BFF]"} />
+                <Moon size={16} className={isLight ? "text-[#C25E42]" : "text-[#A99BFF]"} />
                 <span>Sleep Quality (1–10)</span>
               </span>
               <span className="font-mono text-xs font-bold">
@@ -969,7 +969,7 @@ export default function HabitTrackerTab({
                         </span>
                         <span
                           className={`text-xs font-bold font-mono mt-0.5 ${
-                            d.isToday ? (isLight ? "text-[#EA580C]" : "text-[#A99BFF]") : ""
+                            d.isToday ? (isLight ? "text-[#C25E42]" : "text-[#A99BFF]") : ""
                           }`}
                         >
                           {d.dayNum}
@@ -977,7 +977,7 @@ export default function HabitTrackerTab({
                         {d.isToday && (
                           <span
                             className={`mt-0.5 text-[9px] font-bold ${
-                              isLight ? "text-[#EA580C]" : "text-[#A99BFF]"
+                              isLight ? "text-[#C25E42]" : "text-[#A99BFF]"
                             }`}
                           >
                             Today
@@ -999,7 +999,7 @@ export default function HabitTrackerTab({
                           type="button"
                           onClick={() => setShowAddModal(true)}
                           className={`px-4 py-2 rounded-xl text-xs font-semibold text-white cursor-pointer shadow-md transition-all ${
-                            isLight ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25" : "bg-[#6D5DF6] hover:bg-[#5B4BE8] shadow-purple-500/25"
+                            isLight ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[#C25E42]/25" : "bg-[#6D5DF6] hover:bg-[#5B4BE8] shadow-purple-500/25"
                           }`}
                         >
                           Add Your First Habit
@@ -1164,7 +1164,7 @@ export default function HabitTrackerTab({
                   >
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2">
-                        <Moon size={14} className={isLight ? "text-[#EA580C]" : "text-[#A99BFF]"} />
+                        <Moon size={14} className={isLight ? "text-[#C25E42]" : "text-[#A99BFF]"} />
                         <span>Sleep (1–10)</span>
                       </span>
                       <span className={`text-[10px] font-normal ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
@@ -1196,7 +1196,7 @@ export default function HabitTrackerTab({
                           className={`w-8 h-7 rounded-md mx-auto font-mono text-xs font-bold flex items-center justify-center transition-colors cursor-pointer ${
                             sleepVal !== undefined
                               ? isLight
-                                ? "bg-[#FFF7ED] text-[#EA580C] border border-[#FED7AA]"
+                                ? "bg-[#FFF7ED] text-[#C25E42] border border-[#FED7AA]"
                                 : "bg-[#6D5DF6]/25 text-[#A99BFF] border border-[#6D5DF6]/40"
                               : isLight
                               ? "text-[#768295] hover:bg-[#E8ECF4]"

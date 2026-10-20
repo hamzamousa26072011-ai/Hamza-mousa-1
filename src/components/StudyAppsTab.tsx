@@ -34,7 +34,7 @@ interface StudyAppsTabProps {
 
 const COLOR_PALETTE = [
   { name: "Violet", hex: "#8B5CF6" },
-  { name: "Orange", hex: "#EA580C" },
+  { name: "Orange", hex: "#C25E42" },
   { name: "Emerald", hex: "#10B981" },
   { name: "Sky", hex: "#0EA5E9" },
   { name: "Amber", hex: "#F59E0B" },
@@ -68,7 +68,7 @@ const QUICK_SUGGESTIONS: Omit<StudyApp, "id">[] = [
     url: "https://www.desmos.com/calculator",
     category: "Tools & Math",
     description: "Interactive function plotting and graphing calculator for mathematics",
-    logoColor: "#EA580C"
+    logoColor: "#C25E42"
   },
   {
     name: "Notion",
@@ -101,9 +101,9 @@ export default function StudyAppsTab({
 
   // Active theme accents:
   // Dark mode -> Purple palette (#8B5CF6 / #7C3AED / #C084FC)
-  // Light mode -> Orange palette (#EA580C / #C2410C / #F97316 / #FFF7ED)
-  const primaryColor = isLight ? "#EA580C" : "#8B5CF6";
-  const primaryHoverColor = isLight ? "#C2410C" : "#7C3AED";
+  // Light mode -> Orange palette (#C25E42 / #B25136 / #F97316 / #FFF7ED)
+  const primaryColor = isLight ? "#C25E42" : "#8B5CF6";
+  const primaryHoverColor = isLight ? "#B25136" : "#7C3AED";
 
   const userApps = apps.length > 0 ? apps : customApps;
 
@@ -121,7 +121,7 @@ export default function StudyAppsTab({
   const [formUrl, setFormUrl] = useState("");
   const [formCategory, setFormCategory] = useState("");
   const [formDescription, setFormDescription] = useState("");
-  const [formColor, setFormColor] = useState(isLight ? "#EA580C" : "#8B5CF6");
+  const [formColor, setFormColor] = useState(isLight ? "#C25E42" : "#8B5CF6");
   const [formError, setFormError] = useState<string | null>(null);
 
   // Available categories derived dynamically from user's apps
@@ -182,7 +182,7 @@ export default function StudyAppsTab({
     setFormUrl("");
     setFormCategory("");
     setFormDescription("");
-    setFormColor(isLight ? "#EA580C" : "#8B5CF6");
+    setFormColor(isLight ? "#C25E42" : "#8B5CF6");
     setFormError(null);
     setIsModalOpen(true);
   };
@@ -193,7 +193,7 @@ export default function StudyAppsTab({
     setFormUrl(app.url);
     setFormCategory(app.category || "");
     setFormDescription(app.description || "");
-    setFormColor(app.logoColor || (isLight ? "#EA580C" : "#8B5CF6"));
+    setFormColor(app.logoColor || (isLight ? "#C25E42" : "#8B5CF6"));
     setFormError(null);
     setIsModalOpen(true);
   };
@@ -236,7 +236,7 @@ export default function StudyAppsTab({
   const handleQuickAdd = (suggestion: Omit<StudyApp, "id">) => {
     onAddApp({
       ...suggestion,
-      logoColor: suggestion.logoColor || (isLight ? "#EA580C" : "#8B5CF6")
+      logoColor: suggestion.logoColor || (isLight ? "#C25E42" : "#8B5CF6")
     });
   };
 
@@ -248,7 +248,7 @@ export default function StudyAppsTab({
           <div className="flex items-center gap-2.5">
             <div
               className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+                isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
               }`}
             >
               <Compass size={18} />
@@ -290,7 +290,7 @@ export default function StudyAppsTab({
             onClick={openAddModal}
             className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95 ${
               isLight
-                ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25"
+                ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[#C25E42]/25"
                 : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-purple-500/25"
             }`}
           >
@@ -305,12 +305,12 @@ export default function StudyAppsTab({
         <div
           className={`p-3 rounded-xl border flex items-center justify-between text-xs font-medium animate-fadeIn ${
             isLight
-              ? "bg-orange-50 border-orange-200 text-[#C2410C]"
+              ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#B25136]"
               : "bg-[#8B5CF6]/15 border-[#8B5CF6]/30 text-[#DDD6FE]"
           }`}
         >
           <div className="flex items-center gap-2">
-            <Check size={14} className={isLight ? "text-[#EA580C]" : "text-[#C084FC]"} />
+            <Check size={14} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
             <span>{appSavedNotice}</span>
           </div>
         </div>
@@ -337,7 +337,7 @@ export default function StudyAppsTab({
             placeholder="Search your study tabs by name, URL, or tag..."
             className={`w-full pl-9 pr-8 py-2 text-xs rounded-xl border outline-none transition ${
               isLight
-                ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#C25E42] focus:bg-white"
                 : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
             }`}
           />
@@ -374,7 +374,7 @@ export default function StudyAppsTab({
               className={`p-1.5 rounded-lg transition cursor-pointer ${
                 viewMode === "grid"
                   ? isLight
-                    ? "bg-white text-[#EA580C] shadow-xs font-bold"
+                    ? "bg-white text-[#C25E42] shadow-xs font-bold"
                     : "bg-[#8B5CF6] text-white font-bold"
                   : isLight
                   ? "text-[#596474] hover:text-[#18202B]"
@@ -390,7 +390,7 @@ export default function StudyAppsTab({
               className={`p-1.5 rounded-lg transition cursor-pointer ${
                 viewMode === "list"
                   ? isLight
-                    ? "bg-white text-[#EA580C] shadow-xs font-bold"
+                    ? "bg-white text-[#C25E42] shadow-xs font-bold"
                     : "bg-[#8B5CF6] text-white font-bold"
                   : isLight
                   ? "text-[#596474] hover:text-[#18202B]"
@@ -414,10 +414,10 @@ export default function StudyAppsTab({
               className={`px-3 py-1 rounded-xl text-xs font-medium shrink-0 transition cursor-pointer border ${
                 selectedCategory === cat
                   ? isLight
-                    ? "bg-[#EA580C] text-white border-[#EA580C] shadow-xs font-bold"
+                    ? "bg-[#C25E42] text-white border-[#C25E42] shadow-xs font-bold"
                     : "bg-[#8B5CF6] text-white border-[#8B5CF6] shadow-xs font-bold"
                   : isLight
-                  ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#596474] hover:border-[#EA580C]/40"
+                  ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#596474] hover:border-[#C25E42]/40"
                   : "bg-[#191E28] border-[#283040] text-[#94A3B8] hover:border-[#8B5CF6]/40"
               }`}
             >
@@ -439,7 +439,7 @@ export default function StudyAppsTab({
           <div
             className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
               isLight
-                ? "bg-orange-100 text-[#EA580C] ring-8 ring-orange-50"
+                ? "bg-[#FFF2ED] text-[#C25E42] ring-8 ring-[#FFF2ED]"
                 : "bg-[#8B5CF6]/20 text-[#C084FC] ring-8 ring-[#8B5CF6]/10"
             }`}
           >
@@ -459,7 +459,7 @@ export default function StudyAppsTab({
             onClick={openAddModal}
             className={`mt-5 px-5 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95 ${
               isLight
-                ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25"
+                ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[#C25E42]/25"
                 : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-purple-500/25"
             }`}
           >
@@ -484,11 +484,11 @@ export default function StudyAppsTab({
                   onClick={() => handleQuickAdd(item)}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
                     isLight
-                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] hover:border-[#EA580C] hover:bg-orange-50"
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] hover:border-[#C25E42] hover:bg-[#FFF2ED]"
                       : "bg-[#12161F] border-[#283040] text-[#F1F3F8] hover:border-[#8B5CF6] hover:bg-[#8B5CF6]/15"
                   }`}
                 >
-                  <Plus size={12} className={isLight ? "text-[#EA580C]" : "text-[#C084FC]"} />
+                  <Plus size={12} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
                   <span>{item.name}</span>
                 </button>
               ))}
@@ -513,7 +513,7 @@ export default function StudyAppsTab({
               setSelectedCategory("All");
             }}
             className={`mt-3 text-xs font-bold underline cursor-pointer ${
-              isLight ? "text-[#EA580C]" : "text-[#C084FC]"
+              isLight ? "text-[#C25E42]" : "text-[#C084FC]"
             }`}
           >
             Clear filters
@@ -532,7 +532,7 @@ export default function StudyAppsTab({
                 key={app.id}
                 className={`group rounded-2xl border p-4.5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   isLight
-                    ? "bg-[#FFFFFF] border-[#E2E6EF] hover:border-[#EA580C]/40"
+                    ? "bg-[#FFFFFF] border-[#E2E6EF] hover:border-[#C25E42]/40"
                     : "bg-[#191E28] border-[#283040] hover:border-[#8B5CF6]/50"
                 }`}
               >
@@ -612,7 +612,7 @@ export default function StudyAppsTab({
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider ${
                           isLight
-                            ? "bg-orange-50 text-[#C2410C] border border-orange-200/70"
+                            ? "bg-[#FFF2ED] text-[#B25136] border border-[#F0D5CC]/70"
                             : "bg-[#8B5CF6]/15 text-[#DDD6FE] border border-[#8B5CF6]/30"
                         }`}
                       >
@@ -642,7 +642,7 @@ export default function StudyAppsTab({
                     rel="noopener noreferrer"
                     className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
                       isLight
-                        ? "bg-orange-50 hover:bg-[#EA580C] text-[#EA580C] hover:text-white border border-orange-200 hover:border-[#EA580C]"
+                        ? "bg-[#FFF2ED] hover:bg-[#C25E42] text-[#C25E42] hover:text-white border border-[#F0D5CC] hover:border-[#C25E42]"
                         : "bg-[#8B5CF6]/15 hover:bg-[#8B5CF6] text-[#C084FC] hover:text-white border border-[#8B5CF6]/30 hover:border-[#8B5CF6]"
                     }`}
                   >
@@ -705,7 +705,7 @@ export default function StudyAppsTab({
                         <span
                           className={`text-[10px] font-semibold px-2 py-0.2 rounded uppercase ${
                             isLight
-                              ? "bg-orange-50 text-[#C2410C] border border-orange-200"
+                              ? "bg-[#FFF2ED] text-[#B25136] border border-[#F0D5CC]"
                               : "bg-[#8B5CF6]/15 text-[#DDD6FE] border border-[#8B5CF6]/30"
                           }`}
                         >
@@ -760,7 +760,7 @@ export default function StudyAppsTab({
                     rel="noopener noreferrer"
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
                       isLight
-                        ? "bg-orange-50 hover:bg-[#EA580C] text-[#EA580C] hover:text-white border border-orange-200"
+                        ? "bg-[#FFF2ED] hover:bg-[#C25E42] text-[#C25E42] hover:text-white border border-[#F0D5CC]"
                         : "bg-[#8B5CF6]/15 hover:bg-[#8B5CF6] text-[#C084FC] hover:text-white border border-[#8B5CF6]/30"
                     }`}
                   >
@@ -789,7 +789,7 @@ export default function StudyAppsTab({
               <div className="flex items-center gap-2">
                 <div
                   className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+                    isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
                   }`}
                 >
                   {editingApp ? <Edit3 size={16} /> : <Plus size={16} />}
@@ -835,7 +835,7 @@ export default function StudyAppsTab({
                   placeholder="e.g. Physics & Maths Tutor, Quizlet, Khan Academy"
                   className={`w-full px-3.5 py-2.5 text-xs rounded-xl border outline-none transition ${
                     isLight
-                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#C25E42] focus:bg-white"
                       : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
                   }`}
                 />
@@ -853,7 +853,7 @@ export default function StudyAppsTab({
                   placeholder="e.g. physicsandmathstutor.com or https://..."
                   className={`w-full px-3.5 py-2.5 text-xs rounded-xl border outline-none font-mono transition ${
                     isLight
-                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#C25E42] focus:bg-white"
                       : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
                   }`}
                 />
@@ -871,7 +871,7 @@ export default function StudyAppsTab({
                   placeholder="e.g. Past Papers, Notes, Flashcards, Tools, Math"
                   className={`w-full px-3.5 py-2.5 text-xs rounded-xl border outline-none transition ${
                     isLight
-                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#C25E42] focus:bg-white"
                       : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
                   }`}
                 />
@@ -885,7 +885,7 @@ export default function StudyAppsTab({
                       className={`text-[10px] px-2 py-0.5 rounded-md border transition cursor-pointer ${
                         formCategory === tag
                           ? isLight
-                            ? "bg-orange-100 text-[#C2410C] border-orange-300 font-semibold"
+                            ? "bg-[#FFF2ED] text-[#B25136] border-[#E5BEB2] font-semibold"
                             : "bg-[#8B5CF6]/20 text-[#DDD6FE] border-[#8B5CF6]/50 font-semibold"
                           : isLight
                           ? "bg-black/5 border-transparent text-[#596474] hover:bg-black/10"
@@ -910,7 +910,7 @@ export default function StudyAppsTab({
                   placeholder="What do you use this tab for? e.g. Chapter 4 mechanics practice papers"
                   className={`w-full px-3.5 py-2 text-xs rounded-xl border outline-none transition resize-none ${
                     isLight
-                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#C25E42] focus:bg-white"
                       : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
                   }`}
                 />
@@ -961,7 +961,7 @@ export default function StudyAppsTab({
                   type="submit"
                   className={`px-5 py-2 text-xs font-bold text-white rounded-xl shadow-md transition cursor-pointer active:scale-95 ${
                     isLight
-                      ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25"
+                      ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[#C25E42]/25"
                       : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-purple-500/25"
                   }`}
                 >
