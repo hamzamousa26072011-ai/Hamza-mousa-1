@@ -76,9 +76,9 @@ export const URGENCY_TIERS_LEGEND = [
   { id: "very-urgent", label: "1–2d", name: "Urgent", dot: "bg-[#FB7185]", lightBadge: "bg-[#FFF5F5] text-[#B91C1C] border-[#FCA5A5]", darkBadge: "bg-[#FB7185]/15 text-[#FECDD3] border-[#FB7185]/30" },
   { id: "high-urgency", label: "3–4d", name: "High", dot: "bg-[#F97316]", lightBadge: "bg-[#FFF7ED] text-[#C2410C] border-[#FDBA74]", darkBadge: "bg-[#F97316]/15 text-[#FED7AA] border-[#F97316]/30" },
   { id: "this-week", label: "5–7d", name: "This Week", dot: "bg-[#FBBF24]", lightBadge: "bg-[#FFFBEB] text-[#B45309] border-[#FCD34D]", darkBadge: "bg-[#FBBF24]/15 text-[#FDE68A] border-[#FBBF24]/30" },
-  { id: "next-week", label: "8–14d", name: "Next Week", dot: "bg-[#8B5CF6]", lightBadge: "bg-[#F7FEE7] text-[#4D7C0F] border-[#BEF264]", darkBadge: "bg-[#8B5CF6]/15 text-[#C084FC] border-[#8B5CF6]/30" },
-  { id: "on-track", label: "15–21d", name: "On Track", dot: "bg-[#6366F1]", lightBadge: "bg-[#F0FDF4] text-[#15803D] border-[#86EFAC]", darkBadge: "bg-[#6366F1]/15 text-[#A5B4FC] border-[#6366F1]/30" },
-  { id: "horizon", label: "22–35d", name: "Horizon", dot: "bg-[#06B6D4]", lightBadge: "bg-[#F0FDFA] text-[#0F766E] border-[#5EEAD4]", darkBadge: "bg-[#06B6D4]/15 text-[#67E8F9] border-[#06B6D4]/30" },
+  { id: "next-week", label: "8–14d", name: "Next Week", dot: "bg-[#8B5CF6]", lightBadge: "bg-[#F5F3FF] text-[#6D28D9] border-[#DDD6FE]", darkBadge: "bg-[#8B5CF6]/15 text-[#C084FC] border-[#8B5CF6]/30" },
+  { id: "on-track", label: "15–21d", name: "On Track", dot: "bg-[#6366F1]", lightBadge: "bg-[#EEF2FF] text-[#4338CA] border-[#C7D2FE]", darkBadge: "bg-[#6366F1]/15 text-[#A5B4FC] border-[#6366F1]/30" },
+  { id: "horizon", label: "22–35d", name: "Horizon", dot: "bg-[#06B6D4]", lightBadge: "bg-[#ECFEFF] text-[#0E7490] border-[#A5F3FC]", darkBadge: "bg-[#06B6D4]/15 text-[#67E8F9] border-[#06B6D4]/30" },
   { id: "distant", label: "> 35d", name: "Distant", dot: "bg-[#38BDF8]", lightBadge: "bg-[#F0F9FF] text-[#0369A1] border-[#BAE6FD]", darkBadge: "bg-[#38BDF8]/15 text-[#BAE6FD] border-[#38BDF8]/30" }
 ];
 
@@ -98,15 +98,15 @@ export const getExamUrgencyTheme = (
           badgeClasses: isLight 
             ? "bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]" 
             : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/40 shadow-[0_0_10px_rgba(139,92,246,0.25)]",
-          cardBg: isLight ? "bg-[#FAF8FF]" : "bg-[#101322]/95",
+          cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#DDD6FE] ring-1 ring-[#8B5CF6]/20" : "border-[#8B5CF6]/45 ring-1 ring-[#8B5CF6]/25",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(139,92,246,0.12)]" : "shadow-[0_8px_30px_rgba(139,92,246,0.22)]",
-          titleColor: isLight ? "text-[#5B21B6]" : "text-white",
-          subtitleColor: isLight ? "text-[#7C3AED]" : "text-slate-400",
-          pillBg: isLight ? "bg-[#EDE9FE]" : "bg-[#161A2B]",
-          pillBorder: isLight ? "border-[#DDD6FE]" : "border-white/[0.08]",
-          digitColor: isLight ? "text-[#4C1D95]" : "text-white",
-          unitColor: isLight ? "text-[#6D28D9]" : "text-[#C4B5FD]",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(139,92,246,0.08)]" : "shadow-[0_8px_30px_rgba(139,92,246,0.22)]",
+          titleColor: isLight ? "text-[#1A1614]" : "text-white",
+          subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#1A1614]" : "text-white",
+          unitColor: isLight ? "text-[#7A6E65]" : "text-[#C4B5FD]",
           dotColor: "bg-[#8B5CF6]"
         };
       case "sky":
@@ -115,15 +115,15 @@ export const getExamUrgencyTheme = (
           tierName: "Sky",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
           badgeClasses: isLight ? "bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD]" : "bg-[#38BDF8]/20 text-[#BAE6FD] border border-[#38BDF8]/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]",
-          cardBg: isLight ? "bg-[#F0F9FF]" : "bg-[#101322]/95",
+          cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#BAE6FD] ring-1 ring-[#0284C7]/20" : "border-[#38BDF8]/40 ring-1 ring-[#0284C7]/25",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(2,132,199,0.12)]" : "shadow-[0_8px_30px_rgba(56,189,248,0.22)]",
-          titleColor: isLight ? "text-[#0369A1]" : "text-white",
-          subtitleColor: isLight ? "text-[#0284C7]" : "text-slate-400",
-          pillBg: isLight ? "bg-[#E0F2FE]" : "bg-[#161A2B]",
-          pillBorder: isLight ? "border-[#BAE6FD]" : "border-white/[0.08]",
-          digitColor: isLight ? "text-[#0C4A6E]" : "text-white",
-          unitColor: isLight ? "text-[#0369A1]" : "text-[#7DD3FC]",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(2,132,199,0.08)]" : "shadow-[0_8px_30px_rgba(56,189,248,0.22)]",
+          titleColor: isLight ? "text-[#1A1614]" : "text-white",
+          subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#1A1614]" : "text-white",
+          unitColor: isLight ? "text-[#7A6E65]" : "text-[#7DD3FC]",
           dotColor: "bg-[#38BDF8]"
         };
       case "mint":
@@ -132,15 +132,15 @@ export const getExamUrgencyTheme = (
           tierName: "Mint",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
           badgeClasses: isLight ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" : "bg-emerald-500/20 text-[#A7F3D0] border border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]",
-          cardBg: isLight ? "bg-[#F0FDF4]" : "bg-[#101322]/95",
+          cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#A7F3D0] ring-1 ring-[#10B981]/20" : "border-emerald-500/40 ring-1 ring-[#10B981]/25",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(16,185,129,0.12)]" : "shadow-[0_8px_30px_rgba(16,185,129,0.22)]",
-          titleColor: isLight ? "text-[#15803D]" : "text-white",
-          subtitleColor: isLight ? "text-[#16A34A]" : "text-slate-400",
-          pillBg: isLight ? "bg-[#DCFCE7]" : "bg-[#161A2B]",
-          pillBorder: isLight ? "border-[#BBF7D0]" : "border-white/[0.08]",
-          digitColor: isLight ? "text-[#14532D]" : "text-white",
-          unitColor: isLight ? "text-[#15803D]" : "text-[#6EE7B7]",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(16,185,129,0.08)]" : "shadow-[0_8px_30px_rgba(16,185,129,0.22)]",
+          titleColor: isLight ? "text-[#1A1614]" : "text-white",
+          subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#1A1614]" : "text-white",
+          unitColor: isLight ? "text-[#7A6E65]" : "text-[#6EE7B7]",
           dotColor: "bg-[#34D399]"
         };
       case "sunset":
@@ -149,15 +149,15 @@ export const getExamUrgencyTheme = (
           tierName: "Sunset",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
           badgeClasses: isLight ? "bg-[#FFEDD5] text-[#C2410C] border border-[#FED7AA]" : "bg-orange-500/20 text-[#FED7AA] border border-orange-400/40 shadow-[0_0_10px_rgba(251,146,60,0.25)]",
-          cardBg: isLight ? "bg-[#FFF7ED]" : "bg-[#101322]/95",
+          cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#FED7AA] ring-1 ring-[#FB923C]/20" : "border-[#FB923C]/40 ring-1 ring-[#FB923C]/25",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(251,146,60,0.12)]" : "shadow-[0_8px_30px_rgba(251,146,60,0.22)]",
-          titleColor: isLight ? "text-[#C2410C]" : "text-white",
-          subtitleColor: isLight ? "text-[#EA580C]" : "text-slate-400",
-          pillBg: isLight ? "bg-[#FFEDD5]" : "bg-[#161A2B]",
-          pillBorder: isLight ? "border-[#FED7AA]" : "border-white/[0.08]",
-          digitColor: isLight ? "text-[#9A3412]" : "text-white",
-          unitColor: isLight ? "text-[#C2410C]" : "text-[#FDBA74]",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(251,146,60,0.08)]" : "shadow-[0_8px_30px_rgba(251,146,60,0.22)]",
+          titleColor: isLight ? "text-[#1A1614]" : "text-white",
+          subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#1A1614]" : "text-white",
+          unitColor: isLight ? "text-[#7A6E65]" : "text-[#FDBA74]",
           dotColor: "bg-[#FB923C]"
         };
       case "golden":
@@ -166,15 +166,15 @@ export const getExamUrgencyTheme = (
           tierName: "Golden",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
           badgeClasses: isLight ? "bg-[#FEF9C3] text-[#A16207] border border-[#FEF08A]" : "bg-yellow-500/20 text-[#FEF08A] border border-yellow-400/40 shadow-[0_0_10px_rgba(250,204,21,0.25)]",
-          cardBg: isLight ? "bg-[#FEFCE8]" : "bg-[#101322]/95",
+          cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#FEF08A] ring-1 ring-[#FACC15]/20" : "border-[#FACC15]/40 ring-1 ring-[#FACC15]/25",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(250,204,21,0.12)]" : "shadow-[0_8px_30px_rgba(250,204,21,0.22)]",
-          titleColor: isLight ? "text-[#A16207]" : "text-white",
-          subtitleColor: isLight ? "text-[#CA8A04]" : "text-slate-400",
-          pillBg: isLight ? "bg-[#FEF9C3]" : "bg-[#161A2B]",
-          pillBorder: isLight ? "border-[#FEF08A]" : "border-white/[0.08]",
-          digitColor: isLight ? "text-[#713F12]" : "text-white",
-          unitColor: isLight ? "text-[#A16207]" : "text-[#FDE047]",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(250,204,21,0.08)]" : "shadow-[0_8px_30px_rgba(250,204,21,0.22)]",
+          titleColor: isLight ? "text-[#1A1614]" : "text-white",
+          subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#1A1614]" : "text-white",
+          unitColor: isLight ? "text-[#7A6E65]" : "text-[#FDE047]",
           dotColor: "bg-[#FACC15]"
         };
       case "coral":
@@ -183,15 +183,15 @@ export const getExamUrgencyTheme = (
           tierName: "Coral",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
           badgeClasses: isLight ? "bg-[#FFE4E6] text-[#BE123C] border border-[#FECDD3]" : "bg-rose-500/20 text-[#FECDD3] border border-rose-400/40 shadow-[0_0_10px_rgba(251,113,133,0.25)]",
-          cardBg: isLight ? "bg-[#FFF1F2]" : "bg-[#101322]/95",
+          cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#FECDD3] ring-1 ring-[#FB7185]/20" : "border-[#FB7185]/40 ring-1 ring-[#FB7185]/25",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(251,113,133,0.12)]" : "shadow-[0_8px_30px_rgba(251,113,133,0.22)]",
-          titleColor: isLight ? "text-[#BE123C]" : "text-white",
-          subtitleColor: isLight ? "text-[#E11D48]" : "text-slate-400",
-          pillBg: isLight ? "bg-[#FFE4E6]" : "bg-[#161A2B]",
-          pillBorder: isLight ? "border-[#FECDD3]" : "border-white/[0.08]",
-          digitColor: isLight ? "text-[#9F1239]" : "text-white",
-          unitColor: isLight ? "text-[#BE123C]" : "text-[#FDA4AF]",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(251,113,133,0.08)]" : "shadow-[0_8px_30px_rgba(251,113,133,0.22)]",
+          titleColor: isLight ? "text-[#1A1614]" : "text-white",
+          subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#1A1614]" : "text-white",
+          unitColor: isLight ? "text-[#7A6E65]" : "text-[#FDA4AF]",
           dotColor: "bg-[#FB7185]"
         };
       case "slate":
@@ -200,15 +200,15 @@ export const getExamUrgencyTheme = (
           tierName: "Slate",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
           badgeClasses: isLight ? "bg-[#F1F5F9] text-[#334155] border border-[#CBD5E1]" : "bg-slate-500/20 text-[#E2E8F0] border border-slate-400/40",
-          cardBg: isLight ? "bg-[#F8FAFC]" : "bg-[#101322]/95",
+          cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#CBD5E1] ring-1 ring-[#94A3B8]/20" : "border-[#94A3B8]/30 ring-1 ring-[#94A3B8]/15",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(148,163,184,0.12)]" : "shadow-[0_8px_20px_rgba(148,163,184,0.15)]",
-          titleColor: isLight ? "text-[#334155]" : "text-white",
-          subtitleColor: isLight ? "text-[#475569]" : "text-slate-400",
-          pillBg: isLight ? "bg-[#F1F5F9]" : "bg-[#161A2B]",
-          pillBorder: isLight ? "border-[#CBD5E1]" : "border-white/[0.08]",
-          digitColor: isLight ? "text-[#1E293B]" : "text-white",
-          unitColor: isLight ? "text-[#334155]" : "text-[#CBD5E1]",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(148,163,184,0.08)]" : "shadow-[0_8px_20px_rgba(148,163,184,0.15)]",
+          titleColor: isLight ? "text-[#1A1614]" : "text-white",
+          subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#1A1614]" : "text-white",
+          unitColor: isLight ? "text-[#7A6E65]" : "text-[#CBD5E1]",
           dotColor: "bg-[#94A3B8]"
         };
     }
@@ -223,12 +223,12 @@ export const getExamUrgencyTheme = (
       badgeClasses: isLight 
         ? "bg-[#EAE5DC] text-[#66615B] border border-[#DDD6CB]" 
         : "bg-white/5 text-[#94A3B8] border border-white/10",
-      cardBg: isLight ? "bg-[#FAF8F5]/85 opacity-75" : "bg-[#101322]/60 opacity-60 hover:opacity-90 transition-opacity",
+      cardBg: isLight ? "bg-white/80 opacity-80" : "bg-[#101322]/60 opacity-60 hover:opacity-90 transition-opacity",
       borderColor: isLight ? "border-[#E7E2D9]" : "border-white/[0.08]",
       glowShadow: "shadow-none",
       titleColor: isLight ? "text-[#66615B]" : "text-slate-300",
       subtitleColor: isLight ? "text-[#8A847C]" : "text-slate-500",
-      pillBg: isLight ? "bg-[#F0ECE5]" : "bg-[#161A2B]/60",
+      pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]/60",
       pillBorder: isLight ? "border-[#E2DCD3]" : "border-white/5",
       digitColor: isLight ? "text-[#66615B]" : "text-slate-400",
       unitColor: isLight ? "text-[#9E988F]" : "text-slate-500",
@@ -246,21 +246,21 @@ export const getExamUrgencyTheme = (
       tierName: "< 24 Hours",
       badgeLabel: `Critical • ${timeLabel}`,
       badgeClasses: isLight
-        ? "bg-[#BE123C] text-white border border-[#9F1239] shadow-xs animate-pulse"
+        ? "bg-[#FFF1F2] text-[#BE123C] border border-[#FDA4AF] shadow-xs animate-pulse"
         : "bg-[#F43F5E]/20 text-[#FDA4AF] border border-[#F43F5E]/40 shadow-[0_0_12px_rgba(244,63,94,0.35)] animate-pulse",
-      cardBg: isLight ? "bg-[#FFF1F2]" : "bg-[#101322]/95",
+      cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#FDA4AF] ring-2 ring-[#F43F5E]/30" 
+        ? "border-[#FDA4AF] ring-1 ring-[#F43F5E]/30" 
         : "border-[#F43F5E]/50 ring-1 ring-[#F43F5E]/30",
       glowShadow: isLight 
-        ? "shadow-[0_10px_30px_rgba(244,63,94,0.18)]" 
+        ? "shadow-[0_8px_25px_rgba(244,63,94,0.10)]" 
         : "shadow-[0_8px_30px_rgba(244,63,94,0.22)]",
-      titleColor: isLight ? "text-[#BE123C]" : "text-white",
-      subtitleColor: isLight ? "text-[#E11D48]" : "text-slate-400",
-      pillBg: isLight ? "bg-[#FFE4E6]" : "bg-[#161A2B]",
-      pillBorder: isLight ? "border-[#FECDD3]" : "border-white/[0.08]",
-      digitColor: isLight ? "text-[#9F1239]" : "text-white",
-      unitColor: isLight ? "text-[#BE123C]" : "text-[#FDA4AF]",
+      titleColor: isLight ? "text-[#1A1614]" : "text-white",
+      subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#1A1614]" : "text-white",
+      unitColor: isLight ? "text-[#7A6E65]" : "text-[#FDA4AF]",
       dotColor: "bg-[#F43F5E]"
     };
   }
@@ -272,21 +272,21 @@ export const getExamUrgencyTheme = (
       tierName: "1–2 Days",
       badgeLabel: `Urgent • ${days} ${days === 1 ? "day" : "days"} left`,
       badgeClasses: isLight
-        ? "bg-[#DC2626] text-white border border-[#B91C1C] shadow-xs"
+        ? "bg-[#FFF5F5] text-[#B91C1C] border border-[#FCA5A5] shadow-xs"
         : "bg-[#FB7185]/20 text-[#FECDD3] border border-[#FB7185]/40 shadow-[0_0_10px_rgba(251,113,133,0.25)]",
-      cardBg: isLight ? "bg-[#FFF5F5]" : "bg-[#101322]/95",
+      cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#FCA5A5] ring-1 ring-[#EF4444]/25" 
+        ? "border-[#FCA5A5] ring-1 ring-[#FB7185]/25" 
         : "border-[#FB7185]/40 ring-1 ring-[#FB7185]/20",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(239,68,68,0.15)]" 
+        ? "shadow-[0_8px_25px_rgba(251,113,133,0.08)]" 
         : "shadow-[0_8px_25px_rgba(251,113,133,0.18)]",
-      titleColor: isLight ? "text-[#B91C1C]" : "text-white",
-      subtitleColor: isLight ? "text-[#DC2626]" : "text-slate-400",
-      pillBg: isLight ? "bg-[#FEE2E2]" : "bg-[#161A2B]",
-      pillBorder: isLight ? "border-[#FECACA]" : "border-white/[0.08]",
-      digitColor: isLight ? "text-[#991B1B]" : "text-white",
-      unitColor: isLight ? "text-[#B91C1C]" : "text-[#FECDD3]",
+      titleColor: isLight ? "text-[#1A1614]" : "text-white",
+      subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#1A1614]" : "text-white",
+      unitColor: isLight ? "text-[#7A6E65]" : "text-[#FECDD3]",
       dotColor: "bg-[#FB7185]"
     };
   }
@@ -298,21 +298,21 @@ export const getExamUrgencyTheme = (
       tierName: "3–4 Days",
       badgeLabel: `Approaching • ${days} days left`,
       badgeClasses: isLight
-        ? "bg-[#EA580C] text-white border border-[#C2410C] shadow-xs"
+        ? "bg-[#FFF7ED] text-[#C2410C] border border-[#FDBA74] shadow-xs"
         : "bg-[#F97316]/20 text-[#FED7AA] border border-[#F97316]/40 shadow-[0_0_10px_rgba(249,115,22,0.25)]",
-      cardBg: isLight ? "bg-[#FFF7ED]" : "bg-[#101322]/95",
+      cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#FDBA74] ring-1 ring-[#EA580C]/25" 
+        ? "border-[#FDBA74] ring-1 ring-[#F97316]/25" 
         : "border-[#F97316]/40 ring-1 ring-[#F97316]/20",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(234,88,12,0.14)]" 
+        ? "shadow-[0_8px_25px_rgba(249,115,22,0.08)]" 
         : "shadow-[0_8px_25px_rgba(249,115,22,0.16)]",
-      titleColor: isLight ? "text-[#C2410C]" : "text-white",
-      subtitleColor: isLight ? "text-[#EA580C]" : "text-slate-400",
-      pillBg: isLight ? "bg-[#FFEDD5]" : "bg-[#161A2B]",
-      pillBorder: isLight ? "border-[#FED7AA]" : "border-white/[0.08]",
-      digitColor: isLight ? "text-[#9A3412]" : "text-white",
-      unitColor: isLight ? "text-[#C2410C]" : "text-[#FED7AA]",
+      titleColor: isLight ? "text-[#1A1614]" : "text-white",
+      subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#1A1614]" : "text-white",
+      unitColor: isLight ? "text-[#7A6E65]" : "text-[#FED7AA]",
       dotColor: "bg-[#F97316]"
     };
   }
@@ -324,47 +324,47 @@ export const getExamUrgencyTheme = (
       tierName: "5–7 Days",
       badgeLabel: `This Week • ${days} days left`,
       badgeClasses: isLight
-        ? "bg-[#D97706] text-white border border-[#B45309] shadow-xs"
+        ? "bg-[#FFFBEB] text-[#B45309] border border-[#FCD34D] shadow-xs"
         : "bg-[#FBBF24]/20 text-[#FDE68A] border border-[#FBBF24]/40 shadow-[0_0_10px_rgba(251,191,36,0.2)]",
-      cardBg: isLight ? "bg-[#FFFBEB]" : "bg-[#101322]/95",
+      cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#FCD34D] ring-1 ring-[#D97706]/20" 
+        ? "border-[#FCD34D] ring-1 ring-[#FBBF24]/25" 
         : "border-[#FBBF24]/40 ring-1 ring-[#FBBF24]/20",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(217,119,6,0.12)]" 
+        ? "shadow-[0_8px_25px_rgba(251,191,36,0.08)]" 
         : "shadow-[0_8px_25px_rgba(251,191,36,0.15)]",
-      titleColor: isLight ? "text-[#B45309]" : "text-white",
-      subtitleColor: isLight ? "text-[#D97706]" : "text-slate-400",
-      pillBg: isLight ? "bg-[#FEF3C7]" : "bg-[#161A2B]",
-      pillBorder: isLight ? "border-[#FDE68A]" : "border-white/[0.08]",
-      digitColor: isLight ? "text-[#78350F]" : "text-white",
-      unitColor: isLight ? "text-[#B45309]" : "text-[#FDE68A]",
+      titleColor: isLight ? "text-[#1A1614]" : "text-white",
+      subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#1A1614]" : "text-white",
+      unitColor: isLight ? "text-[#7A6E65]" : "text-[#FDE68A]",
       dotColor: "bg-[#FBBF24]"
     };
   }
 
-  // 5. TIER: Upcoming / Next Week (8 to 14 Days) - Core Dark Theme Purple
+  // 5. TIER: Upcoming / Next Week (8 to 14 Days) - Theme Purple Accent
   if (days < 15) {
     return {
       tierId: "next-week",
       tierName: "8–14 Days",
       badgeLabel: `Next Week • ${days} days left`,
       badgeClasses: isLight
-        ? "bg-[#65A30D] text-white border border-[#4D7C0F] shadow-xs"
+        ? "bg-[#F5F3FF] text-[#6D28D9] border border-[#DDD6FE] shadow-xs"
         : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/40 shadow-[0_0_12px_rgba(139,92,246,0.25)]",
-      cardBg: isLight ? "bg-[#F7FEE7]" : "bg-[#101322]/95",
+      cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#BEF264] ring-1 ring-[#84CC16]/25" 
+        ? "border-[#DDD6FE] ring-1 ring-[#8B5CF6]/25" 
         : "border-[#8B5CF6]/45 ring-1 ring-[#8B5CF6]/25",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(132,204,22,0.12)]" 
+        ? "shadow-[0_8px_25px_rgba(139,92,246,0.08)]" 
         : "shadow-[0_8px_30px_rgba(139,92,246,0.22)]",
-      titleColor: isLight ? "text-[#4D7C0F]" : "text-white",
-      subtitleColor: isLight ? "text-[#65A30D]" : "text-slate-400",
-      pillBg: isLight ? "bg-[#ECFCCB]" : "bg-[#161A2B]",
-      pillBorder: isLight ? "border-[#D9F99D]" : "border-white/[0.08]",
-      digitColor: isLight ? "text-[#365314]" : "text-white",
-      unitColor: isLight ? "text-[#4D7C0F]" : "text-[#C084FC]",
+      titleColor: isLight ? "text-[#1A1614]" : "text-white",
+      subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#1A1614]" : "text-white",
+      unitColor: isLight ? "text-[#7A6E65]" : "text-[#C084FC]",
       dotColor: "bg-[#8B5CF6]"
     };
   }
@@ -376,21 +376,21 @@ export const getExamUrgencyTheme = (
       tierName: "15–21 Days",
       badgeLabel: `On Track • ${days} days left`,
       badgeClasses: isLight
-        ? "bg-[#16A34A] text-white border border-[#15803D] shadow-xs"
+        ? "bg-[#EEF2FF] text-[#4338CA] border border-[#C7D2FE] shadow-xs"
         : "bg-[#6366F1]/20 text-[#A5B4FC] border border-[#6366F1]/40 shadow-[0_0_10px_rgba(99,102,241,0.2)]",
-      cardBg: isLight ? "bg-[#F0FDF4]" : "bg-[#101322]/95",
+      cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#86EFAC] ring-1 ring-[#22C55E]/25" 
+        ? "border-[#C7D2FE] ring-1 ring-[#6366F1]/20" 
         : "border-[#6366F1]/40 ring-1 ring-[#6366F1]/20",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(34,197,94,0.12)]" 
+        ? "shadow-[0_8px_25px_rgba(99,102,241,0.08)]" 
         : "shadow-[0_8px_25px_rgba(99,102,241,0.18)]",
-      titleColor: isLight ? "text-[#15803D]" : "text-white",
-      subtitleColor: isLight ? "text-[#16A34A]" : "text-slate-400",
-      pillBg: isLight ? "bg-[#DCFCE7]" : "bg-[#161A2B]",
-      pillBorder: isLight ? "border-[#BBF7D0]" : "border-white/[0.08]",
-      digitColor: isLight ? "text-[#14532D]" : "text-white",
-      unitColor: isLight ? "text-[#15803D]" : "text-[#A5B4FC]",
+      titleColor: isLight ? "text-[#1A1614]" : "text-white",
+      subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#1A1614]" : "text-white",
+      unitColor: isLight ? "text-[#7A6E65]" : "text-[#A5B4FC]",
       dotColor: "bg-[#6366F1]"
     };
   }
@@ -402,21 +402,21 @@ export const getExamUrgencyTheme = (
       tierName: "22–35 Days",
       badgeLabel: `Horizon • ${days} days left`,
       badgeClasses: isLight
-        ? "bg-[#0D9488] text-white border border-[#0F766E] shadow-xs"
+        ? "bg-[#ECFEFF] text-[#0E7490] border border-[#A5F3FC] shadow-xs"
         : "bg-[#06B6D4]/20 text-[#67E8F9] border border-[#06B6D4]/40 shadow-[0_0_10px_rgba(6,182,212,0.18)]",
-      cardBg: isLight ? "bg-[#F0FDFA]" : "bg-[#101322]/95",
+      cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#5EEAD4] ring-1 ring-[#14B8A6]/25" 
+        ? "border-[#A5F3FC] ring-1 ring-[#06B6D4]/20" 
         : "border-[#06B6D4]/35 ring-1 ring-[#06B6D4]/15",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(20,184,166,0.12)]" 
+        ? "shadow-[0_8px_25px_rgba(6,182,212,0.08)]" 
         : "shadow-[0_8px_25px_rgba(6,182,212,0.15)]",
-      titleColor: isLight ? "text-[#0F766E]" : "text-white",
-      subtitleColor: isLight ? "text-[#0D9488]" : "text-slate-400",
-      pillBg: isLight ? "bg-[#CCFBF1]" : "bg-[#161A2B]",
-      pillBorder: isLight ? "border-[#99F6E4]" : "border-white/[0.08]",
-      digitColor: isLight ? "text-[#134E4A]" : "text-white",
-      unitColor: isLight ? "text-[#0F766E]" : "text-[#67E8F9]",
+      titleColor: isLight ? "text-[#1A1614]" : "text-white",
+      subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#1A1614]" : "text-white",
+      unitColor: isLight ? "text-[#7A6E65]" : "text-[#67E8F9]",
       dotColor: "bg-[#06B6D4]"
     };
   }
@@ -427,21 +427,21 @@ export const getExamUrgencyTheme = (
     tierName: "> 35 Days",
     badgeLabel: `Distant • ${days} days left`,
     badgeClasses: isLight
-      ? "bg-[#0284C7] text-white border border-[#0369A1] shadow-xs"
+      ? "bg-[#F0F9FF] text-[#0369A1] border border-[#BAE6FD] shadow-xs"
       : "bg-[#38BDF8]/15 text-[#BAE6FD] border border-[#38BDF8]/30",
-    cardBg: isLight ? "bg-[#F0F9FF]" : "bg-[#101322]/95",
+    cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
     borderColor: isLight 
-      ? "border-[#BAE6FD] ring-1 ring-[#0284C7]/20" 
+      ? "border-[#BAE6FD] ring-1 ring-[#38BDF8]/20" 
       : "border-[#38BDF8]/30 ring-1 ring-[#38BDF8]/15",
     glowShadow: isLight 
-      ? "shadow-[0_8px_25px_rgba(2,132,199,0.1)]" 
+      ? "shadow-[0_8px_25px_rgba(56,189,248,0.08)]" 
       : "shadow-[0_8px_20px_rgba(56,189,248,0.12)]",
-    titleColor: isLight ? "text-[#0369A1]" : "text-white",
-    subtitleColor: isLight ? "text-[#0284C7]" : "text-slate-400",
-    pillBg: isLight ? "bg-[#E0F2FE]" : "bg-[#161A2B]",
-    pillBorder: isLight ? "border-[#BAE6FD]" : "border-white/[0.08]",
-    digitColor: isLight ? "text-[#0C4A6E]" : "text-white",
-    unitColor: isLight ? "text-[#0369A1]" : "text-[#BAE6FD]",
+    titleColor: isLight ? "text-[#1A1614]" : "text-white",
+    subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
+    pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
+    pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
+    digitColor: isLight ? "text-[#1A1614]" : "text-white",
+    unitColor: isLight ? "text-[#7A6E65]" : "text-[#BAE6FD]",
     dotColor: "bg-[#38BDF8]"
   };
 };
@@ -886,7 +886,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                 activeSubView === "exams"
                   ? isLight
-                    ? "bg-[#C96F55] text-white shadow-2xs"
+                    ? "bg-[#C25E42] text-white shadow-2xs"
                     : "bg-[#8B5CF6] text-white shadow-xs"
                   : isLight
                     ? "text-[#77736B] hover:text-[#1D1D1B]"
@@ -909,7 +909,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                 activeSubView === "friends"
                   ? isLight
-                    ? "bg-[#C96F55] text-white shadow-2xs"
+                    ? "bg-[#C25E42] text-white shadow-2xs"
                     : "bg-[#8B5CF6] text-white shadow-xs"
                   : isLight
                     ? "text-[#77736B] hover:text-[#1D1D1B]"
@@ -947,7 +947,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   <option value="pinned">Pinned Only</option>
                   <option value="completed">Past / Completed</option>
                 </select>
-                <ChevronDown size={12} className={`absolute right-2.5 top-3 pointer-events-none ${isLight ? "text-[#C96F55]" : "opacity-60"}`} />
+                <ChevronDown size={12} className={`absolute right-2.5 top-3 pointer-events-none ${isLight ? "text-[#C25E42]" : "opacity-60"}`} />
               </div>
 
               {/* Add a Friend Shortcut Button (Requested by User!) */}
@@ -960,7 +960,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 }`}
                 title="Add a study buddy and compare focus scores"
               >
-                <UserPlus size={14} className={isLight ? "text-[#C96F55]" : "text-[#8B5CF6] dark:text-[#C084FC]"} />
+                <UserPlus size={14} className={isLight ? "text-[#C25E42]" : "text-[#8B5CF6] dark:text-[#C084FC]"} />
                 <span>+ Add a Friend</span>
               </button>
 
@@ -988,7 +988,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98] ${
                   isLight 
-                    ? "bg-[#C96F55] hover:bg-[#B85F48] text-white" 
+                    ? "bg-[#C25E42] hover:bg-[#B25136] text-white" 
                     : "bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-[0_0_15px_rgba(139,92,246,0.35)]"
                 }`}
               >
@@ -1007,7 +1007,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98] ${
                 isLight 
-                  ? "bg-[#C96F55] hover:bg-[#B85F48] text-white" 
+                  ? "bg-[#C25E42] hover:bg-[#B25136] text-white" 
                   : "bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-[0_0_15px_rgba(139,92,246,0.35)]"
               }`}
             >
@@ -1075,7 +1075,11 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
             <div className={`p-8 sm:p-12 rounded-3xl border text-center space-y-4 ${
               isLight ? "bg-white border-[#E8D7C9]" : "bg-[#101322]/95 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
             }`}>
-              <div className="w-14 h-14 rounded-2xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[#C084FC] flex items-center justify-center mx-auto">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto ${
+                isLight 
+                  ? "bg-[#FFF2ED] border border-[#F0D5CC] text-[#C25E42]" 
+                  : "bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[#C084FC]"
+              }`}>
                 <CalendarClock size={28} />
               </div>
               <div className="max-w-md mx-auto">
@@ -1124,7 +1128,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     setIsAddExamOpen(true);
                   }}
                   className={`px-5 py-2.5 rounded-xl text-xs font-bold ${
-                    isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-[#7C3AED] hover:bg-[#6D28D9] shadow-lg shadow-[#7C3AED]/30"
+                    isLight ? "bg-[#C25E42] hover:bg-[#B25136]" : "bg-[#7C3AED] hover:bg-[#6D28D9] shadow-lg shadow-[#7C3AED]/30"
                   } text-white transition inline-flex items-center gap-2 cursor-pointer shadow-xs`}
                 >
                   <Plus size={16} />
@@ -1311,7 +1315,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" 
                   : "bg-[#120E22] border-white/10 text-white"
               }`}>
-                <Calendar size={13} className={isLight ? "text-[#C96F55]" : "text-[#8B5CF6]"} />
+                <Calendar size={13} className={isLight ? "text-[#C25E42]" : "text-[#8B5CF6]"} />
                 <span>{seasonStats.rangeLabel}</span>
               </div>
             </div>
@@ -1344,16 +1348,16 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
 
               <div className="flex items-start gap-3.5 pr-8">
                 <div className={`w-10 h-10 rounded-2xl ${
-                  isLight ? "bg-[#C96F55]/15 border-[#C96F55]/30 text-[#C96F55]" : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                  isLight ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#C25E42]" : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
                 } border flex items-center justify-center shrink-0 mt-0.5`}>
                   <Coffee size={20} />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-sm sm:text-base font-sans tracking-tight text-white">
+                  <h4 className={`font-extrabold text-sm sm:text-base font-sans tracking-tight ${isLight ? "text-[#1A1614]" : "text-white"}`}>
                     Think you'd win?
                   </h4>
                   <p className={`text-xs sm:text-sm font-sans mt-0.5 leading-relaxed ${
-                    isLight ? "text-[#555047]" : "text-[#C4B5FD]/85"
+                    isLight ? "text-[#7A6E65]" : "text-[#C4B5FD]/85"
                   }`}>
                     Add a friend with your invite link and find out. Focused minutes stack up on a weekly leaderboard — loser owes coffee.
                   </p>
@@ -1387,7 +1391,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                       placeholder="@yourhandle"
                       className={`flex-1 px-3 py-1.5 rounded-xl border text-sm font-mono font-bold outline-none ${
                         isLight 
-                          ? "bg-white border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55]" 
+                          ? "bg-white border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C25E42]" 
                           : "bg-[#0A0714] border-white/20 text-white focus:border-[#8B5CF6]"
                       }`}
                     />
@@ -1395,7 +1399,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                       type="button"
                       onClick={handleSaveUsername}
                       className={`px-3.5 py-1.5 rounded-xl text-xs font-bold ${
-                        isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-[#7C3AED] hover:bg-[#6D28D9]"
+                        isLight ? "bg-[#C25E42] hover:bg-[#B25136]" : "bg-[#7C3AED] hover:bg-[#6D28D9]"
                       } text-white transition cursor-pointer`}
                     >
                       Save
@@ -1413,7 +1417,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   </div>
                 ) : (
                   <>
-                    <span className={`font-mono font-bold text-sm sm:text-base ${isLight ? "text-[#C96F55]" : "text-[#C084FC]"}`}>
+                    <span className={`font-mono font-bold text-sm sm:text-base ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"}`}>
                       {friendUsername || "@student"}
                     </span>
                     <button
@@ -1482,7 +1486,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   placeholder="@username"
                   className={`flex-1 px-4 py-2.5 rounded-2xl border text-sm font-mono font-medium outline-none transition ${
                     isLight 
-                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C96F55] focus:bg-white" 
+                      ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C25E42] focus:bg-white" 
                       : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6] focus:bg-[#1A1432]"
                   }`}
                 />
@@ -1494,7 +1498,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   } disabled:opacity-50 text-white transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]`}
                 >
                   <span>Send</span>
-                  <ArrowRight size={13} className={isLight ? "text-[#C96F55]" : ""} />
+                  <ArrowRight size={13} className={isLight ? "text-[#C25E42]" : ""} />
                 </button>
               </div>
 
@@ -1514,7 +1518,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <Trophy size={18} className="text-[#F59E0B]" />
-                  <h3 className="font-extrabold text-base sm:text-lg font-sans tracking-tight text-white">
+                  <h3 className={`font-extrabold text-base sm:text-lg font-sans tracking-tight ${isLight ? "text-[#1A1614]" : "text-white"}`}>
                     Leaderboard
                   </h3>
                 </div>
@@ -1524,7 +1528,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               </div>
 
               <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold ${
-                isLight ? "bg-[#C96F55]/15 text-[#C96F55] border-[#C96F55]/30" : "bg-[#8B5CF6]/15 text-[#C084FC] border-[#8B5CF6]/35"
+                isLight ? "bg-[#FFF2ED] text-[#C25E42] border-[#F0D5CC]" : "bg-[#8B5CF6]/15 text-[#C084FC] border-[#8B5CF6]/35"
               } border`}>
                 Weekly Battle
               </span>
@@ -1568,13 +1572,15 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className={`font-mono font-bold text-sm truncate ${
-                            entry.isCurrentUser ? (isLight ? "text-[#C96F55]" : "text-[#C084FC]") : "text-white"
+                            entry.isCurrentUser 
+                              ? (isLight ? "text-[#C25E42]" : "text-[#C084FC]") 
+                              : (isLight ? "text-[#1A1614]" : "text-white")
                           }`}>
                             {entry.username}
                           </span>
                           {entry.isCurrentUser && (
                             <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
-                              isLight ? "bg-[#C96F55]/20 text-[#C96F55]" : "bg-[#8B5CF6]/25 text-[#E9D5FF]"
+                              isLight ? "bg-[#FFF2ED] text-[#C25E42] border border-[#F0D5CC]" : "bg-[#8B5CF6]/25 text-[#E9D5FF]"
                             }`}>
                               You
                             </span>
@@ -1665,7 +1671,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   placeholder="e.g. Mathematics Paper 1"
                   className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium transition outline-none ${
                     isLight 
-                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
+                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#C25E42] focus:ring-2 focus:ring-[#C25E42]/15" 
                       : "bg-[#161228] border-white/10 text-white placeholder-slate-500 focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                   }`}
                 />
@@ -1685,7 +1691,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     onChange={(e) => setExamForm({ ...examForm, examDate: e.target.value })}
                     className={`w-full pl-11 pr-4 py-3 rounded-2xl border text-sm font-medium transition outline-none cursor-pointer ${
                       isLight 
-                        ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
+                        ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C25E42] focus:ring-2 focus:ring-[#C25E42]/15" 
                         : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                     }`}
                   />
@@ -1717,7 +1723,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     placeholder="09"
                     className={`w-14 text-center py-2.5 px-2 rounded-2xl border font-mono text-sm font-bold transition outline-none ${
                       isLight 
-                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
+                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C25E42] focus:ring-2 focus:ring-[#C25E42]/15" 
                         : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                     }`}
                   />
@@ -1740,7 +1746,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     placeholder="00"
                     className={`w-14 text-center py-2.5 px-2 rounded-2xl border font-mono text-sm font-bold transition outline-none ${
                       isLight 
-                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
+                        ? "bg-[#ECEAE4]/80 border-[#D5D2CA] text-[#1D1D1B] focus:border-[#C25E42] focus:ring-2 focus:ring-[#C25E42]/15" 
                         : "bg-[#161228] border-white/10 text-white focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                     }`}
                   />
@@ -1759,7 +1765,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   placeholder="Add any additional details about the exam. You can add line breaks."
                   className={`w-full px-4 py-3 rounded-2xl border text-sm font-medium transition outline-none resize-y ${
                     isLight 
-                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#C96F55] focus:ring-2 focus:ring-[#C96F55]/15" 
+                      ? "bg-[#ECEAE4]/60 border-[#D5D2CA] text-[#1D1D1B] placeholder-[#9E9A91] focus:border-[#C25E42] focus:ring-2 focus:ring-[#C25E42]/15" 
                       : "bg-[#161228] border-white/10 text-white placeholder-slate-500 focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/25"
                   }`}
                 />
@@ -1790,7 +1796,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                         className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
                           isSelected
                             ? isLight
-                              ? "bg-[#C96F55] text-white shadow-md shadow-[#C96F55]/25 border border-transparent font-semibold"
+                              ? "bg-[#C25E42] text-white shadow-md shadow-[#C25E42]/25 border border-transparent font-semibold"
                               : "bg-[#4F46E5] text-white shadow-md shadow-[#4F46E5]/25 border border-transparent font-semibold"
                             : isLight
                             ? "bg-white border border-[#D5D2CA] text-[#1D1D1B] hover:bg-[#F3EFEA]"
@@ -1829,7 +1835,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   type="submit"
                   className={`px-6 py-2.5 rounded-2xl ${
                     isLight
-                      ? "bg-[#C96F55] hover:bg-[#B85F48] shadow-[#C96F55]/30"
+                      ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[#C25E42]/30"
                       : "bg-[#4F46E5] hover:bg-[#4338CA] shadow-[#4F46E5]/30"
                   } text-white text-sm font-semibold shadow-md active:scale-95 transition cursor-pointer`}
                 >
