@@ -72,14 +72,14 @@ export interface ExamUrgencyStyle {
 }
 
 export const URGENCY_TIERS_LEGEND = [
-  { id: "critical", label: "< 24h", name: "Critical", dot: "bg-[#F43F5E]", lightBadge: "bg-[#FFF1F2] text-[#BE123C] border-[#FDA4AF]", darkBadge: "bg-[#1D0810] text-[#FDA4AF] border-[#F43F5E]/40" },
-  { id: "very-urgent", label: "1–2d", name: "Urgent", dot: "bg-[#EF4444]", lightBadge: "bg-[#FFF5F5] text-[#B91C1C] border-[#FCA5A5]", darkBadge: "bg-[#1C090E] text-[#FECACA] border-[#EF4444]/40" },
-  { id: "high-urgency", label: "3–4d", name: "High", dot: "bg-[#EA580C]", lightBadge: "bg-[#FFF7ED] text-[#C2410C] border-[#FDBA74]", darkBadge: "bg-[#200F05] text-[#FED7AA] border-[#FB923C]/40" },
-  { id: "this-week", label: "5–7d", name: "This Week", dot: "bg-[#F59E0B]", lightBadge: "bg-[#FFFBEB] text-[#B45309] border-[#FCD34D]", darkBadge: "bg-[#1E1504] text-[#FDE68A] border-[#FBBF24]/40" },
-  { id: "next-week", label: "8–14d", name: "Next Week", dot: "bg-[#84CC16]", lightBadge: "bg-[#F7FEE7] text-[#4D7C0F] border-[#BEF264]", darkBadge: "bg-[#111A07] text-[#D9F99D] border-[#A3E635]/40" },
-  { id: "on-track", label: "15–21d", name: "On Track", dot: "bg-[#22C55E]", lightBadge: "bg-[#F0FDF4] text-[#15803D] border-[#86EFAC]", darkBadge: "bg-[#051A10] text-[#BBF7D0] border-[#4ADE80]/40" },
-  { id: "horizon", label: "22–35d", name: "Horizon", dot: "bg-[#14B8A6]", lightBadge: "bg-[#F0FDFA] text-[#0F766E] border-[#5EEAD4]", darkBadge: "bg-[#041A17] text-[#99F6E4] border-[#2DD4BF]/40" },
-  { id: "distant", label: "> 35d", name: "Distant", dot: "bg-[#0284C7]", lightBadge: "bg-[#F0F9FF] text-[#0369A1] border-[#BAE6FD]", darkBadge: "bg-[#071324] text-[#BAE6FD] border-[#38BDF8]/40" }
+  { id: "critical", label: "< 24h", name: "Critical", dot: "bg-[#F43F5E]", lightBadge: "bg-[#FFF1F2] text-[#BE123C] border-[#FDA4AF]", darkBadge: "bg-[#F43F5E]/15 text-[#FDA4AF] border-[#F43F5E]/30" },
+  { id: "very-urgent", label: "1–2d", name: "Urgent", dot: "bg-[#FB7185]", lightBadge: "bg-[#FFF5F5] text-[#B91C1C] border-[#FCA5A5]", darkBadge: "bg-[#FB7185]/15 text-[#FECDD3] border-[#FB7185]/30" },
+  { id: "high-urgency", label: "3–4d", name: "High", dot: "bg-[#F97316]", lightBadge: "bg-[#FFF7ED] text-[#C2410C] border-[#FDBA74]", darkBadge: "bg-[#F97316]/15 text-[#FED7AA] border-[#F97316]/30" },
+  { id: "this-week", label: "5–7d", name: "This Week", dot: "bg-[#FBBF24]", lightBadge: "bg-[#FFFBEB] text-[#B45309] border-[#FCD34D]", darkBadge: "bg-[#FBBF24]/15 text-[#FDE68A] border-[#FBBF24]/30" },
+  { id: "next-week", label: "8–14d", name: "Next Week", dot: "bg-[#8B5CF6]", lightBadge: "bg-[#F7FEE7] text-[#4D7C0F] border-[#BEF264]", darkBadge: "bg-[#8B5CF6]/15 text-[#C084FC] border-[#8B5CF6]/30" },
+  { id: "on-track", label: "15–21d", name: "On Track", dot: "bg-[#6366F1]", lightBadge: "bg-[#F0FDF4] text-[#15803D] border-[#86EFAC]", darkBadge: "bg-[#6366F1]/15 text-[#A5B4FC] border-[#6366F1]/30" },
+  { id: "horizon", label: "22–35d", name: "Horizon", dot: "bg-[#06B6D4]", lightBadge: "bg-[#F0FDFA] text-[#0F766E] border-[#5EEAD4]", darkBadge: "bg-[#06B6D4]/15 text-[#67E8F9] border-[#06B6D4]/30" },
+  { id: "distant", label: "> 35d", name: "Distant", dot: "bg-[#38BDF8]", lightBadge: "bg-[#F0F9FF] text-[#0369A1] border-[#BAE6FD]", darkBadge: "bg-[#38BDF8]/15 text-[#BAE6FD] border-[#38BDF8]/30" }
 ];
 
 export const getExamUrgencyTheme = (
@@ -95,32 +95,34 @@ export const getExamUrgencyTheme = (
           tierId: "lavender",
           tierName: "Lavender",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
-          badgeClasses: isLight ? "bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]" : "bg-[#8B5CF6]/25 text-[#E9D5FF] border border-[#A78BFA]/40",
-          cardBg: isLight ? "bg-[#FAF8FF]" : "bg-[#140E28]/95",
-          borderColor: isLight ? "border-[#DDD6FE] ring-1 ring-[#8B5CF6]/20" : "border-[#A78BFA]/40 ring-1 ring-[#8B5CF6]/25",
+          badgeClasses: isLight 
+            ? "bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]" 
+            : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/40 shadow-[0_0_10px_rgba(139,92,246,0.25)]",
+          cardBg: isLight ? "bg-[#FAF8FF]" : "bg-[#101322]/95",
+          borderColor: isLight ? "border-[#DDD6FE] ring-1 ring-[#8B5CF6]/20" : "border-[#8B5CF6]/45 ring-1 ring-[#8B5CF6]/25",
           glowShadow: isLight ? "shadow-[0_8px_25px_rgba(139,92,246,0.12)]" : "shadow-[0_8px_30px_rgba(139,92,246,0.22)]",
-          titleColor: isLight ? "text-[#5B21B6]" : "text-[#E9D5FF]",
-          subtitleColor: isLight ? "text-[#7C3AED]" : "text-[#C4B5FD]",
-          pillBg: isLight ? "bg-[#EDE9FE]" : "bg-[#241744]/80",
-          pillBorder: isLight ? "border-[#DDD6FE]" : "border-[#A78BFA]/30",
-          digitColor: isLight ? "text-[#4C1D95]" : "text-[#F5F3FF]",
+          titleColor: isLight ? "text-[#5B21B6]" : "text-white",
+          subtitleColor: isLight ? "text-[#7C3AED]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#EDE9FE]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#DDD6FE]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#4C1D95]" : "text-white",
           unitColor: isLight ? "text-[#6D28D9]" : "text-[#C4B5FD]",
-          dotColor: "bg-[#A78BFA]"
+          dotColor: "bg-[#8B5CF6]"
         };
       case "sky":
         return {
           tierId: "sky",
           tierName: "Sky",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
-          badgeClasses: isLight ? "bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD]" : "bg-sky-500/25 text-[#BAE6FD] border border-sky-400/40",
-          cardBg: isLight ? "bg-[#F0F9FF]" : "bg-[#081528]/95",
+          badgeClasses: isLight ? "bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD]" : "bg-[#38BDF8]/20 text-[#BAE6FD] border border-[#38BDF8]/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]",
+          cardBg: isLight ? "bg-[#F0F9FF]" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#BAE6FD] ring-1 ring-[#0284C7]/20" : "border-[#38BDF8]/40 ring-1 ring-[#0284C7]/25",
           glowShadow: isLight ? "shadow-[0_8px_25px_rgba(2,132,199,0.12)]" : "shadow-[0_8px_30px_rgba(56,189,248,0.22)]",
-          titleColor: isLight ? "text-[#0369A1]" : "text-[#BAE6FD]",
-          subtitleColor: isLight ? "text-[#0284C7]" : "text-[#7DD3FC]",
-          pillBg: isLight ? "bg-[#E0F2FE]" : "bg-[#0F294A]/80",
-          pillBorder: isLight ? "border-[#BAE6FD]" : "border-[#38BDF8]/30",
-          digitColor: isLight ? "text-[#0C4A6E]" : "text-[#F0F9FF]",
+          titleColor: isLight ? "text-[#0369A1]" : "text-white",
+          subtitleColor: isLight ? "text-[#0284C7]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#E0F2FE]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#BAE6FD]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#0C4A6E]" : "text-white",
           unitColor: isLight ? "text-[#0369A1]" : "text-[#7DD3FC]",
           dotColor: "bg-[#38BDF8]"
         };
@@ -129,15 +131,15 @@ export const getExamUrgencyTheme = (
           tierId: "mint",
           tierName: "Mint",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
-          badgeClasses: isLight ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" : "bg-emerald-500/25 text-[#A7F3D0] border border-emerald-400/40",
-          cardBg: isLight ? "bg-[#F0FDF4]" : "bg-[#071E14]/95",
+          badgeClasses: isLight ? "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]" : "bg-emerald-500/20 text-[#A7F3D0] border border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]",
+          cardBg: isLight ? "bg-[#F0FDF4]" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#A7F3D0] ring-1 ring-[#10B981]/20" : "border-emerald-500/40 ring-1 ring-[#10B981]/25",
           glowShadow: isLight ? "shadow-[0_8px_25px_rgba(16,185,129,0.12)]" : "shadow-[0_8px_30px_rgba(16,185,129,0.22)]",
-          titleColor: isLight ? "text-[#15803D]" : "text-[#34D399]",
-          subtitleColor: isLight ? "text-[#16A34A]" : "text-[#6EE7B7]",
-          pillBg: isLight ? "bg-[#DCFCE7]" : "bg-[#0A3322]/80",
-          pillBorder: isLight ? "border-[#BBF7D0]" : "border-emerald-500/30",
-          digitColor: isLight ? "text-[#14532D]" : "text-[#F0FDF4]",
+          titleColor: isLight ? "text-[#15803D]" : "text-white",
+          subtitleColor: isLight ? "text-[#16A34A]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#DCFCE7]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#BBF7D0]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#14532D]" : "text-white",
           unitColor: isLight ? "text-[#15803D]" : "text-[#6EE7B7]",
           dotColor: "bg-[#34D399]"
         };
@@ -146,15 +148,15 @@ export const getExamUrgencyTheme = (
           tierId: "sunset",
           tierName: "Sunset",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
-          badgeClasses: isLight ? "bg-[#FFEDD5] text-[#C2410C] border border-[#FED7AA]" : "bg-orange-500/25 text-[#FED7AA] border border-orange-400/40",
-          cardBg: isLight ? "bg-[#FFF7ED]" : "bg-[#241107]/95",
+          badgeClasses: isLight ? "bg-[#FFEDD5] text-[#C2410C] border border-[#FED7AA]" : "bg-orange-500/20 text-[#FED7AA] border border-orange-400/40 shadow-[0_0_10px_rgba(251,146,60,0.25)]",
+          cardBg: isLight ? "bg-[#FFF7ED]" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#FED7AA] ring-1 ring-[#FB923C]/20" : "border-[#FB923C]/40 ring-1 ring-[#FB923C]/25",
           glowShadow: isLight ? "shadow-[0_8px_25px_rgba(251,146,60,0.12)]" : "shadow-[0_8px_30px_rgba(251,146,60,0.22)]",
-          titleColor: isLight ? "text-[#C2410C]" : "text-[#FED7AA]",
-          subtitleColor: isLight ? "text-[#EA580C]" : "text-[#FDBA74]",
-          pillBg: isLight ? "bg-[#FFEDD5]" : "bg-[#3D1A0A]/80",
-          pillBorder: isLight ? "border-[#FED7AA]" : "border-[#FB923C]/30",
-          digitColor: isLight ? "text-[#9A3412]" : "text-[#FFF7ED]",
+          titleColor: isLight ? "text-[#C2410C]" : "text-white",
+          subtitleColor: isLight ? "text-[#EA580C]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FFEDD5]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#FED7AA]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#9A3412]" : "text-white",
           unitColor: isLight ? "text-[#C2410C]" : "text-[#FDBA74]",
           dotColor: "bg-[#FB923C]"
         };
@@ -163,15 +165,15 @@ export const getExamUrgencyTheme = (
           tierId: "golden",
           tierName: "Golden",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
-          badgeClasses: isLight ? "bg-[#FEF9C3] text-[#A16207] border border-[#FEF08A]" : "bg-yellow-500/25 text-[#FEF08A] border border-yellow-400/40",
-          cardBg: isLight ? "bg-[#FEFCE8]" : "bg-[#221B06]/95",
+          badgeClasses: isLight ? "bg-[#FEF9C3] text-[#A16207] border border-[#FEF08A]" : "bg-yellow-500/20 text-[#FEF08A] border border-yellow-400/40 shadow-[0_0_10px_rgba(250,204,21,0.25)]",
+          cardBg: isLight ? "bg-[#FEFCE8]" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#FEF08A] ring-1 ring-[#FACC15]/20" : "border-[#FACC15]/40 ring-1 ring-[#FACC15]/25",
           glowShadow: isLight ? "shadow-[0_8px_25px_rgba(250,204,21,0.12)]" : "shadow-[0_8px_30px_rgba(250,204,21,0.22)]",
-          titleColor: isLight ? "text-[#A16207]" : "text-[#FEF08A]",
-          subtitleColor: isLight ? "text-[#CA8A04]" : "text-[#FDE047]",
-          pillBg: isLight ? "bg-[#FEF9C3]" : "bg-[#3A2D0A]/80",
-          pillBorder: isLight ? "border-[#FEF08A]" : "border-[#FACC15]/30",
-          digitColor: isLight ? "text-[#713F12]" : "text-[#FEFCE8]",
+          titleColor: isLight ? "text-[#A16207]" : "text-white",
+          subtitleColor: isLight ? "text-[#CA8A04]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FEF9C3]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#FEF08A]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#713F12]" : "text-white",
           unitColor: isLight ? "text-[#A16207]" : "text-[#FDE047]",
           dotColor: "bg-[#FACC15]"
         };
@@ -180,15 +182,15 @@ export const getExamUrgencyTheme = (
           tierId: "coral",
           tierName: "Coral",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
-          badgeClasses: isLight ? "bg-[#FFE4E6] text-[#BE123C] border border-[#FECDD3]" : "bg-rose-500/25 text-[#FECDD3] border border-rose-400/40",
-          cardBg: isLight ? "bg-[#FFF1F2]" : "bg-[#250912]/95",
+          badgeClasses: isLight ? "bg-[#FFE4E6] text-[#BE123C] border border-[#FECDD3]" : "bg-rose-500/20 text-[#FECDD3] border border-rose-400/40 shadow-[0_0_10px_rgba(251,113,133,0.25)]",
+          cardBg: isLight ? "bg-[#FFF1F2]" : "bg-[#101322]/95",
           borderColor: isLight ? "border-[#FECDD3] ring-1 ring-[#FB7185]/20" : "border-[#FB7185]/40 ring-1 ring-[#FB7185]/25",
           glowShadow: isLight ? "shadow-[0_8px_25px_rgba(251,113,133,0.12)]" : "shadow-[0_8px_30px_rgba(251,113,133,0.22)]",
-          titleColor: isLight ? "text-[#BE123C]" : "text-[#FECDD3]",
-          subtitleColor: isLight ? "text-[#E11D48]" : "text-[#FDA4AF]",
-          pillBg: isLight ? "bg-[#FFE4E6]" : "bg-[#3F0E1E]/80",
-          pillBorder: isLight ? "border-[#FECDD3]" : "border-[#FB7185]/30",
-          digitColor: isLight ? "text-[#9F1239]" : "text-[#FFF1F2]",
+          titleColor: isLight ? "text-[#BE123C]" : "text-white",
+          subtitleColor: isLight ? "text-[#E11D48]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#FFE4E6]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#FECDD3]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#9F1239]" : "text-white",
           unitColor: isLight ? "text-[#BE123C]" : "text-[#FDA4AF]",
           dotColor: "bg-[#FB7185]"
         };
@@ -197,15 +199,15 @@ export const getExamUrgencyTheme = (
           tierId: "slate",
           tierName: "Slate",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
-          badgeClasses: isLight ? "bg-[#F1F5F9] text-[#334155] border border-[#CBD5E1]" : "bg-slate-500/25 text-[#E2E8F0] border border-slate-400/40",
-          cardBg: isLight ? "bg-[#F8FAFC]" : "bg-[#0F1420]/95",
-          borderColor: isLight ? "border-[#CBD5E1] ring-1 ring-[#94A3B8]/20" : "border-[#94A3B8]/40 ring-1 ring-[#94A3B8]/25",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(148,163,184,0.12)]" : "shadow-[0_8px_30px_rgba(148,163,184,0.22)]",
-          titleColor: isLight ? "text-[#334155]" : "text-[#E2E8F0]",
-          subtitleColor: isLight ? "text-[#475569]" : "text-[#CBD5E1]",
-          pillBg: isLight ? "bg-[#F1F5F9]" : "bg-[#1E2536]/80",
-          pillBorder: isLight ? "border-[#CBD5E1]" : "border-[#94A3B8]/30",
-          digitColor: isLight ? "text-[#1E293B]" : "text-[#F8FAFC]",
+          badgeClasses: isLight ? "bg-[#F1F5F9] text-[#334155] border border-[#CBD5E1]" : "bg-slate-500/20 text-[#E2E8F0] border border-slate-400/40",
+          cardBg: isLight ? "bg-[#F8FAFC]" : "bg-[#101322]/95",
+          borderColor: isLight ? "border-[#CBD5E1] ring-1 ring-[#94A3B8]/20" : "border-[#94A3B8]/30 ring-1 ring-[#94A3B8]/15",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(148,163,184,0.12)]" : "shadow-[0_8px_20px_rgba(148,163,184,0.15)]",
+          titleColor: isLight ? "text-[#334155]" : "text-white",
+          subtitleColor: isLight ? "text-[#475569]" : "text-slate-400",
+          pillBg: isLight ? "bg-[#F1F5F9]" : "bg-[#161A2B]",
+          pillBorder: isLight ? "border-[#CBD5E1]" : "border-white/[0.08]",
+          digitColor: isLight ? "text-[#1E293B]" : "text-white",
           unitColor: isLight ? "text-[#334155]" : "text-[#CBD5E1]",
           dotColor: "bg-[#94A3B8]"
         };
@@ -220,17 +222,17 @@ export const getExamUrgencyTheme = (
       badgeLabel: "Exam Completed",
       badgeClasses: isLight 
         ? "bg-[#EAE5DC] text-[#66615B] border border-[#DDD6CB]" 
-        : "bg-white/5 text-[#8E869B] border border-white/10",
-      cardBg: isLight ? "bg-[#FAF8F5]/85 opacity-75" : "bg-[#0B0912]/80 opacity-65",
-      borderColor: isLight ? "border-[#E7E2D9]" : "border-white/10",
+        : "bg-white/5 text-[#94A3B8] border border-white/10",
+      cardBg: isLight ? "bg-[#FAF8F5]/85 opacity-75" : "bg-[#101322]/60 opacity-60 hover:opacity-90 transition-opacity",
+      borderColor: isLight ? "border-[#E7E2D9]" : "border-white/[0.08]",
       glowShadow: "shadow-none",
-      titleColor: isLight ? "text-[#66615B]" : "text-[#8E869B]",
-      subtitleColor: isLight ? "text-[#8A847C]" : "text-[#6C6479]",
-      pillBg: isLight ? "bg-[#F0ECE5]" : "bg-[#130F20]",
+      titleColor: isLight ? "text-[#66615B]" : "text-slate-300",
+      subtitleColor: isLight ? "text-[#8A847C]" : "text-slate-500",
+      pillBg: isLight ? "bg-[#F0ECE5]" : "bg-[#161A2B]/60",
       pillBorder: isLight ? "border-[#E2DCD3]" : "border-white/5",
-      digitColor: isLight ? "text-[#66615B]" : "text-[#8E869B]",
-      unitColor: isLight ? "text-[#9E988F]" : "text-[#6C6479]",
-      dotColor: isLight ? "bg-[#9E988F]" : "bg-[#5D556E]"
+      digitColor: isLight ? "text-[#66615B]" : "text-slate-400",
+      unitColor: isLight ? "text-[#9E988F]" : "text-slate-500",
+      dotColor: isLight ? "bg-[#9E988F]" : "bg-[#475569]"
     };
   }
 
@@ -245,20 +247,20 @@ export const getExamUrgencyTheme = (
       badgeLabel: `Critical • ${timeLabel}`,
       badgeClasses: isLight
         ? "bg-[#BE123C] text-white border border-[#9F1239] shadow-xs animate-pulse"
-        : "bg-[#E11D48] text-white border border-[#F43F5E] shadow-[0_0_12px_rgba(225,29,72,0.6)] animate-pulse",
-      cardBg: isLight ? "bg-[#FFF1F2]" : "bg-[#1D0810]/95",
+        : "bg-[#F43F5E]/20 text-[#FDA4AF] border border-[#F43F5E]/40 shadow-[0_0_12px_rgba(244,63,94,0.35)] animate-pulse",
+      cardBg: isLight ? "bg-[#FFF1F2]" : "bg-[#101322]/95",
       borderColor: isLight 
         ? "border-[#FDA4AF] ring-2 ring-[#F43F5E]/30" 
-        : "border-[#F43F5E]/60 ring-2 ring-[#F43F5E]/40",
+        : "border-[#F43F5E]/50 ring-1 ring-[#F43F5E]/30",
       glowShadow: isLight 
         ? "shadow-[0_10px_30px_rgba(244,63,94,0.18)]" 
-        : "shadow-[0_12px_35px_rgba(244,63,94,0.35)]",
-      titleColor: isLight ? "text-[#BE123C]" : "text-[#FDA4AF]",
-      subtitleColor: isLight ? "text-[#E11D48]" : "text-[#FB7185]",
-      pillBg: isLight ? "bg-[#FFE4E6]" : "bg-[#3B0C1A]/85",
-      pillBorder: isLight ? "border-[#FECDD3]" : "border-[#F43F5E]/40",
-      digitColor: isLight ? "text-[#9F1239]" : "text-[#FFF1F2]",
-      unitColor: isLight ? "text-[#BE123C]" : "text-[#FB7185]",
+        : "shadow-[0_8px_30px_rgba(244,63,94,0.22)]",
+      titleColor: isLight ? "text-[#BE123C]" : "text-white",
+      subtitleColor: isLight ? "text-[#E11D48]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FFE4E6]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#FECDD3]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#9F1239]" : "text-white",
+      unitColor: isLight ? "text-[#BE123C]" : "text-[#FDA4AF]",
       dotColor: "bg-[#F43F5E]"
     };
   }
@@ -271,21 +273,21 @@ export const getExamUrgencyTheme = (
       badgeLabel: `Urgent • ${days} ${days === 1 ? "day" : "days"} left`,
       badgeClasses: isLight
         ? "bg-[#DC2626] text-white border border-[#B91C1C] shadow-xs"
-        : "bg-[#DC2626] text-white border border-[#EF4444] shadow-[0_0_12px_rgba(220,38,38,0.5)]",
-      cardBg: isLight ? "bg-[#FFF5F5]" : "bg-[#1C090E]/95",
+        : "bg-[#FB7185]/20 text-[#FECDD3] border border-[#FB7185]/40 shadow-[0_0_10px_rgba(251,113,133,0.25)]",
+      cardBg: isLight ? "bg-[#FFF5F5]" : "bg-[#101322]/95",
       borderColor: isLight 
         ? "border-[#FCA5A5] ring-1 ring-[#EF4444]/25" 
-        : "border-[#EF4444]/55 ring-1 ring-[#EF4444]/35",
+        : "border-[#FB7185]/40 ring-1 ring-[#FB7185]/20",
       glowShadow: isLight 
         ? "shadow-[0_8px_25px_rgba(239,68,68,0.15)]" 
-        : "shadow-[0_10px_30px_rgba(239,68,68,0.28)]",
-      titleColor: isLight ? "text-[#B91C1C]" : "text-[#FECACA]",
-      subtitleColor: isLight ? "text-[#DC2626]" : "text-[#F87171]",
-      pillBg: isLight ? "bg-[#FEE2E2]" : "bg-[#380E17]/85",
-      pillBorder: isLight ? "border-[#FECACA]" : "border-[#EF4444]/35",
-      digitColor: isLight ? "text-[#991B1B]" : "text-[#FEF2F2]",
-      unitColor: isLight ? "text-[#B91C1C]" : "text-[#F87171]",
-      dotColor: "bg-[#EF4444]"
+        : "shadow-[0_8px_25px_rgba(251,113,133,0.18)]",
+      titleColor: isLight ? "text-[#B91C1C]" : "text-white",
+      subtitleColor: isLight ? "text-[#DC2626]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FEE2E2]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#FECACA]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#991B1B]" : "text-white",
+      unitColor: isLight ? "text-[#B91C1C]" : "text-[#FECDD3]",
+      dotColor: "bg-[#FB7185]"
     };
   }
 
@@ -297,21 +299,21 @@ export const getExamUrgencyTheme = (
       badgeLabel: `Approaching • ${days} days left`,
       badgeClasses: isLight
         ? "bg-[#EA580C] text-white border border-[#C2410C] shadow-xs"
-        : "bg-[#EA580C] text-white border border-[#FB923C] shadow-[0_0_12px_rgba(234,88,12,0.5)]",
-      cardBg: isLight ? "bg-[#FFF7ED]" : "bg-[#200F05]/95",
+        : "bg-[#F97316]/20 text-[#FED7AA] border border-[#F97316]/40 shadow-[0_0_10px_rgba(249,115,22,0.25)]",
+      cardBg: isLight ? "bg-[#FFF7ED]" : "bg-[#101322]/95",
       borderColor: isLight 
         ? "border-[#FDBA74] ring-1 ring-[#EA580C]/25" 
-        : "border-[#FB923C]/55 ring-1 ring-[#EA580C]/35",
+        : "border-[#F97316]/40 ring-1 ring-[#F97316]/20",
       glowShadow: isLight 
         ? "shadow-[0_8px_25px_rgba(234,88,12,0.14)]" 
-        : "shadow-[0_10px_30px_rgba(234,88,12,0.25)]",
-      titleColor: isLight ? "text-[#C2410C]" : "text-[#FED7AA]",
-      subtitleColor: isLight ? "text-[#EA580C]" : "text-[#FB923C]",
-      pillBg: isLight ? "bg-[#FFEDD5]" : "bg-[#3A1806]/85",
-      pillBorder: isLight ? "border-[#FED7AA]" : "border-[#FB923C]/35",
-      digitColor: isLight ? "text-[#9A3412]" : "text-[#FFF7ED]",
-      unitColor: isLight ? "text-[#C2410C]" : "text-[#FB923C]",
-      dotColor: "bg-[#EA580C]"
+        : "shadow-[0_8px_25px_rgba(249,115,22,0.16)]",
+      titleColor: isLight ? "text-[#C2410C]" : "text-white",
+      subtitleColor: isLight ? "text-[#EA580C]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FFEDD5]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#FED7AA]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#9A3412]" : "text-white",
+      unitColor: isLight ? "text-[#C2410C]" : "text-[#FED7AA]",
+      dotColor: "bg-[#F97316]"
     };
   }
 
@@ -323,25 +325,25 @@ export const getExamUrgencyTheme = (
       badgeLabel: `This Week • ${days} days left`,
       badgeClasses: isLight
         ? "bg-[#D97706] text-white border border-[#B45309] shadow-xs"
-        : "bg-[#D97706] text-white border border-[#FBBF24] shadow-[0_0_12px_rgba(217,119,6,0.45)]",
-      cardBg: isLight ? "bg-[#FFFBEB]" : "bg-[#1E1504]/95",
+        : "bg-[#FBBF24]/20 text-[#FDE68A] border border-[#FBBF24]/40 shadow-[0_0_10px_rgba(251,191,36,0.2)]",
+      cardBg: isLight ? "bg-[#FFFBEB]" : "bg-[#101322]/95",
       borderColor: isLight 
         ? "border-[#FCD34D] ring-1 ring-[#D97706]/20" 
-        : "border-[#FBBF24]/50 ring-1 ring-[#D97706]/30",
+        : "border-[#FBBF24]/40 ring-1 ring-[#FBBF24]/20",
       glowShadow: isLight 
         ? "shadow-[0_8px_25px_rgba(217,119,6,0.12)]" 
-        : "shadow-[0_10px_30px_rgba(217,119,6,0.22)]",
-      titleColor: isLight ? "text-[#B45309]" : "text-[#FDE68A]",
-      subtitleColor: isLight ? "text-[#D97706]" : "text-[#FCD34D]",
-      pillBg: isLight ? "bg-[#FEF3C7]" : "bg-[#362205]/85",
-      pillBorder: isLight ? "border-[#FDE68A]" : "border-[#FBBF24]/30",
-      digitColor: isLight ? "text-[#78350F]" : "text-[#FFFBEB]",
-      unitColor: isLight ? "text-[#B45309]" : "text-[#FBBF24]",
-      dotColor: "bg-[#F59E0B]"
+        : "shadow-[0_8px_25px_rgba(251,191,36,0.15)]",
+      titleColor: isLight ? "text-[#B45309]" : "text-white",
+      subtitleColor: isLight ? "text-[#D97706]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#FEF3C7]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#FDE68A]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#78350F]" : "text-white",
+      unitColor: isLight ? "text-[#B45309]" : "text-[#FDE68A]",
+      dotColor: "bg-[#FBBF24]"
     };
   }
 
-  // 5. TIER: Upcoming / Next Week (8 to 14 Days)
+  // 5. TIER: Upcoming / Next Week (8 to 14 Days) - Core Dark Theme Purple
   if (days < 15) {
     return {
       tierId: "next-week",
@@ -349,25 +351,25 @@ export const getExamUrgencyTheme = (
       badgeLabel: `Next Week • ${days} days left`,
       badgeClasses: isLight
         ? "bg-[#65A30D] text-white border border-[#4D7C0F] shadow-xs"
-        : "bg-[#65A30D] text-white border border-[#A3E635] shadow-[0_0_12px_rgba(101,163,13,0.45)]",
-      cardBg: isLight ? "bg-[#F7FEE7]" : "bg-[#111A07]/95",
+        : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/40 shadow-[0_0_12px_rgba(139,92,246,0.25)]",
+      cardBg: isLight ? "bg-[#F7FEE7]" : "bg-[#101322]/95",
       borderColor: isLight 
         ? "border-[#BEF264] ring-1 ring-[#84CC16]/25" 
-        : "border-[#A3E635]/45 ring-1 ring-[#84CC16]/25",
+        : "border-[#8B5CF6]/45 ring-1 ring-[#8B5CF6]/25",
       glowShadow: isLight 
         ? "shadow-[0_8px_25px_rgba(132,204,22,0.12)]" 
-        : "shadow-[0_10px_30px_rgba(132,204,22,0.2)]",
-      titleColor: isLight ? "text-[#4D7C0F]" : "text-[#D9F99D]",
-      subtitleColor: isLight ? "text-[#65A30D]" : "text-[#BEF264]",
-      pillBg: isLight ? "bg-[#ECFCCB]" : "bg-[#1E2E0B]/85",
-      pillBorder: isLight ? "border-[#D9F99D]" : "border-[#A3E635]/30",
-      digitColor: isLight ? "text-[#365314]" : "text-[#F7FEE7]",
-      unitColor: isLight ? "text-[#4D7C0F]" : "text-[#A3E635]",
-      dotColor: "bg-[#84CC16]"
+        : "shadow-[0_8px_30px_rgba(139,92,246,0.22)]",
+      titleColor: isLight ? "text-[#4D7C0F]" : "text-white",
+      subtitleColor: isLight ? "text-[#65A30D]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#ECFCCB]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#D9F99D]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#365314]" : "text-white",
+      unitColor: isLight ? "text-[#4D7C0F]" : "text-[#C084FC]",
+      dotColor: "bg-[#8B5CF6]"
     };
   }
 
-  // 6. TIER: On Track / 2–3 Weeks (15 to 21 Days)
+  // 6. TIER: On Track / 2–3 Weeks (15 to 21 Days) - Harmonious Royal Indigo
   if (days < 22) {
     return {
       tierId: "on-track",
@@ -375,25 +377,25 @@ export const getExamUrgencyTheme = (
       badgeLabel: `On Track • ${days} days left`,
       badgeClasses: isLight
         ? "bg-[#16A34A] text-white border border-[#15803D] shadow-xs"
-        : "bg-[#16A34A] text-white border border-[#4ADE80] shadow-[0_0_12px_rgba(22,163,74,0.45)]",
-      cardBg: isLight ? "bg-[#F0FDF4]" : "bg-[#051A10]/95",
+        : "bg-[#6366F1]/20 text-[#A5B4FC] border border-[#6366F1]/40 shadow-[0_0_10px_rgba(99,102,241,0.2)]",
+      cardBg: isLight ? "bg-[#F0FDF4]" : "bg-[#101322]/95",
       borderColor: isLight 
         ? "border-[#86EFAC] ring-1 ring-[#22C55E]/25" 
-        : "border-[#4ADE80]/45 ring-1 ring-[#22C55E]/25",
+        : "border-[#6366F1]/40 ring-1 ring-[#6366F1]/20",
       glowShadow: isLight 
         ? "shadow-[0_8px_25px_rgba(34,197,94,0.12)]" 
-        : "shadow-[0_10px_30px_rgba(34,197,94,0.2)]",
-      titleColor: isLight ? "text-[#15803D]" : "text-[#BBF7D0]",
-      subtitleColor: isLight ? "text-[#16A34A]" : "text-[#86EFAC]",
-      pillBg: isLight ? "bg-[#DCFCE7]" : "bg-[#09321E]/85",
-      pillBorder: isLight ? "border-[#BBF7D0]" : "border-[#4ADE80]/30",
-      digitColor: isLight ? "text-[#14532D]" : "text-[#F0FDF4]",
-      unitColor: isLight ? "text-[#15803D]" : "text-[#4ADE80]",
-      dotColor: "bg-[#22C55E]"
+        : "shadow-[0_8px_25px_rgba(99,102,241,0.18)]",
+      titleColor: isLight ? "text-[#15803D]" : "text-white",
+      subtitleColor: isLight ? "text-[#16A34A]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#DCFCE7]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#BBF7D0]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#14532D]" : "text-white",
+      unitColor: isLight ? "text-[#15803D]" : "text-[#A5B4FC]",
+      dotColor: "bg-[#6366F1]"
     };
   }
 
-  // 7. TIER: Planned Horizon / 3–5 Weeks (22 to 35 Days)
+  // 7. TIER: Planned Horizon / 3–5 Weeks (22 to 35 Days) - Cool Cyan
   if (days < 36) {
     return {
       tierId: "horizon",
@@ -401,46 +403,46 @@ export const getExamUrgencyTheme = (
       badgeLabel: `Horizon • ${days} days left`,
       badgeClasses: isLight
         ? "bg-[#0D9488] text-white border border-[#0F766E] shadow-xs"
-        : "bg-[#0D9488] text-white border border-[#2DD4BF] shadow-[0_0_12px_rgba(13,148,136,0.45)]",
-      cardBg: isLight ? "bg-[#F0FDFA]" : "bg-[#041A17]/95",
+        : "bg-[#06B6D4]/20 text-[#67E8F9] border border-[#06B6D4]/40 shadow-[0_0_10px_rgba(6,182,212,0.18)]",
+      cardBg: isLight ? "bg-[#F0FDFA]" : "bg-[#101322]/95",
       borderColor: isLight 
         ? "border-[#5EEAD4] ring-1 ring-[#14B8A6]/25" 
-        : "border-[#2DD4BF]/45 ring-1 ring-[#14B8A6]/25",
+        : "border-[#06B6D4]/35 ring-1 ring-[#06B6D4]/15",
       glowShadow: isLight 
         ? "shadow-[0_8px_25px_rgba(20,184,166,0.12)]" 
-        : "shadow-[0_10px_30px_rgba(20,184,166,0.2)]",
-      titleColor: isLight ? "text-[#0F766E]" : "text-[#99F6E4]",
-      subtitleColor: isLight ? "text-[#0D9488]" : "text-[#5EEAD4]",
-      pillBg: isLight ? "bg-[#CCFBF1]" : "bg-[#06332E]/85",
-      pillBorder: isLight ? "border-[#99F6E4]" : "border-[#2DD4BF]/30",
-      digitColor: isLight ? "text-[#134E4A]" : "text-[#F0FDFA]",
-      unitColor: isLight ? "text-[#0F766E]" : "text-[#2DD4BF]",
-      dotColor: "bg-[#14B8A6]"
+        : "shadow-[0_8px_25px_rgba(6,182,212,0.15)]",
+      titleColor: isLight ? "text-[#0F766E]" : "text-white",
+      subtitleColor: isLight ? "text-[#0D9488]" : "text-slate-400",
+      pillBg: isLight ? "bg-[#CCFBF1]" : "bg-[#161A2B]",
+      pillBorder: isLight ? "border-[#99F6E4]" : "border-white/[0.08]",
+      digitColor: isLight ? "text-[#134E4A]" : "text-white",
+      unitColor: isLight ? "text-[#0F766E]" : "text-[#67E8F9]",
+      dotColor: "bg-[#06B6D4]"
     };
   }
 
-  // 8. TIER: Distant (> 35 Days)
+  // 8. TIER: Distant (> 35 Days) - Sky Blue
   return {
     tierId: "distant",
     tierName: "> 35 Days",
     badgeLabel: `Distant • ${days} days left`,
     badgeClasses: isLight
       ? "bg-[#0284C7] text-white border border-[#0369A1] shadow-xs"
-      : "bg-[#0284C7] text-white border border-[#38BDF8] shadow-[0_0_12px_rgba(2,132,199,0.45)]",
-    cardBg: isLight ? "bg-[#F0F9FF]" : "bg-[#071324]/95",
+      : "bg-[#38BDF8]/15 text-[#BAE6FD] border border-[#38BDF8]/30",
+    cardBg: isLight ? "bg-[#F0F9FF]" : "bg-[#101322]/95",
     borderColor: isLight 
       ? "border-[#BAE6FD] ring-1 ring-[#0284C7]/20" 
-      : "border-[#38BDF8]/40 ring-1 ring-[#0284C7]/25",
+      : "border-[#38BDF8]/30 ring-1 ring-[#38BDF8]/15",
     glowShadow: isLight 
       ? "shadow-[0_8px_25px_rgba(2,132,199,0.1)]" 
-      : "shadow-[0_10px_30px_rgba(56,189,248,0.2)]",
-    titleColor: isLight ? "text-[#0369A1]" : "text-[#BAE6FD]",
-    subtitleColor: isLight ? "text-[#0284C7]" : "text-[#7DD3FC]",
-    pillBg: isLight ? "bg-[#E0F2FE]" : "bg-[#0C223D]/85",
-    pillBorder: isLight ? "border-[#BAE6FD]" : "border-[#38BDF8]/30",
-    digitColor: isLight ? "text-[#0C4A6E]" : "text-[#F0F9FF]",
-    unitColor: isLight ? "text-[#0369A1]" : "text-[#38BDF8]",
-    dotColor: "bg-[#0284C7]"
+      : "shadow-[0_8px_20px_rgba(56,189,248,0.12)]",
+    titleColor: isLight ? "text-[#0369A1]" : "text-white",
+    subtitleColor: isLight ? "text-[#0284C7]" : "text-slate-400",
+    pillBg: isLight ? "bg-[#E0F2FE]" : "bg-[#161A2B]",
+    pillBorder: isLight ? "border-[#BAE6FD]" : "border-white/[0.08]",
+    digitColor: isLight ? "text-[#0C4A6E]" : "text-white",
+    unitColor: isLight ? "text-[#0369A1]" : "text-[#BAE6FD]",
+    dotColor: "bg-[#38BDF8]"
   };
 };
 
@@ -1024,18 +1026,18 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
           
           {/* URGENCY SPECTRUM LEGEND & FILTER BAR */}
           <div className={`p-3 sm:p-4 rounded-3xl border transition-all ${
-            isLight ? "bg-white/90 border-[#E8D7C9] shadow-xs" : "bg-[#0E0A1A]/90 border-white/10 shadow-xs"
+            isLight ? "bg-white/90 border-[#E8D7C9] shadow-xs" : "bg-[#101322]/95 border-white/10 shadow-xs"
           }`}>
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-mono font-bold uppercase tracking-wider ${isLight ? "text-[#555047]" : "text-[#C4B5FD]/90"}`}>
+                <span className={`text-xs font-mono font-bold uppercase tracking-wider ${isLight ? "text-[#555047]" : "text-[#C084FC]"}`}>
                   Urgency Spectrum:
                 </span>
                 {selectedUrgencyTier && (
                   <button
                     onClick={() => setSelectedUrgencyTier(null)}
                     className={`text-[11px] font-mono font-bold ${
-                      isLight ? "text-[#C96F55] hover:text-[#B85F48]" : "text-[#C084FC] hover:text-white"
+                      isLight ? "text-[#C25E42] hover:text-[#B25136]" : "text-[#C084FC] hover:text-white"
                     } underline cursor-pointer ml-1`}
                   >
                     Clear Filter
@@ -1052,8 +1054,8 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                       className={`px-2.5 py-1 rounded-xl border text-[10px] font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
                         isSelected
                           ? isLight 
-                            ? "ring-2 ring-[#C96F55] shadow-xs scale-105" 
-                            : "ring-2 ring-[#C084FC] shadow-xs scale-105"
+                            ? "ring-2 ring-[#C25E42] shadow-xs scale-105" 
+                            : "ring-2 ring-[#8B5CF6] shadow-xs scale-105"
                           : "hover:scale-102"
                       } ${isLight ? tier.lightBadge : tier.darkBadge}`}
                       title={`Filter by ${tier.name} (${tier.label})`}
@@ -1071,7 +1073,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
           {filteredExams.length === 0 ? (
             /* Empty State */
             <div className={`p-8 sm:p-12 rounded-3xl border text-center space-y-4 ${
-              isLight ? "bg-white border-[#E8D7C9]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
+              isLight ? "bg-white border-[#E8D7C9]" : "bg-[#101322]/95 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
             }`}>
               <div className="w-14 h-14 rounded-2xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 text-[#C084FC] flex items-center justify-center mx-auto">
                 <CalendarClock size={28} />
@@ -1084,7 +1086,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                     ? "No Exam Countdowns Yet" 
                     : `No ${examFilter} exams found`}
                 </h3>
-                <p className={`text-xs sm:text-sm font-sans mt-1 ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"}`}>
+                <p className={`text-xs sm:text-sm font-sans mt-1 ${isLight ? "text-[#77736B]" : "text-slate-400"}`}>
                   {selectedUrgencyTier 
                     ? "Try selecting another urgency range or show all exams." 
                     : "Stay ahead of your academic season. Track every paper with customized urgency timers, alerts, and target grades."}
@@ -1094,7 +1096,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 <button
                   onClick={() => setSelectedUrgencyTier(null)}
                   className={`px-5 py-2.5 rounded-xl text-xs font-bold ${
-                    isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-[#7C3AED] hover:bg-[#6D28D9]"
+                    isLight ? "bg-[#C25E42] hover:bg-[#B25136]" : "bg-[#8B5CF6] hover:bg-[#7C3AED]"
                   } text-white transition inline-flex items-center gap-2 cursor-pointer shadow-xs`}
                 >
                   <span>Show All Urgency Tiers</span>
@@ -1176,7 +1178,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                             title={exam.isPinned ? "Unpin exam" : "Pin exam to top"}
                             className={`p-1.5 rounded-lg transition cursor-pointer ${
                               exam.isPinned
-                                ? "text-[#C96F55] bg-[#C96F55]/15"
+                                ? isLight ? "text-[#C25E42] bg-[#C25E42]/15" : "text-[#C084FC] bg-[#8B5CF6]/20"
                                 : "text-[#77736B] dark:text-[#ADA59B] hover:bg-black/5 dark:hover:bg-white/5"
                             }`}
                           >
@@ -1203,7 +1205,11 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                       {(exam.targetGrade || exam.roomNumber) && (
                         <div className="flex items-center gap-2 mt-2.5">
                           {exam.targetGrade && (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#C96F55]/15 text-[#C96F55] border border-[#C96F55]/20">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
+                              isLight 
+                                ? "bg-[#C25E42]/15 text-[#C25E42] border border-[#C25E42]/20" 
+                                : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/30"
+                            }`}>
                               Target: {exam.targetGrade}
                             </span>
                           )}
