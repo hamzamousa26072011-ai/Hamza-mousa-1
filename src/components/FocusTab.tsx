@@ -186,13 +186,13 @@ const FlipCard: React.FC<FlipCardProps> = React.memo(({
         <div className="absolute top-1/2 left-0 right-0 h-[2px] sm:h-[3px] -translate-y-1/2 bg-[#090814] z-30 pointer-events-none shadow-[0_1px_1px_rgba(255,255,255,0.08)]" />
         
         {/* Physical side hinge notches */}
-        <div className={`absolute top-1/2 -left-1.5 sm:-left-2 md:-left-2.5 w-3 sm:w-4 md:w-5 h-4 sm:h-5 md:h-6 -translate-y-1/2 rounded-r-full ${isLight ? "bg-[#F3E8FF]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-r border-y border-black/40`} />
-        <div className={`absolute top-1/2 -right-1.5 sm:-right-2 md:-right-2.5 w-3 sm:w-4 md:w-5 h-4 sm:h-5 md:h-6 -translate-y-1/2 rounded-l-full ${isLight ? "bg-[#F3E8FF]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-l border-y border-black/40`} />
+        <div className={`absolute top-1/2 -left-1.5 sm:-left-2 md:-left-2.5 w-3 sm:w-4 md:w-5 h-4 sm:h-5 md:h-6 -translate-y-1/2 rounded-r-full ${isLight ? "bg-[#FFF7ED]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-r border-y border-black/40`} />
+        <div className={`absolute top-1/2 -right-1.5 sm:-right-2 md:-right-2.5 w-3 sm:w-4 md:w-5 h-4 sm:h-5 md:h-6 -translate-y-1/2 rounded-l-full ${isLight ? "bg-[#FFF7ED]" : "bg-[#0C0D17]"} z-30 pointer-events-none border-l border-y border-black/40`} />
       </div>
 
       {/* Label beneath card */}
       <span className={`${isFullscreen ? "text-xs sm:text-sm md:text-base font-mono font-black uppercase tracking-[0.25em] mt-3 sm:mt-5" : "text-[10px] sm:text-xs md:text-sm font-mono font-black uppercase tracking-widest mt-2.5 sm:mt-3.5"} ${
-        isLight ? "text-[#7E22CE]" : "text-purple-300/80"
+        isLight ? "text-[#EA580C]" : "text-purple-300/80"
       }`}>
         {label}
       </span>
@@ -576,13 +576,21 @@ export default function FocusTab({
                     size="fullscreen"
                   />
 
-                  {/* Purple Colon Separator 1 */}
+                  {/* Colon Separator 1 */}
                   <div className="flex flex-col gap-3 sm:gap-5 md:gap-7 items-center justify-center pb-6 sm:pb-10 md:pb-14">
                     <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
-                      isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
+                      isPaused 
+                        ? (isLight ? "bg-[#EA580C] shadow-[0_0_12px_rgba(234,88,12,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
+                        : focusModeActive 
+                        ? (isLight ? "bg-[#EA580C] shadow-[0_0_14px_rgba(234,88,12,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
+                        : "bg-white/20"
                     }`} />
                     <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
-                      isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
+                      isPaused 
+                        ? (isLight ? "bg-[#EA580C] shadow-[0_0_12px_rgba(234,88,12,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
+                        : focusModeActive 
+                        ? (isLight ? "bg-[#EA580C] shadow-[0_0_14px_rgba(234,88,12,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
+                        : "bg-white/20"
                     }`} />
                   </div>
 
@@ -596,13 +604,21 @@ export default function FocusTab({
                     size="fullscreen"
                   />
 
-                  {/* Purple Colon Separator 2 */}
+                  {/* Colon Separator 2 */}
                   <div className="flex flex-col gap-3 sm:gap-5 md:gap-7 items-center justify-center pb-6 sm:pb-10 md:pb-14">
                     <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
-                      isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
+                      isPaused 
+                        ? (isLight ? "bg-[#EA580C] shadow-[0_0_12px_rgba(234,88,12,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
+                        : focusModeActive 
+                        ? (isLight ? "bg-[#EA580C] shadow-[0_0_14px_rgba(234,88,12,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
+                        : "bg-white/20"
                     }`} />
                     <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
-                      isPaused ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" : focusModeActive ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" : "bg-white/20"
+                      isPaused 
+                        ? (isLight ? "bg-[#EA580C] shadow-[0_0_12px_rgba(234,88,12,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
+                        : focusModeActive 
+                        ? (isLight ? "bg-[#EA580C] shadow-[0_0_14px_rgba(234,88,12,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
+                        : "bg-white/20"
                     }`} />
                   </div>
 
@@ -617,16 +633,24 @@ export default function FocusTab({
                   />
                 </div>
 
-                {/* Status Pill (All purple, zero yellow) */}
+                {/* Status Pill (Orange in light theme, purple in dark theme) */}
                 <div className="mt-4">
                   {isPaused ? (
-                    <div className="px-4 py-1.5 rounded-full border border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] font-mono text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.25)]">
+                    <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                      isLight 
+                        ? "border-orange-500/50 bg-orange-500/20 text-orange-600 shadow-[0_0_15px_rgba(234,88,12,0.25)]" 
+                        : "border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.25)]"
+                    }`}>
                       <Pause size={12} fill="currentColor" />
                       <span>PAUSED</span>
                     </div>
                   ) : focusModeActive ? (
-                    <div className="px-4 py-1.5 rounded-full border border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] font-mono text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.25)]">
-                      <span className="w-2 h-2 rounded-full bg-[#8B5CF6] animate-ping" />
+                    <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                      isLight 
+                        ? "border-orange-500/50 bg-orange-500/15 text-orange-600 shadow-[0_0_15px_rgba(234,88,12,0.25)]" 
+                        : "border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.25)]"
+                    }`}>
+                      <span className={`w-2 h-2 rounded-full ${isLight ? "bg-[#EA580C]" : "bg-[#8B5CF6]"} animate-ping`} />
                       <span>STUDYING</span>
                     </div>
                   ) : (
@@ -648,7 +672,11 @@ export default function FocusTab({
                         pauseSoundscape();
                         onPauseFocus ? onPauseFocus() : onStopFocus();
                       }}
-                      className="py-3.5 px-8 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                      className={`py-3.5 px-8 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
+                        isLight
+                          ? "bg-orange-500/20 border-orange-500/40 text-orange-600"
+                          : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                      }`}
                     >
                       <Pause size={16} fill="currentColor" />
                       <span>Pause</span>
@@ -662,7 +690,11 @@ export default function FocusTab({
                         }
                         onStartFocus();
                       }}
-                      className="py-3.5 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-xl shadow-[#8B5CF6]/35"
+                      className={`py-3.5 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer ${
+                        isLight
+                          ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-xl shadow-orange-500/35"
+                          : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-xl shadow-[#8B5CF6]/35"
+                      }`}
                     >
                       <Play size={16} fill="currentColor" />
                       <span>{isPaused ? "Resume" : "Start"}</span>
@@ -677,7 +709,7 @@ export default function FocusTab({
                     }}
                     className={`py-3.5 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
                       isLight
-                        ? "bg-[#FFFFFF] hover:bg-[#FAF5FF] border-[#EBE4DC] text-[#1A1614]"
+                        ? "bg-[#FFFFFF] hover:bg-[#FFF7ED] border-[#EBE4DC] text-[#1A1614]"
                         : "bg-[#101322] hover:bg-[#161A2B] border-white/10 text-white"
                     }`}
                   >
@@ -686,7 +718,7 @@ export default function FocusTab({
                   </button>
                 </div>
 
-                <p className={`text-[11px] font-mono ${isLight ? "text-[#7E22CE]" : "text-purple-300/80"}`}>
+                <p className={`text-[11px] font-mono ${isLight ? "text-orange-600" : "text-purple-300/80"}`}>
                   Space: Play/Pause · Esc: Exit Full Screen
                 </p>
               </div>
@@ -708,7 +740,7 @@ export default function FocusTab({
           {/* Top Bar: Mode Indicator + Full Screen Button */}
           <div className="flex items-center justify-between pb-3 border-b border-inherit">
             <div className="flex items-center gap-2.5">
-              <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#8B5CF6]" : "bg-[#8B5CF6]"} ${focusModeActive ? "animate-ping" : ""}`} />
+              <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#EA580C]" : "bg-[#8B5CF6]"} ${focusModeActive ? "animate-ping" : ""}`} />
               <span className="text-sm font-mono font-black tracking-wide uppercase">{getPresetLabel()}</span>
             </div>
 
@@ -716,7 +748,7 @@ export default function FocusTab({
               type="button"
               onClick={handleEnterFullscreen}
               className={`px-4 py-2 rounded-xl text-xs font-mono font-bold text-white flex items-center gap-2 cursor-pointer transition shadow-md active:scale-95 ${
-                isLight ? "bg-[#8B5CF6] hover:bg-[#7C3AED]" : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_16px_rgba(139,92,246,0.35)]"
+                isLight ? "bg-[#EA580C] hover:bg-[#C2410C]" : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_16px_rgba(139,92,246,0.35)]"
               }`}
             >
               <Maximize2 size={13} />
@@ -727,10 +759,10 @@ export default function FocusTab({
           {/* Preset Mode Selector Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className={`font-bold uppercase tracking-wider ${isLight ? "text-[#7E22CE]" : "text-slate-400"}`}>
+              <span className={`font-bold uppercase tracking-wider ${isLight ? "text-orange-600" : "text-slate-400"}`}>
                 SELECT MODE OR TYPE TIME
               </span>
-              <span className={`font-bold ${isLight ? "text-[#8B5CF6]" : "text-[#C084FC]"}`}>
+              <span className={`font-bold ${isLight ? "text-[#EA580C]" : "text-[#C084FC]"}`}>
                 Current: {getActiveDurationLabel()}
               </span>
             </div>
@@ -759,25 +791,25 @@ export default function FocusTab({
                     className={`p-3.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[78px] ${
                       isSelected
                         ? isLight
-                          ? "bg-[#FAF5FF] border-[#8B5CF6] shadow-xs"
+                          ? "bg-[#FFF7ED] border-[#EA580C] shadow-xs"
                           : "bg-[#8B5CF6]/15 border-[#8B5CF6] shadow-[0_0_20px_rgba(139,92,246,0.25)]"
                         : isLight
-                        ? "bg-[#FAF8F5] hover:bg-[#FAF5FF] border-[#EBE4DC]"
+                        ? "bg-[#FAF8F5] hover:bg-[#FFF7ED] border-[#EBE4DC]"
                         : "bg-[#121320] hover:bg-[#18192A] border-white/5"
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className={`text-xs sm:text-sm font-mono font-black ${
                         isSelected 
-                          ? isLight ? "text-[#7E22CE]" : "text-white" 
+                          ? isLight ? "text-orange-700" : "text-white" 
                           : isLight ? "text-[#1A1614]" : "text-slate-200"
                       }`}>
                         {preset.title}
                       </span>
                       <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold flex items-center gap-1 ${
                         isSelected
-                          ? "bg-[#8B5CF6] text-white shadow-xs"
-                          : isLight ? "bg-[#EDE9FE] text-[#7E22CE]" : "bg-white/10 text-slate-300"
+                          ? isLight ? "bg-[#EA580C] text-white shadow-xs" : "bg-[#8B5CF6] text-white shadow-xs"
+                          : isLight ? "bg-[#FFEDD5] text-[#C2410C]" : "bg-white/10 text-slate-300"
                       }`}>
                         {preset.isCustom && <Edit3 size={9} />}
                         <span>{preset.badge}</span>
@@ -786,7 +818,7 @@ export default function FocusTab({
 
                     <p className={`text-[11px] font-sans truncate mt-2 ${
                       isSelected 
-                        ? isLight ? "text-[#7E22CE] font-semibold" : "text-[#C084FC] font-semibold" 
+                        ? isLight ? "text-[#C2410C] font-semibold" : "text-[#C084FC] font-semibold" 
                         : isLight ? "text-[#82776E]" : "text-slate-400"
                     }`}>
                       {preset.desc}
@@ -811,8 +843,8 @@ export default function FocusTab({
                   onClick={() => handleSelectPreset(pomo.id)}
                   className={`px-3 py-1 rounded-lg text-xs font-mono font-bold cursor-pointer border transition ${
                     activePreset === pomo.id
-                      ? "bg-[#8B5CF6] text-white border-[#8B5CF6]"
-                      : isLight ? "bg-[#FAF8F5] text-[#7E22CE] border-[#E9D5FF]" : "bg-white/5 text-slate-400 border-white/5 hover:text-white"
+                      ? isLight ? "bg-[#EA580C] text-white border-[#EA580C]" : "bg-[#8B5CF6] text-white border-[#8B5CF6]"
+                      : isLight ? "bg-[#FAF8F5] text-[#C2410C] border-[#FED7AA]" : "bg-white/5 text-slate-400 border-white/5 hover:text-white"
                   }`}
                 >
                   {pomo.label}
@@ -827,7 +859,7 @@ export default function FocusTab({
           }`}>
             <div className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                isLight ? "bg-[#FAF5FF] text-[#8B5CF6]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+                isLight ? "bg-[#FFF7ED] text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
               }`}>
                 <Clock size={16} />
               </div>
@@ -936,21 +968,21 @@ export default function FocusTab({
                 isActive={focusModeActive}
               />
 
-              {/* PURPLE COLON SEPARATOR 1 */}
+              {/* COLON SEPARATOR 1 */}
               <div className="flex flex-col gap-2.5 sm:gap-3.5 md:gap-4 items-center justify-center pb-5 sm:pb-7 md:pb-9">
                 <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
                   isPaused 
-                    ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
+                    ? (isLight ? "bg-[#EA580C] shadow-[0_0_12px_rgba(234,88,12,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
                     : focusModeActive 
-                    ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
-                    : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
+                    ? (isLight ? "bg-[#EA580C] shadow-[0_0_14px_rgba(234,88,12,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
+                    : isLight ? "bg-[#FFEDD5]" : "bg-white/20"
                 }`} />
                 <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
                   isPaused 
-                    ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
+                    ? (isLight ? "bg-[#EA580C] shadow-[0_0_12px_rgba(234,88,12,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
                     : focusModeActive 
-                    ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
-                    : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
+                    ? (isLight ? "bg-[#EA580C] shadow-[0_0_14px_rgba(234,88,12,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
+                    : isLight ? "bg-[#FFEDD5]" : "bg-white/20"
                 }`} />
               </div>
 
@@ -963,21 +995,21 @@ export default function FocusTab({
                 isActive={focusModeActive}
               />
 
-              {/* PURPLE COLON SEPARATOR 2 */}
+              {/* COLON SEPARATOR 2 */}
               <div className="flex flex-col gap-2.5 sm:gap-3.5 md:gap-4 items-center justify-center pb-5 sm:pb-7 md:pb-9">
                 <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
                   isPaused 
-                    ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
+                    ? (isLight ? "bg-[#EA580C] shadow-[0_0_12px_rgba(234,88,12,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
                     : focusModeActive 
-                    ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
-                    : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
+                    ? (isLight ? "bg-[#EA580C] shadow-[0_0_14px_rgba(234,88,12,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
+                    : isLight ? "bg-[#FFEDD5]" : "bg-white/20"
                 }`} />
                 <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
                   isPaused 
-                    ? "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]" 
+                    ? (isLight ? "bg-[#EA580C] shadow-[0_0_12px_rgba(234,88,12,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
                     : focusModeActive 
-                    ? "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse" 
-                    : isLight ? "bg-[#EDE9FE]" : "bg-white/20"
+                    ? (isLight ? "bg-[#EA580C] shadow-[0_0_14px_rgba(234,88,12,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
+                    : isLight ? "bg-[#FFEDD5]" : "bg-white/20"
                 }`} />
               </div>
 
@@ -991,16 +1023,24 @@ export default function FocusTab({
               />
             </div>
 
-            {/* Status Indicator Pill (Purple when paused, zero yellow) */}
+            {/* Status Indicator Pill */}
             <div className="mt-4">
               {isPaused ? (
-                <div className="px-4 py-1.5 rounded-full border border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] font-mono text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                  isLight 
+                    ? "border-orange-500/50 bg-orange-500/20 text-orange-600 shadow-[0_0_15px_rgba(234,88,12,0.3)]" 
+                    : "border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                }`}>
                   <Pause size={12} fill="currentColor" />
                   <span>PAUSED</span>
                 </div>
               ) : focusModeActive ? (
-                <div className="px-4 py-1.5 rounded-full border border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] font-mono text-xs font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
-                  <span className="w-2 h-2 rounded-full bg-[#8B5CF6] animate-ping" />
+                <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                  isLight 
+                    ? "border-orange-500/50 bg-orange-500/15 text-orange-600 shadow-[0_0_15px_rgba(234,88,12,0.3)]" 
+                    : "border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${isLight ? "bg-[#EA580C]" : "bg-[#8B5CF6]"} animate-ping`} />
                   <span>STUDYING</span>
                 </div>
               ) : (
@@ -1020,7 +1060,11 @@ export default function FocusTab({
                     pauseSoundscape();
                     onPauseFocus ? onPauseFocus() : onStopFocus();
                   }}
-                  className="py-3 px-8 rounded-2xl border text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                  className={`py-3 px-8 rounded-2xl border text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 ${
+                    isLight 
+                      ? "bg-orange-500/20 border-orange-500/40 text-orange-600" 
+                      : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                  }`}
                 >
                   <Pause size={15} fill="currentColor" />
                   <span>PAUSE</span>
@@ -1034,7 +1078,11 @@ export default function FocusTab({
                     }
                     onStartFocus();
                   }}
-                  className="py-3 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_24px_rgba(139,92,246,0.45)]"
+                  className={`py-3 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 ${
+                    isLight 
+                      ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-[0_4px_24px_rgba(234,88,12,0.45)]" 
+                      : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_24px_rgba(139,92,246,0.45)]"
+                  }`}
                 >
                   <Play size={15} fill="currentColor" />
                   <span>{isPaused ? "RESUME" : "START"}</span>
@@ -1049,7 +1097,7 @@ export default function FocusTab({
                 }}
                 className={`py-3 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition active:scale-95 ${
                   isLight
-                    ? "bg-[#FFFFFF] hover:bg-[#FAF5FF] border-[#EBE4DC] text-[#1A1614]"
+                    ? "bg-[#FFFFFF] hover:bg-[#FFF7ED] border-[#EBE4DC] text-[#1A1614]"
                     : "bg-[#18192A] hover:bg-[#202238] border-white/10 text-white"
                 }`}
               >
@@ -1065,22 +1113,26 @@ export default function FocusTab({
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Activity size={18} className="text-[#8B5CF6]" />
+                <Activity size={18} className={isLight ? "text-[#EA580C]" : "text-[#8B5CF6]"} />
                 <h3 className="text-xs font-mono font-bold tracking-wide uppercase">
                   Ambient Focus Soundscapes
                 </h3>
               </div>
 
-              {/* Status Pill matching user's screenshot with PURPLE when paused */}
+              {/* Status Pill matching user's screenshot with PURPLE when paused in dark mode, ORANGE in light mode */}
               <div className={`px-2.5 py-0.5 rounded-full border text-[10px] font-mono font-bold flex items-center gap-1.5 ${
                 isPaused
-                  ? "bg-[#8B5CF6]/15 border-[#8B5CF6]/40 text-[#C084FC]"
+                  ? isLight ? "bg-orange-500/15 border-orange-500/40 text-orange-600" : "bg-[#8B5CF6]/15 border-[#8B5CF6]/40 text-[#C084FC]"
                   : focusModeActive && selectedSoundscape !== "silent"
-                  ? isLight ? "bg-[#FAF5FF] border-[#E9D5FF] text-[#7E22CE]" : "bg-purple-500/15 border-purple-500/30 text-purple-400"
+                  ? isLight ? "bg-[#FFF7ED] border-[#FFEDD5] text-orange-700" : "bg-purple-500/15 border-purple-500/30 text-purple-400"
                   : isLight ? "bg-black/5 border-black/10 text-[#82776E]" : "bg-white/5 border-white/10 text-slate-400"
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${
-                  isPaused ? "bg-[#A855F7]" : focusModeActive && selectedSoundscape !== "silent" ? "bg-purple-400 animate-ping" : "bg-slate-400"
+                  isPaused 
+                    ? isLight ? "bg-[#EA580C]" : "bg-[#A855F7]" 
+                    : focusModeActive && selectedSoundscape !== "silent" 
+                    ? isLight ? "bg-orange-500 animate-ping" : "bg-purple-400 animate-ping" 
+                    : "bg-slate-400"
                 }`} />
                 <span>
                   {isPaused 
@@ -1100,7 +1152,7 @@ export default function FocusTab({
                   onClick={() => handleSelectSoundscape("silent")}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition ${
                     selectedSoundscape === "silent"
-                      ? isLight ? "bg-[#FAF5FF] border-[#8B5CF6] text-[#7E22CE]" : "bg-[#8B5CF6]/20 border-[#8B5CF6] text-[#C084FC]"
+                      ? isLight ? "bg-[#FFF7ED] border-[#EA580C] text-[#C2410C]" : "bg-[#8B5CF6]/20 border-[#8B5CF6] text-[#C084FC]"
                       : isLight ? "bg-white border-[#EBE4DC] text-[#736B63]" : "bg-[#18192A] border-white/10 text-slate-400"
                   }`}
                 >
@@ -1113,7 +1165,7 @@ export default function FocusTab({
                   onClick={() => handleSelectSoundscape("white_noise")}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition ${
                     selectedSoundscape === "white_noise"
-                      ? isLight ? "bg-[#FAF5FF] border-[#8B5CF6] text-[#7E22CE]" : "bg-[#8B5CF6]/20 border-[#8B5CF6] text-[#C084FC]"
+                      ? isLight ? "bg-[#FFF7ED] border-[#EA580C] text-[#C2410C]" : "bg-[#8B5CF6]/20 border-[#8B5CF6] text-[#C084FC]"
                       : isLight ? "bg-white border-[#EBE4DC] text-[#736B63]" : "bg-[#18192A] border-white/10 text-slate-400"
                   }`}
                 >
@@ -1136,7 +1188,7 @@ export default function FocusTab({
                     setSoundVolumeState(newVol);
                     setSoundscapeVolume(newVol);
                   }}
-                  className="flex-1 h-1.5 rounded-lg cursor-pointer accent-[#8B5CF6]"
+                  className={`flex-1 h-1.5 rounded-lg cursor-pointer ${isLight ? "accent-[#EA580C]" : "accent-[#8B5CF6]"}`}
                 />
                 <span className="font-mono text-xs w-9 text-right font-bold text-slate-400">
                   {Math.round(soundVolume * 100)}%
@@ -1159,12 +1211,16 @@ export default function FocusTab({
           <div className={`max-w-md w-full p-6 sm:p-7 rounded-3xl border shadow-2xl text-center space-y-4 ${
             isLight ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614]" : "bg-[#101322] border-white/10 text-white"
           }`}>
-            <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-[#8B5CF6]/20 text-[#C084FC]">
+            <div className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center ${
+              isLight ? "bg-orange-500/20 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+            }`}>
               <CheckCircle2 size={30} />
             </div>
             
             <div className="space-y-1">
-              <span className="text-[10px] font-mono uppercase tracking-widest font-black text-[#C084FC]">
+              <span className={`text-[10px] font-mono uppercase tracking-widest font-black ${
+                isLight ? "text-[#EA580C]" : "text-[#C084FC]"
+              }`}>
                 STUDY BLOCK COMPLETED
               </span>
               <h2 className="text-xl font-black font-sans">
@@ -1183,7 +1239,11 @@ export default function FocusTab({
                   handleSelectPreset("shortBreak");
                   onStartFocus();
                 }}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-white cursor-pointer bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-md shadow-[#8B5CF6]/30"
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-white cursor-pointer ${
+                  isLight 
+                    ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-md shadow-orange-500/30" 
+                    : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-md shadow-[#8B5CF6]/30"
+                }`}
               >
                 Take 5m Break
               </button>

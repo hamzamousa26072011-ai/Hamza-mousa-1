@@ -20,6 +20,7 @@ import {
   HardDrive
 } from "lucide-react";
 import { HabitItem, HabitDayLog } from "../types";
+import HabitCompletionChart from "./HabitCompletionChart";
 
 interface HabitTrackerTabProps {
   habits: HabitItem[];
@@ -401,31 +402,7 @@ export default function HabitTrackerTab({
     return `Day 1: ${month} ${d.getDate()}`;
   }, [startDate]);
 
-  // SVG line/area path for Daily Progress chart
-  const progressPath = useMemo(() => {
-    const points = stats.dailyCompletions;
-    if (points.length === 0) return { area: "", line: "", coords: [], width: 600, height: 90 };
 
-    const width = 600;
-    const height = 90;
-    const paddingX = 16;
-    const paddingY = 12;
-    const step = (width - paddingX * 2) / (points.length - 1 || 1);
-
-    const coords = points.map((p, idx) => {
-      const x = paddingX + idx * step;
-      const y = height - paddingY - (p.percentage / 100) * (height - paddingY * 2);
-      return { x, y, ...p };
-    });
-
-    const linePath = coords.reduce((acc, pt, idx) => {
-      return idx === 0 ? `M ${pt.x},${pt.y}` : `${acc} L ${pt.x},${pt.y}`;
-    }, "");
-
-    const areaPath = `${linePath} L ${coords[coords.length - 1].x},${height} L ${coords[0].x},${height} Z`;
-
-    return { area: areaPath, line: linePath, coords, width, height };
-  }, [stats.dailyCompletions]);
 
   const activeDayItem = useMemo(() => {
     return daysList.find((d) => d.dateStr === selectedDayStr) || daysList.find((d) => d.isToday) || daysList[0];
@@ -466,8 +443,8 @@ export default function HabitTrackerTab({
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer ${
-              isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
+            className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95 ${
+              isLight ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25" : "bg-[#6D5DF6] hover:bg-[#5B4BE8] shadow-purple-500/25"
             }`}
           >
             <Plus size={15} />
@@ -509,152 +486,76 @@ export default function HabitTrackerTab({
         </div>
       )}
 
-      {/* 1. SUMMARY METRICS & DAILY PROGRESS CHART */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-        {/* Left (7 cols): Daily Completion Trend Chart (or honest empty state when no data) */}
+      {/* 1. HABIT COMPLETION SUMMARY CHART (RECHARTS - LAST 7 DAYS TREND) */}
+      <HabitCompletionChart
+        habits={habits}
+        habitLogs={habitLogs}
+        themeMode={themeMode}
+      />
+
+      {/* PERIOD SUMMARY METRICS */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div
-          className={`lg:col-span-7 rounded-2xl border p-5 flex flex-col justify-between ${
+          className={`rounded-2xl border p-4 flex flex-col justify-between ${
             isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
           }`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <BarChart3 size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-              <h2 className="text-sm font-bold">Daily Completion Trend</h2>
-            </div>
-            <span className={`text-xs font-mono ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              {daysList.length}-day window
+          <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+            Period Goal
+          </span>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono tabular-nums">{stats.totalPossible}</span>
+            <span className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+              {habits.length} × {rangeDays}d
             </span>
           </div>
-
-          {habits.length === 0 || stats.completedCount === 0 ? (
-            <div
-              className={`h-28 rounded-xl border border-dashed flex flex-col items-center justify-center p-4 text-center ${
-                isLight ? "bg-[#F6F7FA] border-[#CBD2E0]" : "bg-[#10131A]/50 border-[#364054]"
-              }`}
-            >
-              <p className="text-xs font-semibold">
-                {habits.length === 0 ? "No habits configured yet" : "No habit completions logged in this period yet"}
-              </p>
-              <p className={`text-[11px] mt-0.5 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                Check off habits below to see your daily consistency trend over the {rangeDays}-day window.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="relative w-full h-24 my-1 overflow-hidden">
-                <svg
-                  viewBox={`0 0 ${progressPath.width} ${progressPath.height}`}
-                  className="w-full h-full"
-                  preserveAspectRatio="none"
-                  role="img"
-                  aria-label={`Habit completion trend chart showing ${stats.completionRate}% overall completion across ${rangeDays} days`}
-                >
-                  <defs>
-                    <linearGradient id="habitProgressGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isLight ? "#5F55C8" : "#6D5DF6"} stopOpacity="0.28" />
-                      <stop offset="100%" stopColor={isLight ? "#5F55C8" : "#6D5DF6"} stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
-                  {progressPath.area && <path d={progressPath.area} fill="url(#habitProgressGrad)" />}
-                  {progressPath.line && (
-                    <path
-                      d={progressPath.line}
-                      fill="none"
-                      stroke={isLight ? "#5F55C8" : "#A99BFF"}
-                      strokeWidth="2.25"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
-                  {progressPath.coords?.map((pt, i) => (
-                    <circle
-                      key={i}
-                      cx={pt.x}
-                      cy={pt.y}
-                      r={pt.isToday ? 4 : pt.count > 0 ? 2.5 : 1.5}
-                      fill={pt.isToday ? (isLight ? "#5F55C8" : "#A99BFF") : isLight ? "#18202B" : "#F1F3F8"}
-                    />
-                  ))}
-                </svg>
-              </div>
-              <div
-                className={`pt-2 border-t flex items-center justify-between text-[11px] font-mono ${
-                  isLight ? "border-[#E2E6EF] text-[#596474]" : "border-[#283040] text-[#B7C0CF]"
-                }`}
-              >
-                <span>Day 1 ({daysList[0]?.monthShort} {daysList[0]?.dayNum})</span>
-                <span>Overall: {stats.completionRate}%</span>
-                <span>Day {daysList.length} ({daysList[daysList.length - 1]?.monthShort} {daysList[daysList.length - 1]?.dayNum})</span>
-              </div>
-            </>
-          )}
         </div>
 
-        {/* Right (5 cols): Mathematically Consistent Summary Cards */}
-        <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3">
-          <div
-            className={`rounded-2xl border p-4 flex flex-col justify-between ${
-              isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
-            }`}
-          >
-            <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              Period Goal
+        <div
+          className={`rounded-2xl border p-4 flex flex-col justify-between ${
+            isLight ? "bg-[#FFF7ED] border-[#FED7AA]" : "bg-[#6D5DF6]/15 border-[#6D5DF6]/35"
+          }`}
+        >
+          <span className={`text-xs font-semibold ${isLight ? "text-[#EA580C]" : "text-[#A99BFF]"}`}>
+            Completed
+          </span>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className={`text-2xl font-bold font-mono tabular-nums ${isLight ? "text-[#EA580C]" : "text-[#A99BFF]"}`}>
+              {stats.completedCount}
             </span>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono tabular-nums">{stats.totalPossible}</span>
-              <span className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                {habits.length} × {rangeDays}d
-              </span>
-            </div>
+            <span className="text-xs font-mono font-semibold">{stats.completionRate}%</span>
           </div>
+        </div>
 
-          <div
-            className={`rounded-2xl border p-4 flex flex-col justify-between ${
-              isLight ? "bg-[#F0EEFF]/60 border-[#D8D3F8]" : "bg-[#6D5DF6]/15 border-[#6D5DF6]/35"
-            }`}
-          >
-            <span className={`text-xs font-semibold ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
-              Completed
-            </span>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className={`text-2xl font-bold font-mono tabular-nums ${isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"}`}>
-                {stats.completedCount}
-              </span>
-              <span className="text-xs font-mono font-semibold">{stats.completionRate}%</span>
-            </div>
+        <div
+          className={`rounded-2xl border p-4 flex flex-col justify-between ${
+            isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+          }`}
+        >
+          <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+            Remaining
+          </span>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono tabular-nums">{stats.remaining}</span>
+            <span className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>checks left</span>
           </div>
+        </div>
 
-          <div
-            className={`rounded-2xl border p-4 flex flex-col justify-between ${
-              isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
-            }`}
-          >
-            <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              Remaining
+        <div
+          className={`rounded-2xl border p-4 flex flex-col justify-between ${
+            isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
+          }`}
+        >
+          <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
+            Today&apos;s Progress
+          </span>
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono tabular-nums">
+              {stats.todayCompleted}/{stats.todayTotal}
             </span>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono tabular-nums">{stats.remaining}</span>
-              <span className={`text-[11px] ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>checks left</span>
-            </div>
-          </div>
-
-          <div
-            className={`rounded-2xl border p-4 flex flex-col justify-between ${
-              isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
-            }`}
-          >
-            <span className={`text-xs font-medium ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              Today&apos;s Progress
+            <span className={`text-[11px] ${isLight ? "text-[#15803D]" : "text-[#34D399]"}`}>
+              today
             </span>
-            <div className="mt-2 flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono tabular-nums">
-                {stats.todayCompleted}/{stats.todayTotal}
-              </span>
-              <span className={`text-[11px] ${isLight ? "text-[#15803D]" : "text-[#34D399]"}`}>
-                today
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -683,7 +584,7 @@ export default function HabitTrackerTab({
               <ChevronLeft size={15} />
             </button>
             <div className="px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5">
-              <Calendar size={13} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+              <Calendar size={13} className={isLight ? "text-[#EA580C]" : "text-[#A99BFF]"} />
               <span>{formattedAnchorDate}</span>
             </div>
             <button
@@ -793,7 +694,7 @@ export default function HabitTrackerTab({
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors flex items-center gap-1.5 cursor-pointer ${
               startDate === todayStr
                 ? isLight
-                  ? "bg-[#F0EEFF] border-[#D8D3F8] text-[#5F55C8]"
+                  ? "bg-[#FFF7ED] border-[#FED7AA] text-[#EA580C]"
                   : "bg-[#6D5DF6]/20 border-[#6D5DF6]/40 text-[#A99BFF]"
                 : isLight
                 ? "bg-[#F6F7FA] hover:bg-[#E8ECF4] border-[#E2E6EF] text-[#18202B]"
@@ -851,11 +752,11 @@ export default function HabitTrackerTab({
                     className={`min-w-[52px] py-2 px-2 rounded-xl border text-center transition-colors shrink-0 cursor-pointer ${
                       isSelected
                         ? isLight
-                          ? "bg-[#5F55C8] border-[#5F55C8] text-white"
+                          ? "bg-[#EA580C] border-[#EA580C] text-white"
                           : "bg-[#6D5DF6] border-[#6D5DF6] text-white"
                         : d.isToday
                         ? isLight
-                          ? "bg-[#F0EEFF] border-[#D8D3F8] text-[#5F55C8]"
+                          ? "bg-[#FFF7ED] border-[#FED7AA] text-[#EA580C]"
                           : "bg-[#6D5DF6]/15 border-[#6D5DF6]/40 text-[#A99BFF]"
                         : isLight
                         ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#18202B]"
@@ -963,7 +864,7 @@ export default function HabitTrackerTab({
               }`}
             >
               <span className="flex items-center gap-2 text-xs font-semibold">
-                <Moon size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+                <Moon size={16} className={isLight ? "text-[#EA580C]" : "text-[#A99BFF]"} />
                 <span>Sleep Quality (1–10)</span>
               </span>
               <span className="font-mono text-xs font-bold">
@@ -1068,7 +969,7 @@ export default function HabitTrackerTab({
                         </span>
                         <span
                           className={`text-xs font-bold font-mono mt-0.5 ${
-                            d.isToday ? (isLight ? "text-[#5F55C8]" : "text-[#A99BFF]") : ""
+                            d.isToday ? (isLight ? "text-[#EA580C]" : "text-[#A99BFF]") : ""
                           }`}
                         >
                           {d.dayNum}
@@ -1076,7 +977,7 @@ export default function HabitTrackerTab({
                         {d.isToday && (
                           <span
                             className={`mt-0.5 text-[9px] font-bold ${
-                              isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"
+                              isLight ? "text-[#EA580C]" : "text-[#A99BFF]"
                             }`}
                           >
                             Today
@@ -1097,8 +998,8 @@ export default function HabitTrackerTab({
                         <button
                           type="button"
                           onClick={() => setShowAddModal(true)}
-                          className={`px-4 py-2 rounded-xl text-xs font-semibold text-white cursor-pointer ${
-                            isLight ? "bg-[#5F55C8] hover:bg-[#4E45B0]" : "bg-[#6D5DF6] hover:bg-[#5B4BE8]"
+                          className={`px-4 py-2 rounded-xl text-xs font-semibold text-white cursor-pointer shadow-md transition-all ${
+                            isLight ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25" : "bg-[#6D5DF6] hover:bg-[#5B4BE8] shadow-purple-500/25"
                           }`}
                         >
                           Add Your First Habit
@@ -1263,7 +1164,7 @@ export default function HabitTrackerTab({
                   >
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2">
-                        <Moon size={14} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
+                        <Moon size={14} className={isLight ? "text-[#EA580C]" : "text-[#A99BFF]"} />
                         <span>Sleep (1–10)</span>
                       </span>
                       <span className={`text-[10px] font-normal ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
@@ -1295,7 +1196,7 @@ export default function HabitTrackerTab({
                           className={`w-8 h-7 rounded-md mx-auto font-mono text-xs font-bold flex items-center justify-center transition-colors cursor-pointer ${
                             sleepVal !== undefined
                               ? isLight
-                                ? "bg-[#F0EEFF] text-[#5F55C8] border border-[#D8D3F8]"
+                                ? "bg-[#FFF7ED] text-[#EA580C] border border-[#FED7AA]"
                                 : "bg-[#6D5DF6]/25 text-[#A99BFF] border border-[#6D5DF6]/40"
                               : isLight
                               ? "text-[#768295] hover:bg-[#E8ECF4]"

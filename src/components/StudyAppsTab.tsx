@@ -1,16 +1,21 @@
 import React, { useState, useMemo } from "react";
 import { 
-  Compass, 
+  Globe, 
   ExternalLink, 
   Plus, 
   Trash2, 
   Search, 
   X, 
-  AlertCircle,
-  Check,
-  RotateCcw,
-  Globe,
-  CheckCircle2
+  Edit3, 
+  Sparkles, 
+  Cloud, 
+  HardDrive, 
+  Check, 
+  LayoutGrid, 
+  List, 
+  Tag, 
+  Compass, 
+  AlertTriangle 
 } from "lucide-react";
 import { StudyApp } from "../types";
 
@@ -27,636 +32,940 @@ interface StudyAppsTabProps {
   onOpenLoginModal?: () => void;
 }
 
-interface CuratedApp extends Omit<StudyApp, "logoColor"> {
-  category: "Notes & Revision" | "Flashcards" | "Past Papers" | "Planning" | "Reference" | "Custom";
-  badge?: string;
-  desc: string;
-  logo?: string;
-  logoColor?: string;
-  isCustom?: boolean;
-}
-
-const CURATED_APPS: CuratedApp[] = [
-  {
-    id: "pmt",
-    name: "Physics & Maths Tutor",
-    desc: "Past papers by topic, revision notes, mark schemes, and flashcards for IGCSE and A-Level.",
-    url: "https://www.physicsandmathstutor.com",
-    logo: "https://www.google.com/s2/favicons?domain=physicsandmathstutor.com&sz=128",
-    isCustom: false,
-    category: "Past Papers",
-    badge: "Past Papers"
-  },
-  {
-    id: "savemyexams",
-    name: "Save My Exams",
-    desc: "Syllabus-specific revision notes, topic questions, and model answers for Cambridge & Edexcel.",
-    url: "https://www.savemyexams.com",
-    logo: "https://www.google.com/s2/favicons?domain=savemyexams.com&sz=128",
-    isCustom: false,
-    category: "Notes & Revision",
-    badge: "Syllabus Notes"
-  },
-  {
-    id: "papacambridge",
-    name: "PapaCambridge",
-    desc: "Complete archive of Cambridge IGCSE, O-Level, and AS/A-Level question papers and mark schemes.",
-    url: "https://papacambridge.com",
-    logo: "https://www.google.com/s2/favicons?domain=papacambridge.com&sz=128",
-    isCustom: false,
-    category: "Past Papers",
-    badge: "Exam Archive"
-  },
-  {
-    id: "znotes",
-    name: "ZNotes",
-    desc: "Concise, student-written revision summaries and topical notes for Cambridge IGCSE exams.",
-    url: "https://znotes.org",
-    logo: "https://www.google.com/s2/favicons?domain=znotes.org&sz=128",
-    isCustom: false,
-    category: "Notes & Revision",
-    badge: "Concise Notes"
-  },
-  {
-    id: "anki",
-    name: "AnkiWeb",
-    desc: "Spaced repetition flashcard system for long-term retention of formulas, definitions, and vocabulary.",
-    url: "https://ankiweb.net",
-    logo: "https://www.google.com/s2/favicons?domain=ankiweb.net&sz=128",
-    isCustom: false,
-    category: "Flashcards",
-    badge: "Active Recall"
-  },
-  {
-    id: "quizlet",
-    name: "Quizlet",
-    desc: "Study sets, interactive flashcards, and practice tests for languages and sciences.",
-    url: "https://quizlet.com",
-    logo: "https://www.google.com/s2/favicons?domain=quizlet.com&sz=128",
-    isCustom: false,
-    category: "Flashcards",
-    badge: "Flashcards"
-  },
-  {
-    id: "desmos",
-    name: "Desmos Graphing Calculator",
-    desc: "Interactive function plotting and coordinate geometry visualizer for Mathematics.",
-    url: "https://www.desmos.com/calculator",
-    logo: "https://www.google.com/s2/favicons?domain=desmos.com&sz=128",
-    isCustom: false,
-    category: "Reference",
-    badge: "Mathematics"
-  },
-  {
-    id: "notion",
-    name: "Notion",
-    desc: "Structured workspace for organizing syllabus checklists, lecture notes, and revision timetables.",
-    url: "https://www.notion.so",
-    logo: "https://www.google.com/s2/favicons?domain=notion.so&sz=128",
-    isCustom: false,
-    category: "Planning",
-    badge: "Organization"
-  }
+const COLOR_PALETTE = [
+  { name: "Violet", hex: "#8B5CF6" },
+  { name: "Orange", hex: "#EA580C" },
+  { name: "Emerald", hex: "#10B981" },
+  { name: "Sky", hex: "#0EA5E9" },
+  { name: "Amber", hex: "#F59E0B" },
+  { name: "Rose", hex: "#F43F5E" }
 ];
 
-const CATEGORIES = ["All", "Past Papers", "Notes & Revision", "Flashcards", "Reference", "Planning", "Custom"] as const;
+const QUICK_SUGGESTIONS: Omit<StudyApp, "id">[] = [
+  {
+    name: "Physics & Maths Tutor",
+    url: "https://www.physicsandmathstutor.com",
+    category: "Past Papers",
+    description: "Past papers, revision notes, and questions by topic for IGCSE & A-Levels",
+    logoColor: "#8B5CF6"
+  },
+  {
+    name: "Save My Exams",
+    url: "https://www.savemyexams.com",
+    category: "Notes & Revision",
+    description: "Syllabus-aligned revision notes, model answers, and topic questions",
+    logoColor: "#0EA5E9"
+  },
+  {
+    name: "Quizlet",
+    url: "https://quizlet.com",
+    category: "Flashcards",
+    description: "Digital flashcard sets and spaced testing for memory retention",
+    logoColor: "#10B981"
+  },
+  {
+    name: "Desmos Graphing",
+    url: "https://www.desmos.com/calculator",
+    category: "Tools & Math",
+    description: "Interactive function plotting and graphing calculator for mathematics",
+    logoColor: "#EA580C"
+  },
+  {
+    name: "Notion",
+    url: "https://www.notion.so",
+    category: "Planning",
+    description: "All-in-one workspace for lecture notes and study schedule management",
+    logoColor: "#64748B"
+  },
+  {
+    name: "PapaCambridge",
+    url: "https://papacambridge.com",
+    category: "Past Papers",
+    description: "Complete past paper archive with mark schemes for Cambridge examinations",
+    logoColor: "#F59E0B"
+  }
+];
 
 export default function StudyAppsTab({
   apps = [],
   customApps = [],
   onAddApp,
+  onEditApp,
   onDeleteApp,
   themeMode = "dark",
-  appSavedNotice
+  currentUser,
+  appSavedNotice,
+  onOpenLoginModal
 }: StudyAppsTabProps) {
   const isLight = themeMode === "light";
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
+  // Active theme accents:
+  // Dark mode -> Purple palette (#8B5CF6 / #7C3AED / #C084FC)
+  // Light mode -> Orange palette (#EA580C / #C2410C / #F97316 / #FFF7ED)
+  const primaryColor = isLight ? "#EA580C" : "#8B5CF6";
+  const primaryHoverColor = isLight ? "#C2410C" : "#7C3AED";
+
+  const userApps = apps.length > 0 ? apps : customApps;
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newAppName, setNewAppName] = useState("");
-  const [newAppUrl, setNewAppUrl] = useState("");
-  const [newAppDesc, setNewAppDesc] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingApp, setEditingApp] = useState<StudyApp | null>(null);
+  const [deletePendingApp, setDeletePendingApp] = useState<StudyApp | null>(null);
+
+  // Form fields
+  const [formName, setFormName] = useState("");
+  const [formUrl, setFormUrl] = useState("");
+  const [formCategory, setFormCategory] = useState("");
+  const [formDescription, setFormDescription] = useState("");
+  const [formColor, setFormColor] = useState(isLight ? "#EA580C" : "#8B5CF6");
   const [formError, setFormError] = useState<string | null>(null);
-  const [confirmDeleteApp, setConfirmDeleteApp] = useState<CuratedApp | null>(null);
 
-  const userSavedApps = apps.length > 0 ? apps : customApps;
-
-  const allApps: CuratedApp[] = useMemo(() => {
-    const customMapped: CuratedApp[] = userSavedApps.map((app) => {
-      let domain = "";
-      try {
-        const u = new URL(/^https?:\/\//i.test(app.url) ? app.url : `https://${app.url}`);
-        domain = u.hostname;
-      } catch {}
-      return {
-        ...app,
-        desc: (app as any).desc || `External bookmark (${domain || app.url})`,
-        logo: (app as any).logo || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : ""),
-        isCustom: true,
-        category: "Custom" as const,
-        badge: "Saved Bookmark"
-      };
+  // Available categories derived dynamically from user's apps
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    userApps.forEach((app) => {
+      if (app.category && app.category.trim()) {
+        set.add(app.category.trim());
+      }
     });
-    return [...customMapped, ...CURATED_APPS];
-  }, [userSavedApps]);
+    return ["All", ...Array.from(set)];
+  }, [userApps]);
 
+  // Filtered apps based on search & category
   const filteredApps = useMemo(() => {
-    return allApps.filter((app) => {
+    return userApps.filter((app) => {
+      const matchesSearch =
+        searchQuery.trim() === "" ||
+        app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (app.description && app.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (app.category && app.category.toLowerCase().includes(searchQuery.toLowerCase()));
+
       const matchesCategory =
         selectedCategory === "All" ||
-        app.category === selectedCategory ||
-        (selectedCategory === "Custom" && app.isCustom);
+        (app.category && app.category.trim().toLowerCase() === selectedCategory.toLowerCase());
 
-      const q = searchQuery.trim().toLowerCase();
-      const matchesSearch =
-        !q ||
-        app.name.toLowerCase().includes(q) ||
-        app.desc.toLowerCase().includes(q) ||
-        app.category.toLowerCase().includes(q);
-
-      return matchesCategory && matchesSearch;
+      return matchesSearch && matchesCategory;
     });
-  }, [allApps, selectedCategory, searchQuery]);
+  }, [userApps, searchQuery, selectedCategory]);
 
-  const validateAndSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-
-    const trimmedName = newAppName.trim();
-    let trimmedUrl = newAppUrl.trim();
-
-    if (!trimmedName) {
-      setFormError("Please enter a resource name.");
-      return;
+  const sanitizeUrl = (input: string): string => {
+    let trimmed = input.trim();
+    if (!trimmed) return "";
+    if (!/^https?:\/\//i.test(trimmed)) {
+      trimmed = `https://${trimmed}`;
     }
-
-    if (!trimmedUrl) {
-      setFormError("Please enter a valid website URL.");
-      return;
-    }
-
-    if (!/^https?:\/\//i.test(trimmedUrl)) {
-      trimmedUrl = `https://${trimmedUrl}`;
-    }
-
-    try {
-      const parsed = new URL(trimmedUrl);
-      if (!parsed.hostname.includes(".")) {
-        setFormError("Please enter a complete web address (e.g., https://savemyexams.com).");
-        return;
-      }
-    } catch {
-      setFormError("Please enter a valid web address (e.g., https://savemyexams.com).");
-      return;
-    }
-
-    onAddApp({
-      name: trimmedName,
-      url: trimmedUrl,
-      logoColor: "#5F55C8",
-      ...(newAppDesc.trim() ? { desc: newAppDesc.trim() } : {})
-    } as any);
-
-    setNewAppName("");
-    setNewAppUrl("");
-    setNewAppDesc("");
-    setIsAddModalOpen(false);
+    return trimmed;
   };
 
-  const getSafeHref = (rawUrl: string): string | null => {
+  const getDomain = (urlStr: string): string => {
     try {
-      const normalized = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
-      const u = new URL(normalized);
-      if (u.protocol === "http:" || u.protocol === "https:") {
-        return u.toString();
-      }
-      return null;
+      const u = new URL(sanitizeUrl(urlStr));
+      return u.hostname.replace(/^www\./, "");
     } catch {
-      return null;
+      return urlStr.replace(/^https?:\/\//i, "").replace(/^www\./, "");
     }
+  };
+
+  const getFaviconUrl = (urlStr: string): string => {
+    const domain = getDomain(urlStr);
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+  };
+
+  const openAddModal = () => {
+    setEditingApp(null);
+    setFormName("");
+    setFormUrl("");
+    setFormCategory("");
+    setFormDescription("");
+    setFormColor(isLight ? "#EA580C" : "#8B5CF6");
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (app: StudyApp) => {
+    setEditingApp(app);
+    setFormName(app.name);
+    setFormUrl(app.url);
+    setFormCategory(app.category || "");
+    setFormDescription(app.description || "");
+    setFormColor(app.logoColor || (isLight ? "#EA580C" : "#8B5CF6"));
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName.trim()) {
+      setFormError("Please provide an app or website name.");
+      return;
+    }
+    if (!formUrl.trim()) {
+      setFormError("Please provide a website link/URL.");
+      return;
+    }
+
+    const cleanUrl = sanitizeUrl(formUrl);
+
+    if (editingApp && onEditApp) {
+      onEditApp({
+        ...editingApp,
+        name: formName.trim(),
+        url: cleanUrl,
+        category: formCategory.trim() || undefined,
+        description: formDescription.trim() || undefined,
+        logoColor: formColor
+      });
+    } else {
+      onAddApp({
+        name: formName.trim(),
+        url: cleanUrl,
+        category: formCategory.trim() || "General",
+        description: formDescription.trim() || undefined,
+        logoColor: formColor
+      });
+    }
+
+    setIsModalOpen(false);
+  };
+
+  const handleQuickAdd = (suggestion: Omit<StudyApp, "id">) => {
+    onAddApp({
+      ...suggestion,
+      logoColor: suggestion.logoColor || (isLight ? "#EA580C" : "#8B5CF6")
+    });
   };
 
   return (
-    <div className="space-y-6 pb-10">
-      {/* Page Header */}
-      <header
-        className={`rounded-2xl border p-6 ${
-          isLight
-            ? "bg-[#FFFFFF] border-[#E2E6EE] shadow-[0_1px_3px_rgba(24,32,43,0.04)]"
-            : "bg-[#191E28] border-[#2B3344]"
+    <div className={`space-y-6 pb-16 ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+      {/* Header & Status Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-inherit">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+              }`}
+            >
+              <Compass size={18} />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Study Apps</h1>
+              <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? "text-[#596474]" : "text-[#94A3B8]"}`}>
+                Custom study tabs, portals, and revision resources added by you.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Storage Sync status */}
+          <div
+            className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 ${
+              isLight
+                ? "bg-[#F6F7FA] border-[#E2E6EF] text-[#596474]"
+                : "bg-[#222938] border-[#283040] text-[#B7C0CF]"
+            }`}
+          >
+            {currentUser?.uid ? (
+              <>
+                <Cloud size={13} className="text-emerald-500" />
+                <span>Synced to account</span>
+              </>
+            ) : (
+              <>
+                <HardDrive size={13} />
+                <span>Saved on this device</span>
+              </>
+            )}
+          </div>
+
+          {/* Add Study App Button */}
+          <button
+            type="button"
+            onClick={openAddModal}
+            className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95 ${
+              isLight
+                ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25"
+                : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-purple-500/25"
+            }`}
+          >
+            <Plus size={15} />
+            <span>Add Study App</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Notice Banner if any */}
+      {appSavedNotice && (
+        <div
+          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-medium animate-fadeIn ${
+            isLight
+              ? "bg-orange-50 border-orange-200 text-[#C2410C]"
+              : "bg-[#8B5CF6]/15 border-[#8B5CF6]/30 text-[#DDD6FE]"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Check size={14} className={isLight ? "text-[#EA580C]" : "text-[#C084FC]"} />
+            <span>{appSavedNotice}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Filter, Search & View Controls Bar */}
+      <div
+        className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${
+          isLight ? "bg-[#FFFFFF] border-[#E2E6EF] shadow-xs" : "bg-[#191E28] border-[#283040]"
         }`}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-medium mb-1">
-              <Compass size={14} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-              <span className={isLight ? "text-[#596474]" : "text-[#B7C0CF]"}>
-                Academic Directory
-              </span>
-            </div>
-            <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-              Study Resources & Links
-            </h1>
-            <p className={`text-sm mt-1 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              Curated past paper archives, syllabus revision notes, and your personal study bookmarks.
-            </p>
+        {/* Search Input */}
+        <div className="relative flex-1 max-w-md">
+          <Search
+            size={14}
+            className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${
+              isLight ? "text-[#82776E]" : "text-[#64748B]"
+            }`}
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search your study tabs by name, URL, or tag..."
+            className={`w-full pl-9 pr-8 py-2 text-xs rounded-xl border outline-none transition ${
+              isLight
+                ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
+            }`}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md hover:bg-black/10 cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
+
+        {/* View Toggle & App Count */}
+        <div className="flex items-center justify-between sm:justify-end gap-2.5">
+          <span
+            className={`text-xs font-mono font-medium ${
+              isLight ? "text-[#596474]" : "text-[#94A3B8]"
+            }`}
+          >
+            {userApps.length} {userApps.length === 1 ? "Tab" : "Tabs"}
+          </span>
+
+          <div
+            className={`flex items-center p-0.5 rounded-xl border text-xs ${
+              isLight ? "bg-[#F5EFE9] border-[#E5DDD4]" : "bg-[#12161F] border-[#283040]"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              title="Grid View"
+              className={`p-1.5 rounded-lg transition cursor-pointer ${
+                viewMode === "grid"
+                  ? isLight
+                    ? "bg-white text-[#EA580C] shadow-xs font-bold"
+                    : "bg-[#8B5CF6] text-white font-bold"
+                  : isLight
+                  ? "text-[#596474] hover:text-[#18202B]"
+                  : "text-[#94A3B8] hover:text-white"
+              }`}
+            >
+              <LayoutGrid size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              title="List View"
+              className={`p-1.5 rounded-lg transition cursor-pointer ${
+                viewMode === "list"
+                  ? isLight
+                    ? "bg-white text-[#EA580C] shadow-xs font-bold"
+                    : "bg-[#8B5CF6] text-white font-bold"
+                  : isLight
+                  ? "text-[#596474] hover:text-[#18202B]"
+                  : "text-[#94A3B8] hover:text-white"
+              }`}
+            >
+              <List size={14} />
+            </button>
           </div>
+        </div>
+      </div>
+
+      {/* Category Filter Pills (if user has tagged apps) */}
+      {availableCategories.length > 2 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {availableCategories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1 rounded-xl text-xs font-medium shrink-0 transition cursor-pointer border ${
+                selectedCategory === cat
+                  ? isLight
+                    ? "bg-[#EA580C] text-white border-[#EA580C] shadow-xs font-bold"
+                    : "bg-[#8B5CF6] text-white border-[#8B5CF6] shadow-xs font-bold"
+                  : isLight
+                  ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#596474] hover:border-[#EA580C]/40"
+                  : "bg-[#191E28] border-[#283040] text-[#94A3B8] hover:border-[#8B5CF6]/40"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* App Display: Empty State or Grid / List */}
+      {userApps.length === 0 ? (
+        <div
+          className={`rounded-2xl border p-8 sm:p-12 text-center flex flex-col items-center justify-center ${
+            isLight
+              ? "bg-[#FFFFFF] border-[#E2E6EF] shadow-sm"
+              : "bg-[#191E28] border-[#283040]"
+          }`}
+        >
+          <div
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
+              isLight
+                ? "bg-orange-100 text-[#EA580C] ring-8 ring-orange-50"
+                : "bg-[#8B5CF6]/20 text-[#C084FC] ring-8 ring-[#8B5CF6]/10"
+            }`}
+          >
+            <Globe size={26} />
+          </div>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight">No Study Apps Added Yet</h2>
+          <p
+            className={`text-xs sm:text-sm mt-1.5 max-w-md ${
+              isLight ? "text-[#596474]" : "text-[#94A3B8]"
+            }`}
+          >
+            Your Study Apps tab is completely personalized. Add your own quick-access shortcuts to past paper archives, flashcards, calculators, or syllabus notes.
+          </p>
 
           <button
             type="button"
-            onClick={() => {
-              setFormError(null);
-              setIsAddModalOpen(true);
-            }}
-            className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition cursor-pointer shrink-0 ${
+            onClick={openAddModal}
+            className={`mt-5 px-5 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95 ${
               isLight
-                ? "bg-[#5F55C8] hover:bg-[#4E45B0] text-white shadow-xs"
-                : "bg-[#5F55C8] hover:bg-[#7066D8] text-white"
+                ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25"
+                : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-purple-500/25"
             }`}
           >
             <Plus size={16} />
-            <span>Add Custom Link</span>
+            <span>Add Your First Study Tab</span>
           </button>
-        </div>
 
-        {appSavedNotice && (
-          <div
-            role="status"
-            className={`mt-4 p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
-              isLight
-                ? "bg-[#E9F7EF] border-[#B7E4C7] text-[#1F7A4C]"
-                : "bg-[#143024] border-[#1F7A4C]/40 text-[#4ADE80]"
-            }`}
-          >
-            <CheckCircle2 size={15} className="shrink-0" />
-            <span>{appSavedNotice}</span>
-          </div>
-        )}
-
-        {/* Filter & Search Bar */}
-        <div className={`mt-6 pt-5 border-t flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 ${
-          isLight ? "border-[#EDF0F5]" : "border-[#2B3344]"
-        }`}>
-          {/* Category Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" role="tablist" aria-label="Resource categories">
-            {CATEGORIES.map((cat) => {
-              const active = selectedCategory === cat;
-              const count = cat === "All"
-                ? allApps.length
-                : cat === "Custom"
-                ? userSavedApps.length
-                : allApps.filter((a) => a.category === cat).length;
-
-              return (
+          {/* Quick Suggestions Chips to add with 1 click */}
+          <div className="mt-8 pt-6 border-t border-inherit w-full max-w-xl">
+            <span
+              className={`text-[11px] font-semibold uppercase tracking-wider block mb-3 ${
+                isLight ? "text-[#82776E]" : "text-[#64748B]"
+              }`}
+            >
+              Or add a popular study tab in 1 click:
+            </span>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {QUICK_SUGGESTIONS.map((item) => (
                 <button
-                  key={cat}
+                  key={item.name}
                   type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
-                    active
-                      ? isLight
-                        ? "bg-[#5F55C8] text-white shadow-2xs"
-                        : "bg-[#A99BFF] text-[#10131A]"
-                      : isLight
-                      ? "bg-[#F6F7FA] text-[#596474] hover:text-[#18202B] hover:bg-[#ECEFF5]"
-                      : "bg-[#222938] text-[#B7C0CF] hover:text-[#F1F3F8]"
+                  onClick={() => handleQuickAdd(item)}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
+                    isLight
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] hover:border-[#EA580C] hover:bg-orange-50"
+                      : "bg-[#12161F] border-[#283040] text-[#F1F3F8] hover:border-[#8B5CF6] hover:bg-[#8B5CF6]/15"
                   }`}
                 >
-                  <span>{cat}</span>
-                  <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded ${
-                    active
-                      ? isLight ? "bg-white/20 text-white" : "bg-black/15 text-[#10131A]"
-                      : isLight ? "bg-[#E2E6EE] text-[#596474]" : "bg-[#191E28] text-[#8590A2]"
-                  }`}>
-                    {count}
-                  </span>
+                  <Plus size={12} className={isLight ? "text-[#EA580C]" : "text-[#C084FC]"} />
+                  <span>{item.name}</span>
                 </button>
-              );
-            })}
-          </div>
-
-          {/* Search Box */}
-          <div className="relative min-w-[240px]">
-            <Search size={15} className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`} />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search resources..."
-              aria-label="Search study resources"
-              className={`w-full min-h-[40px] pl-9 pr-8 py-2 rounded-xl border text-sm transition focus:outline-none ${
-                isLight
-                  ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] placeholder-[#7A8699] focus:bg-white focus:border-[#5F55C8]"
-                  : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] placeholder-[#8590A2] focus:border-[#A99BFF]"
-              }`}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
-                className={`absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md cursor-pointer ${
-                  isLight ? "text-[#596474] hover:bg-[#E2E6EE]" : "text-[#8590A2] hover:bg-[#222938]"
-                }`}
-              >
-                <X size={13} />
-              </button>
-            )}
+              ))}
+            </div>
           </div>
         </div>
-      </header>
-
-      {/* Resource Cards Grid */}
-      {filteredApps.length === 0 ? (
+      ) : filteredApps.length === 0 ? (
         <div
-          className={`rounded-2xl border p-10 text-center ${
-            isLight ? "bg-[#FFFFFF] border-[#E2E6EE]" : "bg-[#191E28] border-[#2B3344]"
+          className={`rounded-2xl border p-8 text-center ${
+            isLight ? "bg-[#FFFFFF] border-[#E2E6EF]" : "bg-[#191E28] border-[#283040]"
           }`}
         >
-          <Compass size={32} className={`mx-auto mb-3 ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`} />
-          <h2 className={`text-base font-bold ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
-            No study resources match your filter
-          </h2>
-          <p className={`text-sm mt-1 max-w-md mx-auto ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-            {selectedCategory === "Custom"
-              ? "You haven't added any custom links yet. Add your school portal, syllabus PDF, or favorite study site."
-              : "Try clearing your search query or switching to All categories."}
+          <Search size={24} className="mx-auto mb-2 opacity-50" />
+          <p className="text-sm font-semibold">No study apps match &ldquo;{searchQuery}&rdquo;</p>
+          <p className={`text-xs mt-1 ${isLight ? "text-[#596474]" : "text-[#94A3B8]"}`}>
+            Try searching for a different keyword or select &ldquo;All&rdquo; categories.
           </p>
-          <div className="mt-5 flex items-center justify-center gap-3">
-            {selectedCategory === "Custom" ? (
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(true)}
-                className="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold bg-[#5F55C8] hover:bg-[#4E45B0] text-white transition cursor-pointer inline-flex items-center gap-1.5"
-              >
-                <Plus size={14} />
-                <span>Add Custom Link</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCategory("All");
-                  setSearchQuery("");
-                }}
-                className={`min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer inline-flex items-center gap-1.5 ${
-                  isLight
-                    ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] hover:bg-[#ECEFF5]"
-                    : "bg-[#222938] border-[#2B3344] text-[#F1F3F8] hover:bg-[#2B3344]"
-                }`}
-              >
-                <RotateCcw size={14} />
-                <span>Show All Resources</span>
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedCategory("All");
+            }}
+            className={`mt-3 text-xs font-bold underline cursor-pointer ${
+              isLight ? "text-[#EA580C]" : "text-[#C084FC]"
+            }`}
+          >
+            Clear filters
+          </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      ) : viewMode === "grid" ? (
+        /* GRID VIEW */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredApps.map((app) => {
-            const safeHref = getSafeHref(app.url);
-            let hostname = "";
-            try {
-              if (safeHref) hostname = new URL(safeHref).hostname.replace(/^www\./, "");
-            } catch {}
+            const domain = getDomain(app.url);
+            const favicon = getFaviconUrl(app.url);
+            const appAccent = app.logoColor || primaryColor;
 
             return (
-              <article
+              <div
                 key={app.id}
-                className={`rounded-2xl border p-5 flex flex-col justify-between transition ${
+                className={`group rounded-2xl border p-4.5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   isLight
-                    ? "bg-[#FFFFFF] border-[#E2E6EE] hover:border-[#5F55C8]/50 shadow-[0_1px_2px_rgba(24,32,43,0.03)]"
-                    : "bg-[#191E28] border-[#2B3344] hover:border-[#A99BFF]/40"
+                    ? "bg-[#FFFFFF] border-[#E2E6EF] hover:border-[#EA580C]/40"
+                    : "bg-[#191E28] border-[#283040] hover:border-[#8B5CF6]/50"
                 }`}
               >
                 <div>
+                  {/* Top Bar: Icon, Name & Action Controls */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 overflow-hidden ${
-                          isLight ? "bg-[#F6F7FA] border-[#E2E6EE]" : "bg-[#222938] border-[#2B3344]"
-                        }`}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center p-1.5 shrink-0 overflow-hidden border shadow-2xs"
+                        style={{
+                          backgroundColor: isLight ? "#F8FAFC" : "#12161F",
+                          borderColor: isLight ? "#E2E8F0" : "#283040"
+                        }}
                       >
-                        {(app as any).logo ? (
-                          <img
-                            src={(app as any).logo}
-                            alt=""
-                            className="w-6 h-6 object-contain"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <Globe size={18} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
-                        )}
+                        <img
+                          src={favicon}
+                          alt={app.name}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            // Fallback to letter avatar if favicon fails to load
+                            const target = e.currentTarget;
+                            target.style.display = "none";
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `<span style="font-weight: bold; color: ${appAccent}; font-size: 13px;">${(app.name[0] || "A").toUpperCase()}</span>`;
+                            }
+                          }}
+                        />
                       </div>
+
                       <div className="min-w-0">
-                        <h3 className={`text-base font-bold truncate ${isLight ? "text-[#18202B]" : "text-[#F1F3F8]"}`}>
+                        <h3 className="text-sm font-bold truncate leading-tight group-hover:text-inherit">
                           {app.name}
                         </h3>
-                        {hostname && (
-                          <p className={`text-xs font-mono truncate ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`}>
-                            {hostname}
-                          </p>
-                        )}
+                        <p
+                          className={`text-[11px] font-mono truncate mt-0.5 ${
+                            isLight ? "text-[#82776E]" : "text-[#64748B]"
+                          }`}
+                        >
+                          {domain}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span
-                        className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md border ${
-                          app.isCustom
-                            ? isLight
-                              ? "bg-[#EFEEFA] border-[#D6D2F6] text-[#5F55C8]"
-                              : "bg-[#5F55C8]/15 border-[#A99BFF]/30 text-[#A99BFF]"
-                            : isLight
-                            ? "bg-[#F6F7FA] border-[#E2E6EE] text-[#596474]"
-                            : "bg-[#222938] border-[#2B3344] text-[#B7C0CF]"
+                    {/* Edit & Delete Buttons */}
+                    <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(app)}
+                        title="Edit app details"
+                        className={`p-1.5 rounded-lg transition cursor-pointer ${
+                          isLight
+                            ? "hover:bg-black/5 text-[#596474] hover:text-[#18202B]"
+                            : "hover:bg-white/10 text-[#94A3B8] hover:text-white"
                         }`}
                       >
-                        {app.badge || app.category}
-                      </span>
-
-                      {app.isCustom && (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDeleteApp(app)}
-                          aria-label={`Remove ${app.name}`}
-                          title={`Remove ${app.name}`}
-                          className={`p-1.5 rounded-lg transition cursor-pointer ${
-                            isLight
-                              ? "text-[#7A8699] hover:text-[#C93B3B] hover:bg-[#FDECEC]"
-                              : "text-[#8590A2] hover:text-[#F87171] hover:bg-[#3A1D24]"
-                          }`}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
+                        <Edit3 size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletePendingApp(app)}
+                        title="Remove app"
+                        className={`p-1.5 rounded-lg transition cursor-pointer ${
+                          isLight
+                            ? "hover:bg-rose-50 text-[#82776E] hover:text-rose-600"
+                            : "hover:bg-rose-500/15 text-[#94A3B8] hover:text-rose-400"
+                        }`}
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
 
-                  <p className={`text-sm mt-3 leading-relaxed line-clamp-2 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-                    {app.desc || "Personal study bookmark."}
-                  </p>
-                </div>
+                  {/* Category Pill */}
+                  {app.category && (
+                    <div className="mt-3">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider ${
+                          isLight
+                            ? "bg-orange-50 text-[#C2410C] border border-orange-200/70"
+                            : "bg-[#8B5CF6]/15 text-[#DDD6FE] border border-[#8B5CF6]/30"
+                        }`}
+                      >
+                        <Tag size={10} />
+                        <span>{app.category}</span>
+                      </span>
+                    </div>
+                  )}
 
-                <div className={`mt-5 pt-3.5 border-t flex items-center justify-between ${
-                  isLight ? "border-[#EDF0F5]" : "border-[#2B3344]"
-                }`}>
-                  <span className={`text-xs ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`}>
-                    Opens in new tab
-                  </span>
-
-                  {safeHref ? (
-                    <a
-                      href={safeHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition ${
-                        isLight
-                          ? "bg-[#F6F7FA] hover:bg-[#5F55C8] text-[#18202B] hover:text-white border border-[#D0D7E2] hover:border-[#5F55C8]"
-                          : "bg-[#222938] hover:bg-[#5F55C8] text-[#F1F3F8] hover:text-white border border-[#2B3344]"
+                  {/* Description if provided */}
+                  {app.description && (
+                    <p
+                      className={`text-xs mt-2.5 line-clamp-2 leading-relaxed ${
+                        isLight ? "text-[#596474]" : "text-[#94A3B8]"
                       }`}
                     >
-                      <span>Open Resource</span>
-                      <ExternalLink size={13} />
-                    </a>
-                  ) : (
-                    <span className={`text-xs font-medium ${isLight ? "text-[#C93B3B]" : "text-[#F87171]"}`}>
-                      Invalid URL
-                    </span>
+                      {app.description}
+                    </p>
                   )}
                 </div>
-              </article>
+
+                {/* Bottom Launch Button */}
+                <div className="mt-4 pt-3 border-t border-inherit">
+                  <a
+                    href={sanitizeUrl(app.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+                      isLight
+                        ? "bg-orange-50 hover:bg-[#EA580C] text-[#EA580C] hover:text-white border border-orange-200 hover:border-[#EA580C]"
+                        : "bg-[#8B5CF6]/15 hover:bg-[#8B5CF6] text-[#C084FC] hover:text-white border border-[#8B5CF6]/30 hover:border-[#8B5CF6]"
+                    }`}
+                  >
+                    <span>Open Tab</span>
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* LIST VIEW */
+        <div
+          className={`rounded-2xl border divide-y overflow-hidden ${
+            isLight
+              ? "bg-[#FFFFFF] border-[#E2E6EF] divide-[#E2E6EF]"
+              : "bg-[#191E28] border-[#283040] divide-[#283040]"
+          }`}
+        >
+          {filteredApps.map((app) => {
+            const domain = getDomain(app.url);
+            const favicon = getFaviconUrl(app.url);
+            const appAccent = app.logoColor || primaryColor;
+
+            return (
+              <div
+                key={app.id}
+                className={`p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
+                  isLight ? "hover:bg-[#F9FAFB]" : "hover:bg-[#1C2230]"
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center p-1.5 shrink-0 overflow-hidden border"
+                    style={{
+                      backgroundColor: isLight ? "#F8FAFC" : "#12161F",
+                      borderColor: isLight ? "#E2E8F0" : "#283040"
+                    }}
+                  >
+                    <img
+                      src={favicon}
+                      alt={app.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span style="font-weight: bold; color: ${appAccent}; font-size: 12px;">${(app.name[0] || "A").toUpperCase()}</span>`;
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold truncate leading-tight">{app.name}</h3>
+                      {app.category && (
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.2 rounded uppercase ${
+                            isLight
+                              ? "bg-orange-50 text-[#C2410C] border border-orange-200"
+                              : "bg-[#8B5CF6]/15 text-[#DDD6FE] border border-[#8B5CF6]/30"
+                          }`}
+                        >
+                          {app.category}
+                        </span>
+                      )}
+                    </div>
+                    <p
+                      className={`text-xs font-mono truncate ${
+                        isLight ? "text-[#82776E]" : "text-[#64748B]"
+                      }`}
+                    >
+                      {domain}
+                      {app.description && (
+                        <span className="font-sans font-normal ml-2 opacity-80">
+                          — {app.description}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(app)}
+                    title="Edit tab"
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${
+                      isLight
+                        ? "hover:bg-black/5 text-[#596474]"
+                        : "hover:bg-white/10 text-[#94A3B8]"
+                    }`}
+                  >
+                    <Edit3 size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletePendingApp(app)}
+                    title="Remove tab"
+                    className={`p-1.5 rounded-lg transition cursor-pointer ${
+                      isLight
+                        ? "hover:bg-rose-50 text-[#82776E] hover:text-rose-600"
+                        : "hover:bg-rose-500/15 text-[#94A3B8] hover:text-rose-400"
+                    }`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+
+                  <a
+                    href={sanitizeUrl(app.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                      isLight
+                        ? "bg-orange-50 hover:bg-[#EA580C] text-[#EA580C] hover:text-white border border-orange-200"
+                        : "bg-[#8B5CF6]/15 hover:bg-[#8B5CF6] text-[#C084FC] hover:text-white border border-[#8B5CF6]/30"
+                    }`}
+                  >
+                    <span>Open</span>
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+              </div>
             );
           })}
         </div>
       )}
 
-      {/* Add Custom Link Modal */}
-      {isAddModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="add-resource-modal-title"
-          onClick={() => setIsAddModalOpen(false)}
-        >
+      {/* ADD / EDIT APP MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div
-            onClick={(e) => e.stopPropagation()}
-            className={`w-full max-w-md rounded-2xl border p-6 shadow-xl ${
+            className={`w-full max-w-lg rounded-2xl border p-6 shadow-2xl relative ${
               isLight
-                ? "bg-[#FFFFFF] border-[#E2E6EE] text-[#18202B]"
-                : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8]"
+                ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#191E28] border-[#283040] text-[#F1F3F8]"
             }`}
           >
-            <div className="flex items-center justify-between pb-4 border-b border-inherit">
-              <h2 id="add-resource-modal-title" className="text-lg font-bold">
-                Add Custom Study Link
-              </h2>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-inherit">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    isLight ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+                  }`}
+                >
+                  {editingApp ? <Edit3 size={16} /> : <Plus size={16} />}
+                </div>
+                <div>
+                  <h2 className="text-base font-bold">
+                    {editingApp ? "Edit Study Tab" : "Add Study Tab"}
+                  </h2>
+                  <p className={`text-xs ${isLight ? "text-[#596474]" : "text-[#94A3B8]"}`}>
+                    {editingApp
+                      ? "Update your customized study portal shortcut"
+                      : "Add a website or revision resource to your workspace"}
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => setIsAddModalOpen(false)}
-                aria-label="Close modal"
-                className={`p-1.5 rounded-lg cursor-pointer ${
-                  isLight ? "text-[#596474] hover:bg-[#F0F2F7]" : "text-[#B7C0CF] hover:bg-[#222938]"
-                }`}
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={validateAndSubmit} className="mt-4 space-y-4">
+            {/* Modal Form */}
+            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               {formError && (
-                <div
-                  role="alert"
-                  className={`p-3 rounded-xl border text-xs font-medium flex items-center gap-2 ${
-                    isLight
-                      ? "bg-[#FDECEC] border-[#F7C6C6] text-[#C93B3B]"
-                      : "bg-[#3A1D24] border-[#C93B3B]/40 text-[#FCA5A5]"
-                  }`}
-                >
-                  <AlertCircle size={15} className="shrink-0" />
+                <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-center gap-2">
+                  <AlertTriangle size={14} className="shrink-0" />
                   <span>{formError}</span>
                 </div>
               )}
 
+              {/* Name */}
               <div>
-                <label htmlFor="custom-app-name" className="block text-xs font-semibold mb-1.5">
-                  Resource Name <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1">
+                  App or Website Name <span className="text-rose-500">*</span>
                 </label>
                 <input
-                  id="custom-app-name"
                   type="text"
-                  value={newAppName}
-                  onChange={(e) => setNewAppName(e.target.value)}
-                  placeholder="e.g., Cambridge Chemistry Syllabus PDF"
-                  required
-                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-xl border text-sm focus:outline-none ${
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="e.g. Physics & Maths Tutor, Quizlet, Khan Academy"
+                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl border outline-none transition ${
                     isLight
-                      ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] focus:bg-white focus:border-[#5F55C8]"
-                      : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                      : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
                   }`}
                 />
               </div>
 
+              {/* URL */}
               <div>
-                <label htmlFor="custom-app-url" className="block text-xs font-semibold mb-1.5">
-                  Website URL <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1">
+                  Link / URL <span className="text-rose-500">*</span>
                 </label>
                 <input
-                  id="custom-app-url"
                   type="text"
-                  value={newAppUrl}
-                  onChange={(e) => setNewAppUrl(e.target.value)}
-                  placeholder="https://www.cambridgeinternational.org"
-                  required
-                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-xl border text-sm font-mono focus:outline-none ${
+                  value={formUrl}
+                  onChange={(e) => setFormUrl(e.target.value)}
+                  placeholder="e.g. physicsandmathstutor.com or https://..."
+                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl border outline-none font-mono transition ${
                     isLight
-                      ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] focus:bg-white focus:border-[#5F55C8]"
-                      : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                      : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
                   }`}
                 />
               </div>
 
+              {/* Category */}
               <div>
-                <label htmlFor="custom-app-desc" className="block text-xs font-semibold mb-1.5">
-                  Short Description <span className={`font-normal ${isLight ? "text-[#7A8699]" : "text-[#8590A2]"}`}>(optional)</span>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1">
+                  Category or Tag (Optional)
                 </label>
                 <input
-                  id="custom-app-desc"
                   type="text"
-                  value={newAppDesc}
-                  onChange={(e) => setNewAppDesc(e.target.value)}
-                  placeholder="e.g., Topic checklists and specimen papers"
-                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-xl border text-sm focus:outline-none ${
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value)}
+                  placeholder="e.g. Past Papers, Notes, Flashcards, Tools, Math"
+                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl border outline-none transition ${
                     isLight
-                      ? "bg-[#F6F7FA] border-[#D0D7E2] text-[#18202B] focus:bg-white focus:border-[#5F55C8]"
-                      : "bg-[#10131A] border-[#2B3344] text-[#F1F3F8] focus:border-[#A99BFF]"
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                      : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
+                  }`}
+                />
+                {/* Fast pick tags */}
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {["Past Papers", "Notes & Revision", "Flashcards", "Tools & Math", "Planning"].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setFormCategory(tag)}
+                      className={`text-[10px] px-2 py-0.5 rounded-md border transition cursor-pointer ${
+                        formCategory === tag
+                          ? isLight
+                            ? "bg-orange-100 text-[#C2410C] border-orange-300 font-semibold"
+                            : "bg-[#8B5CF6]/20 text-[#DDD6FE] border-[#8B5CF6]/50 font-semibold"
+                          : isLight
+                          ? "bg-black/5 border-transparent text-[#596474] hover:bg-black/10"
+                          : "bg-white/5 border-transparent text-[#94A3B8] hover:bg-white/10"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1">
+                  Description / Note (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={formDescription}
+                  onChange={(e) => setFormDescription(e.target.value)}
+                  placeholder="What do you use this tab for? e.g. Chapter 4 mechanics practice papers"
+                  className={`w-full px-3.5 py-2 text-xs rounded-xl border outline-none transition resize-none ${
+                    isLight
+                      ? "bg-[#F5EFE9] border-[#E5DDD4] text-[#1A1614] focus:border-[#EA580C] focus:bg-white"
+                      : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
                   }`}
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2.5">
+              {/* Color Accent */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider mb-1.5">
+                  Accent Color
+                </label>
+                <div className="flex items-center gap-2">
+                  {COLOR_PALETTE.map((color) => (
+                    <button
+                      key={color.name}
+                      type="button"
+                      onClick={() => setFormColor(color.hex)}
+                      className={`w-7 h-7 rounded-xl transition cursor-pointer flex items-center justify-center border ${
+                        formColor === color.hex
+                          ? "ring-2 ring-offset-2 ring-current scale-110"
+                          : "opacity-80 hover:opacity-100"
+                      }`}
+                      style={{
+                        backgroundColor: color.hex,
+                        borderColor: isLight ? "#E2E8F0" : "#283040"
+                      }}
+                      title={color.name}
+                    >
+                      {formColor === color.hex && <Check size={13} className="text-white drop-shadow" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-inherit">
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className={`min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                  onClick={() => setIsModalOpen(false)}
+                  className={`px-4 py-2 text-xs font-semibold rounded-xl border transition cursor-pointer ${
                     isLight
-                      ? "bg-white border-[#D0D7E2] text-[#596474] hover:text-[#18202B]"
-                      : "bg-[#222938] border-[#2B3344] text-[#B7C0CF] hover:text-[#F1F3F8]"
+                      ? "border-[#CBD5E1] hover:bg-[#F1F5F9] text-[#475569]"
+                      : "border-[#334155] hover:bg-white/5 text-[#94A3B8]"
                   }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="min-h-[42px] px-5 py-2 rounded-xl text-xs font-semibold bg-[#5F55C8] hover:bg-[#4E45B0] text-white transition cursor-pointer flex items-center gap-1.5"
+                  className={`px-5 py-2 text-xs font-bold text-white rounded-xl shadow-md transition cursor-pointer active:scale-95 ${
+                    isLight
+                      ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25"
+                      : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-purple-500/25"
+                  }`}
                 >
-                  <Check size={14} />
-                  <span>Save Link</span>
+                  {editingApp ? "Save Changes" : "Add Tab"}
                 </button>
               </div>
             </form>
@@ -664,37 +973,36 @@ export default function StudyAppsTab({
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {confirmDeleteApp && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-resource-title"
-          onClick={() => setConfirmDeleteApp(null)}
-        >
+      {/* DELETE CONFIRMATION MODAL */}
+      {deletePendingApp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div
-            onClick={(e) => e.stopPropagation()}
-            className={`w-full max-w-sm rounded-2xl border p-6 shadow-xl ${
+            className={`w-full max-w-sm rounded-2xl border p-5 shadow-2xl ${
               isLight
-                ? "bg-[#FFFFFF] border-[#E2E6EE] text-[#18202B]"
-                : "bg-[#191E28] border-[#2B3344] text-[#F1F3F8]"
+                ? "bg-[#FFFFFF] border-[#E2E6EF] text-[#18202B]"
+                : "bg-[#191E28] border-[#283040] text-[#F1F3F8]"
             }`}
           >
-            <h3 id="delete-resource-title" className="text-base font-bold">
-              Remove Custom Link?
-            </h3>
-            <p className={`text-sm mt-2 ${isLight ? "text-[#596474]" : "text-[#B7C0CF]"}`}>
-              Are you sure you want to remove <strong>{confirmDeleteApp.name}</strong> from your study resources?
-            </p>
-            <div className="mt-5 flex items-center justify-end gap-2.5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/15 text-rose-500 flex items-center justify-center shrink-0">
+                <Trash2 size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold">Remove Study Tab?</h3>
+                <p className={`text-xs mt-0.5 ${isLight ? "text-[#596474]" : "text-[#94A3B8]"}`}>
+                  &ldquo;{deletePendingApp.name}&rdquo; will be deleted from your list.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 mt-5">
               <button
                 type="button"
-                onClick={() => setConfirmDeleteApp(null)}
-                className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold border cursor-pointer ${
+                onClick={() => setDeletePendingApp(null)}
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl border transition cursor-pointer ${
                   isLight
-                    ? "bg-white border-[#D0D7E2] text-[#596474]"
-                    : "bg-[#222938] border-[#2B3344] text-[#B7C0CF]"
+                    ? "border-[#CBD5E1] hover:bg-[#F1F5F9] text-[#475569]"
+                    : "border-[#334155] hover:bg-white/5 text-[#94A3B8]"
                 }`}
               >
                 Cancel
@@ -702,12 +1010,12 @@ export default function StudyAppsTab({
               <button
                 type="button"
                 onClick={() => {
-                  onDeleteApp(confirmDeleteApp.id);
-                  setConfirmDeleteApp(null);
+                  onDeleteApp(deletePendingApp.id);
+                  setDeletePendingApp(null);
                 }}
-                className="min-h-[40px] px-4 py-2 rounded-xl text-xs font-semibold bg-[#C93B3B] hover:bg-[#B02E2E] text-white cursor-pointer"
+                className="px-4 py-1.5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-xs transition cursor-pointer"
               >
-                Remove Link
+                Remove
               </button>
             </div>
           </div>

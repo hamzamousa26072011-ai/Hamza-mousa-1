@@ -930,3 +930,96 @@ html.theme-light body,
 .theme-light .katex .frac-line {
   border-color: #1A1614 !important;
 }
+
+/* =========================================================================
+   EXPLICIT WHITE / LIGHT THEME ORANGE ACCENT ENFORCEMENT
+   All purple elements in dark theme become vibrant terracotta orange in light theme
+   ========================================================================= */
+
+.theme-light .text-\[\#8B5CF6\],
+.theme-light .text-\[\#7C3AED\],
+.theme-light .text-\[\#6D5DF6\],
+.theme-light .text-\[\#5F55C8\],
+.theme-light .text-\[\#C084FC\],
+.theme-light .text-\[\#A78BFA\],
+.theme-light .text-\[\#A99BFF\],
+.theme-light .text-\[\#7E22CE\],
+.theme-light .text-\[\#6B21A8\],
+.theme-light .text-purple-300,
+.theme-light .text-purple-400,
+.theme-light .text-purple-500,
+.theme-light .text-purple-600,
+.theme-light .text-purple-700 {
+  color: #C25E42 !important;
+}
+
+.theme-light .bg-\[\#8B5CF6\],
+.theme-light .bg-\[\#7C3AED\],
+.theme-light .bg-\[\#6D5DF6\],
+.theme-light .bg-\[\#5F55C8\],
+.theme-light .bg-purple-600,
+.theme-light .bg-purple-500 {
+  background-color: #C25E42 !important;
+  color: #FFFFFF !important;
+}
+
+.theme-light .hover\:bg-\[\#7C3AED\]:hover,
+.theme-light .hover\:bg-\[\#5B4BE8\]:hover,
+.theme-light .hover\:bg-\[\#4E45B0\]:hover,
+.theme-light .hover\:bg-purple-500:hover,
+.theme-light .hover\:bg-purple-700:hover {
+  background-color: #B25136 !important;
+}
+
+.theme-light .bg-\[\#8B5CF6\]\/10,
+.theme-light .bg-\[\#8B5CF6\]\/15,
+.theme-light .bg-\[\#8B5CF6\]\/20,
+.theme-light .bg-\[\#8B5CF6\]\/25,
+.theme-light .bg-\[\#6D5DF6\]\/15,
+.theme-light .bg-\[\#F3E8FF\],
+.theme-light .bg-\[\#FAF5FF\],
+.theme-light .bg-\[\#F0EEFF\]\/60,
+.theme-light .bg-purple-50,
+.theme-light .bg-purple-100,
+.theme-light .bg-purple-500\/10,
+.theme-light .bg-purple-500\/15,
+.theme-light .bg-purple-500\/20,
+.theme-light .bg-purple-950\/25,
+.theme-light .bg-purple-950\/40 {
+  background-color: #FFF2ED !important;
+  color: #C25E42 !important;
+}
+
+.theme-light .border-\[\#8B5CF6\],
+.theme-light .border-\[\#8B5CF6\]\/50,
+.theme-light .border-\[\#8B5CF6\]\/40,
+.theme-light .border-\[\#8B5CF6\]\/30,
+.theme-light .border-\[\#8B5CF6\]\/25,
+.theme-light .border-\[\#8B5CF6\]\/20,
+.theme-light .border-\[\#6D5DF6\]\/35,
+.theme-light .border-\[\#E9D5FF\],
+.theme-light .border-\[\#D8D3F8\],
+.theme-light .border-purple-200,
+.theme-light .border-purple-300,
+.theme-light .border-purple-400,
+.theme-light .border-purple-500\/20,
+.theme-light .border-purple-500\/25,
+.theme-light .border-purple-500\/30 {
+  border-color: #F2D5CA !important;
+}
+
+.theme-light .focus\:border-\[\#8B5CF6\]:focus,
+.theme-light .focus\:border-purple-500:focus,
+.theme-light input:focus {
+  border-color: #C25E42 !important;
+}
+
+.theme-light .shadow-purple-500\/10,
+.theme-light .shadow-purple-500\/20,
+.theme-light .shadow-purple-500\/25,
+.theme-light .shadow-\[\#8B5CF6\]\/25,
+.theme-light .shadow-\[\#8B5CF6\]\/30,
+.theme-light .shadow-\[\#8B5CF6\]\/35,
+.theme-light .shadow-\[\#8B5CF6\]\/40 {
+  box-shadow: 0 4px 14px rgba(194, 94, 66, 0.22) !important;
+}

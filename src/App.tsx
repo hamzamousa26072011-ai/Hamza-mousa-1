@@ -856,14 +856,7 @@ export default function App() {
   const [selectedPaper, setSelectedPaper] = useState<PastPaper | null>(null);
 
   // 6. STUDY APPS DATA LIST (Stateful, Multi-tier Account Persistence)
-  const DEFAULT_STUDY_APPS: StudyApp[] = [
-    {
-      id: "app-1",
-      name: "Google Classroom",
-      url: "https://classroom.google.com",
-      logoColor: "#10B981"
-    }
-  ];
+  const DEFAULT_STUDY_APPS: StudyApp[] = [];
 
   const [appSavedNotice, setAppSavedNotice] = useState<string | null>(null);
 
@@ -1660,12 +1653,12 @@ export default function App() {
                   <img
                     src={currentUser.photoURL}
                     alt={currentUser.displayName || "User"}
-                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg object-cover border border-[#8B5CF6]/50"
+                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg object-cover border ${settings.themeMode === "light" ? "border-[#EA580C]/50" : "border-[#8B5CF6]/50"}`}
                     referrerPolicy="no-referrer"
                   />
                 ) : (
                   <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg ${
-                    settings.themeMode === "light" ? "bg-purple-100 text-[#7C3AED]" : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/40"
+                    settings.themeMode === "light" ? "bg-orange-100 text-[#EA580C]" : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/40"
                   } flex items-center justify-center text-xs font-bold`}>
                     <UserIcon size={12} />
                   </div>
@@ -1684,7 +1677,11 @@ export default function App() {
             ) : (
               <button
                 onClick={handleOpenAuthModal}
-                className="px-3 sm:px-4 py-1.5 bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-md shadow-purple-500/25 text-white rounded-xl text-[11px] sm:text-xs font-sans font-bold transition cursor-pointer flex items-center gap-1.5 min-h-[38px] active:scale-95"
+                className={`px-3 sm:px-4 py-1.5 ${
+                  settings.themeMode === "light"
+                    ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25"
+                    : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-purple-500/25"
+                } shadow-md text-white rounded-xl text-[11px] sm:text-xs font-sans font-bold transition cursor-pointer flex items-center gap-1.5 min-h-[38px] active:scale-95`}
               >
                 <LogIn size={13} />
                 <span className="hidden sm:inline">Sign In</span>
@@ -1928,7 +1925,9 @@ export default function App() {
               } border rounded-3xl p-5 sm:p-6 md:p-8 space-y-5 sm:space-y-6 relative text-center`}
             >
               {/* Decorative top ambient glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-36 bg-gradient-to-b from-[#8B5CF6]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+              <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-80 h-36 bg-gradient-to-b ${
+                settings.themeMode === "light" ? "from-[#EA580C]/15" : "from-[#8B5CF6]/15"
+              } to-transparent rounded-full blur-3xl pointer-events-none`} />
 
               {/* Logo & Header */}
               <div className="flex flex-col items-center gap-3.5 relative z-10">
@@ -1942,7 +1941,7 @@ export default function App() {
                 
                 <div className="space-y-1">
                   <h2 className={`text-2xl font-black ${settings.themeMode === "light" ? "text-[#1A1614]" : "text-[#F8FAFC]"} font-sans tracking-tight`}>
-                    Engez Nafsak • <span className="text-[#8B5CF6]">إنجز نفسك</span>
+                    Engez Nafsak • <span className={settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"}>إنجز نفسك</span>
                   </h2>
                   <p className={`text-xs ${settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} font-sans font-medium`}>
                     Your Dedicated Exam Planner & Academic Suite
@@ -1976,14 +1975,14 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   className={`p-4 ${
                     settings.themeMode === "light"
-                      ? "bg-[#FAF5FF] border-[#E9D5FF]"
+                      ? "bg-orange-50 border-orange-200"
                       : "bg-purple-950/25 border-purple-500/25"
                   } border rounded-2xl text-left space-y-3.5 shadow-xs`}
                 >
                   <div className="flex items-start gap-2.5">
-                    <Globe className="text-[#8B5CF6] shrink-0 mt-0.5" size={16} />
+                    <Globe className={`${settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"} shrink-0 mt-0.5`} size={16} />
                     <div className="space-y-1">
-                      <h4 className="text-xs font-bold font-mono text-[#8B5CF6] uppercase tracking-wider">
+                      <h4 className={`text-xs font-bold font-mono ${settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"} uppercase tracking-wider`}>
                         Custom DNS Domain Authorization Required
                       </h4>
                       <p className={`text-xs ${settings.themeMode === "light" ? "text-[#1D1D1B]" : "text-slate-200"} leading-relaxed font-sans`}>
@@ -1994,15 +1993,15 @@ export default function App() {
 
                   {/* 1-CLICK FAST PASS FOR HAMZA MOUSA */}
                   <div className="p-3 bg-[#FAF9F5] dark:bg-black/40 border border-[#E8D7C9] dark:border-white/10 rounded-xl space-y-2">
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-[#8B5CF6] block font-bold">
+                    <span className={`text-[10px] uppercase font-mono tracking-wider ${settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"} block font-bold`}>
                       Instant Access (Bypass Domain Restriction)
                     </span>
                     <button
                       type="button"
                       onClick={handleInstantHamzaLogin}
-                      className="w-full py-2.5 px-3 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-sans font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99]"
+                      className={`w-full py-2.5 px-3 ${settings.themeMode === "light" ? "bg-[#EA580C] hover:bg-[#C2410C]" : "bg-[#8B5CF6] hover:bg-[#7C3AED]"} text-white font-sans font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99]`}
                     >
-                      <Zap size={14} className="text-purple-200 fill-purple-200 shrink-0" />
+                      <Zap size={14} className={settings.themeMode === "light" ? "text-orange-200 fill-orange-200 shrink-0" : "text-purple-200 fill-purple-200 shrink-0"} />
                       <span>Continue as Hamza Mousa (hamzamousa26072011@gmail.com)</span>
                     </button>
                     <p className="text-[10px] text-[#77736B] dark:text-slate-400 font-sans text-center">
@@ -2035,7 +2034,7 @@ export default function App() {
 
                   <div className="text-[11px] space-y-1.5 text-[#77736B] font-sans">
                     <p>
-                      1. Open <a href="https://console.firebase.google.com/project/engez-nafsak/authentication/settings" target="_blank" rel="noopener noreferrer" className="font-bold underline text-[#8B5CF6]">Engez Nafsak Firebase Settings ↗</a> (Make sure the top-left says <strong>engez nafsak</strong>, not <em>abiding-ratio-g224x</em>).
+                      1. Open <a href="https://console.firebase.google.com/project/engez-nafsak/authentication/settings" target="_blank" rel="noopener noreferrer" className={`font-bold underline ${settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"}`}>Engez Nafsak Firebase Settings ↗</a> (Make sure the top-left says <strong>engez nafsak</strong>, not <em>abiding-ratio-g224x</em>).
                     </p>
                     <p>2. Scroll down to <strong>Authorized domains</strong> and click <strong>Add Domain</strong>.</p>
                     <p>3. Paste <code className="font-mono text-[10px] bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded text-[#1D1D1B] dark:text-white font-bold">{unauthorizedDomain}</code>, and save.</p>
@@ -2047,7 +2046,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setShowDnsModal(true)}
-                        className="text-[11px] font-mono font-bold text-[#8B5CF6] hover:underline flex items-center gap-1 cursor-pointer"
+                        className={`text-[11px] font-mono font-bold ${settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"} hover:underline flex items-center gap-1 cursor-pointer`}
                       >
                         <Globe size={12} />
                         <span>DNS & Domain Hub</span>
@@ -2086,7 +2085,7 @@ export default function App() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Key size={16} className="text-[#8B5CF6]" />
+                        <Key size={16} className={settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"} />
                         <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-[#1D1D1B] dark:text-white">
                           Connect Engez Nafsak Project
                         </h4>
@@ -2127,7 +2126,7 @@ export default function App() {
                           placeholder="e.g. engez-nafsak"
                           className={`w-full px-3 py-2 font-mono text-xs rounded-xl border ${
                             settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none focus:border-[#8B5CF6]`}
+                          } outline-none ${settings.themeMode === "light" ? "focus:border-[#EA580C]" : "focus:border-[#8B5CF6]"}`}
                         />
                       </div>
 
@@ -2142,7 +2141,7 @@ export default function App() {
                           placeholder="e.g. AIzaSy..."
                           className={`w-full px-3 py-2 font-mono text-xs rounded-xl border ${
                             settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none focus:border-[#8B5CF6]`}
+                          } outline-none ${settings.themeMode === "light" ? "focus:border-[#EA580C]" : "focus:border-[#8B5CF6]"}`}
                         />
                       </div>
 
@@ -2157,7 +2156,7 @@ export default function App() {
                           placeholder="const firebaseConfig = { ... };"
                           className={`w-full p-2 font-mono text-xs rounded-xl border ${
                             settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none focus:border-[#8B5CF6] resize-none`}
+                          } outline-none ${settings.themeMode === "light" ? "focus:border-[#EA580C]" : "focus:border-[#8B5CF6]"} resize-none`}
                         />
                       </div>
                     </div>
@@ -2173,7 +2172,11 @@ export default function App() {
                       <button
                         type="button"
                         onClick={handleModalSaveProject}
-                        className="px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-mono text-xs font-bold rounded-xl cursor-pointer shadow-md shadow-[#8B5CF6]/25"
+                        className={`px-4 py-2 ${
+                          settings.themeMode === "light"
+                            ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-orange-500/25"
+                            : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[#8B5CF6]/25"
+                        } text-white font-mono text-xs font-bold rounded-xl cursor-pointer shadow-md`}
                       >
                         Connect &amp; Reload
                       </button>
@@ -2198,7 +2201,7 @@ export default function App() {
                 >
                   {isGoogleLoading ? (
                     <>
-                      <Loader2 className="animate-spin text-[#8B5CF6]" size={16} />
+                      <Loader2 className={`animate-spin ${settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"}`} size={16} />
                       <span className="font-sans normal-case text-xs font-semibold">Connecting securely with Google...</span>
                     </>
                   ) : (
@@ -2243,7 +2246,9 @@ export default function App() {
                       }}
                       className={`py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-lg transition cursor-pointer text-center ${
                         authMethod === "email_login" || authMethod === "options"
-                          ? "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/30"
+                          ? settings.themeMode === "light"
+                            ? "bg-[#EA580C] text-white shadow-md shadow-[#EA580C]/30"
+                            : "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/30"
                           : settings.themeMode === "light"
                           ? "text-[#77736B] hover:text-[#1D1D1B]"
                           : "text-slate-400 hover:text-white"
@@ -2259,7 +2264,9 @@ export default function App() {
                       }}
                       className={`py-2 text-xs font-sans font-bold uppercase tracking-wider rounded-lg transition cursor-pointer text-center ${
                         authMethod === "email_signup"
-                          ? "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/30"
+                          ? settings.themeMode === "light"
+                            ? "bg-[#EA580C] text-white shadow-md shadow-[#EA580C]/30"
+                            : "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/30"
                           : settings.themeMode === "light"
                           ? "text-[#77736B] hover:text-[#1D1D1B]"
                           : "text-slate-400 hover:text-white"
@@ -2288,7 +2295,7 @@ export default function App() {
                             placeholder="Student Name"
                             className={`w-full px-3.5 py-2.5 ${
                               settings.themeMode === "light"
-                                ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#8B5CF6] placeholder:text-[#9B9890]"
+                                ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#EA580C] placeholder:text-[#9B9890]"
                                 : "bg-[#0b0f1d] border-white/10 focus:border-[#8B5CF6] text-white placeholder:text-slate-500"
                             } border rounded-xl text-xs focus:outline-none transition font-sans`}
                           />
@@ -2309,7 +2316,7 @@ export default function App() {
                           placeholder="student@example.com"
                           className={`w-full px-3.5 py-2.5 ${
                             settings.themeMode === "light"
-                              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#8B5CF6] placeholder:text-[#9B9890]"
+                              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#EA580C] placeholder:text-[#9B9890]"
                               : "bg-[#0b0f1d] border-white/10 focus:border-[#8B5CF6] text-white placeholder:text-slate-500"
                           } border rounded-xl text-xs focus:outline-none transition font-sans`}
                         />
@@ -2331,7 +2338,7 @@ export default function App() {
                           placeholder="Enter password"
                           className={`w-full px-3.5 py-2.5 pr-10 ${
                             settings.themeMode === "light"
-                              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#8B5CF6] placeholder:text-[#9B9890]"
+                              ? "bg-[#FFFFFF] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#EA580C] placeholder:text-[#9B9890]"
                               : "bg-[#0b0f1d] border-white/10 focus:border-[#8B5CF6] text-white placeholder:text-slate-500"
                           } border rounded-xl text-xs focus:outline-none transition font-sans`}
                         />
@@ -2349,7 +2356,11 @@ export default function App() {
                     <button
                       type="submit"
                       disabled={isAuthSubmitLoading}
-                      className="w-full py-3 bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-lg shadow-[#8B5CF6]/30 disabled:opacity-50 disabled:cursor-not-allowed text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 mt-4 active:scale-[0.99]"
+                      className={`w-full py-3 ${
+                        settings.themeMode === "light"
+                          ? "bg-[#EA580C] hover:bg-[#C2410C] shadow-[#EA580C]/30"
+                          : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[#8B5CF6]/30"
+                      } shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 mt-4 active:scale-[0.99]`}
                     >
                       {isAuthSubmitLoading ? (
                         <>
@@ -2383,7 +2394,7 @@ export default function App() {
 
               {/* Balanced Footer Inspiration */}
               <div className={`pt-2 text-center text-[10px] ${settings.themeMode === "light" ? "text-[#77736B] border-[#E8D7C9]" : "text-slate-500 border-white/5"} font-sans border-t flex items-center justify-center gap-1.5`}>
-                <ShieldCheck size={13} className="text-[#8B5CF6]" />
+                <ShieldCheck size={13} className={settings.themeMode === "light" ? "text-[#EA580C]" : "text-[#8B5CF6]"} />
                 <span>Protected with Google OAuth 2.0 & Firebase Cloud Security</span>
               </div>
             </motion.div>
