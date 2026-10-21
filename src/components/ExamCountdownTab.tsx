@@ -72,14 +72,14 @@ export interface ExamUrgencyStyle {
 }
 
 export const URGENCY_TIERS_LEGEND = [
-  { id: "critical", label: "< 24h", name: "Critical", dot: "bg-[#F43F5E]", lightBadge: "bg-[#FFF1F2] text-[#BE123C] border-[#FDA4AF]", darkBadge: "bg-[#F43F5E]/15 text-[#FDA4AF] border-[#F43F5E]/30" },
-  { id: "very-urgent", label: "1–2d", name: "Urgent", dot: "bg-[#FB7185]", lightBadge: "bg-[#FFF5F5] text-[#B91C1C] border-[#FCA5A5]", darkBadge: "bg-[#FB7185]/15 text-[#FECDD3] border-[#FB7185]/30" },
-  { id: "high-urgency", label: "3–4d", name: "High", dot: "bg-[#F97316]", lightBadge: "bg-[#FFF7ED] text-[#C2410C] border-[#FDBA74]", darkBadge: "bg-[#F97316]/15 text-[#FED7AA] border-[#F97316]/30" },
-  { id: "this-week", label: "5–7d", name: "This Week", dot: "bg-[#FBBF24]", lightBadge: "bg-[#FFFBEB] text-[#B45309] border-[#FCD34D]", darkBadge: "bg-[#FBBF24]/15 text-[#FDE68A] border-[#FBBF24]/30" },
-  { id: "next-week", label: "8–14d", name: "Next Week", dot: "bg-[#8B5CF6]", lightBadge: "bg-[#F5F3FF] text-[#6D28D9] border-[#DDD6FE]", darkBadge: "bg-[#8B5CF6]/15 text-[#C084FC] border-[#8B5CF6]/30" },
-  { id: "on-track", label: "15–21d", name: "On Track", dot: "bg-[#6366F1]", lightBadge: "bg-[#EEF2FF] text-[#4338CA] border-[#C7D2FE]", darkBadge: "bg-[#6366F1]/15 text-[#A5B4FC] border-[#6366F1]/30" },
-  { id: "horizon", label: "22–35d", name: "Horizon", dot: "bg-[#06B6D4]", lightBadge: "bg-[#ECFEFF] text-[#0E7490] border-[#A5F3FC]", darkBadge: "bg-[#06B6D4]/15 text-[#67E8F9] border-[#06B6D4]/30" },
-  { id: "distant", label: "> 35d", name: "Distant", dot: "bg-[#38BDF8]", lightBadge: "bg-[#F0F9FF] text-[#0369A1] border-[#BAE6FD]", darkBadge: "bg-[#38BDF8]/15 text-[#BAE6FD] border-[#38BDF8]/30" }
+  { id: "critical", label: "< 24h", name: "Critical", dot: "bg-[#F43F5E]", lightDot: "bg-[#F43F5E]", darkDot: "bg-[#F43F5E]", lightBadge: "bg-[#FFF1F2] text-[#BE123C] border-[#FDA4AF]", darkBadge: "bg-[#F43F5E]/15 text-[#FDA4AF] border-[#F43F5E]/30" },
+  { id: "very-urgent", label: "1–2d", name: "Urgent", dot: "bg-[#FB7185]", lightDot: "bg-[#FB7185]", darkDot: "bg-[#FB7185]", lightBadge: "bg-[#FFF5F5] text-[#B91C1C] border-[#FCA5A5]", darkBadge: "bg-[#FB7185]/15 text-[#FECDD3] border-[#FB7185]/30" },
+  { id: "high-urgency", label: "3–4d", name: "High", dot: "bg-[#F97316]", lightDot: "bg-[#F97316]", darkDot: "bg-[#F97316]", lightBadge: "bg-[#FFF7ED] text-[#C2410C] border-[#FDBA74]", darkBadge: "bg-[#F97316]/15 text-[#FED7AA] border-[#F97316]/30" },
+  { id: "this-week", label: "5–7d", name: "This Week", dot: "bg-[#FBBF24]", lightDot: "bg-[#FBBF24]", darkDot: "bg-[#FBBF24]", lightBadge: "bg-[#FFFBEB] text-[#B45309] border-[#FCD34D]", darkBadge: "bg-[#FBBF24]/15 text-[#FDE68A] border-[#FBBF24]/30" },
+  { id: "next-week", label: "8–14d", name: "Next Week", dot: "bg-[#C25E42]", lightDot: "bg-[#C25E42]", darkDot: "bg-[#8B5CF6]", lightBadge: "bg-[#FFF2ED] text-[#C25E42] border-[#F0D5CC]", darkBadge: "bg-[#8B5CF6]/15 text-[#C084FC] border-[#8B5CF6]/30" },
+  { id: "on-track", label: "15–21d", name: "On Track", dot: "bg-[#10B981]", lightDot: "bg-[#10B981]", darkDot: "bg-[#6366F1]", lightBadge: "bg-[#ECFDF5] text-[#065F46] border-[#A7F3D0]", darkBadge: "bg-[#6366F1]/15 text-[#A5B4FC] border-[#6366F1]/30" },
+  { id: "horizon", label: "22–35d", name: "Horizon", dot: "bg-[#16A34A]", lightDot: "bg-[#16A34A]", darkDot: "bg-[#06B6D4]", lightBadge: "bg-[#F0FDF4] text-[#166534] border-[#BBF7D0]", darkBadge: "bg-[#06B6D4]/15 text-[#67E8F9] border-[#06B6D4]/30" },
+  { id: "distant", label: "> 35d", name: "Distant", dot: "bg-[#78716C]", lightDot: "bg-[#78716C]", darkDot: "bg-[#38BDF8]", lightBadge: "bg-[#F5F4F0] text-[#57534E] border-[#E2DFD8]", darkBadge: "bg-[#38BDF8]/15 text-[#BAE6FD] border-[#38BDF8]/30" }
 ];
 
 export const getExamUrgencyTheme = (
@@ -96,18 +96,18 @@ export const getExamUrgencyTheme = (
           tierName: "Lavender",
           badgeLabel: countdown.isPast ? "Completed" : `${countdown.days}d left`,
           badgeClasses: isLight 
-            ? "bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]" 
+            ? "bg-[#FFF2ED] text-[#C25E42] border border-[#F0D5CC]" 
             : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/40 shadow-[0_0_10px_rgba(139,92,246,0.25)]",
           cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
-          borderColor: isLight ? "border-[#DDD6FE] ring-1 ring-[#8B5CF6]/20" : "border-[#8B5CF6]/45 ring-1 ring-[#8B5CF6]/25",
-          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(139,92,246,0.08)]" : "shadow-[0_8px_30px_rgba(139,92,246,0.22)]",
+          borderColor: isLight ? "border-[#F0D5CC] ring-1 ring-[#C25E42]/20" : "border-[#8B5CF6]/45 ring-1 ring-[#8B5CF6]/25",
+          glowShadow: isLight ? "shadow-[0_8px_25px_rgba(194,94,66,0.08)]" : "shadow-[0_8px_30px_rgba(139,92,246,0.22)]",
           titleColor: isLight ? "text-[#1A1614]" : "text-white",
           subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
           pillBg: isLight ? "bg-[#FAF7F3]" : "bg-[#161A2B]",
           pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
           digitColor: isLight ? "text-[#1A1614]" : "text-white",
           unitColor: isLight ? "text-[#7A6E65]" : "text-[#C4B5FD]",
-          dotColor: "bg-[#8B5CF6]"
+          dotColor: isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"
         };
       case "sky":
         return {
@@ -343,21 +343,21 @@ export const getExamUrgencyTheme = (
     };
   }
 
-  // 5. TIER: Upcoming / Next Week (8 to 14 Days) - Theme Purple Accent
+  // 5. TIER: Upcoming / Next Week (8 to 14 Days) - Orange in Light Mode, Purple in Dark Mode
   if (days < 15) {
     return {
       tierId: "next-week",
       tierName: "8–14 Days",
       badgeLabel: `Next Week • ${days} days left`,
       badgeClasses: isLight
-        ? "bg-[#F5F3FF] text-[#6D28D9] border border-[#DDD6FE] shadow-xs"
+        ? "bg-[#FFF2ED] text-[#C25E42] border border-[#F0D5CC] shadow-xs"
         : "bg-[#8B5CF6]/20 text-[#C084FC] border border-[#8B5CF6]/40 shadow-[0_0_12px_rgba(139,92,246,0.25)]",
       cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#DDD6FE] ring-1 ring-[#8B5CF6]/25" 
+        ? "border-[#F0D5CC] ring-1 ring-[#C25E42]/25" 
         : "border-[#8B5CF6]/45 ring-1 ring-[#8B5CF6]/25",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(139,92,246,0.08)]" 
+        ? "shadow-[0_8px_25px_rgba(194,94,66,0.08)]" 
         : "shadow-[0_8px_30px_rgba(139,92,246,0.22)]",
       titleColor: isLight ? "text-[#1A1614]" : "text-white",
       subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
@@ -365,25 +365,25 @@ export const getExamUrgencyTheme = (
       pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
       digitColor: isLight ? "text-[#1A1614]" : "text-white",
       unitColor: isLight ? "text-[#7A6E65]" : "text-[#C084FC]",
-      dotColor: "bg-[#8B5CF6]"
+      dotColor: isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"
     };
   }
 
-  // 6. TIER: On Track / 2–3 Weeks (15 to 21 Days) - Harmonious Royal Indigo
+  // 6. TIER: On Track / 2–3 Weeks (15 to 21 Days) - Fresh Emerald Green in Light Mode
   if (days < 22) {
     return {
       tierId: "on-track",
       tierName: "15–21 Days",
       badgeLabel: `On Track • ${days} days left`,
       badgeClasses: isLight
-        ? "bg-[#EEF2FF] text-[#4338CA] border border-[#C7D2FE] shadow-xs"
+        ? "bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] shadow-xs"
         : "bg-[#6366F1]/20 text-[#A5B4FC] border border-[#6366F1]/40 shadow-[0_0_10px_rgba(99,102,241,0.2)]",
       cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#C7D2FE] ring-1 ring-[#6366F1]/20" 
+        ? "border-[#A7F3D0] ring-1 ring-[#10B981]/25" 
         : "border-[#6366F1]/40 ring-1 ring-[#6366F1]/20",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(99,102,241,0.08)]" 
+        ? "shadow-[0_8px_25px_rgba(16,185,129,0.08)]" 
         : "shadow-[0_8px_25px_rgba(99,102,241,0.18)]",
       titleColor: isLight ? "text-[#1A1614]" : "text-white",
       subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
@@ -391,25 +391,25 @@ export const getExamUrgencyTheme = (
       pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
       digitColor: isLight ? "text-[#1A1614]" : "text-white",
       unitColor: isLight ? "text-[#7A6E65]" : "text-[#A5B4FC]",
-      dotColor: "bg-[#6366F1]"
+      dotColor: isLight ? "bg-[#10B981]" : "bg-[#6366F1]"
     };
   }
 
-  // 7. TIER: Planned Horizon / 3–5 Weeks (22 to 35 Days) - Cool Cyan
+  // 7. TIER: Planned Horizon / 3–5 Weeks (22 to 35 Days) - Forest Green in Light Mode
   if (days < 36) {
     return {
       tierId: "horizon",
       tierName: "22–35 Days",
       badgeLabel: `Horizon • ${days} days left`,
       badgeClasses: isLight
-        ? "bg-[#ECFEFF] text-[#0E7490] border border-[#A5F3FC] shadow-xs"
+        ? "bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0] shadow-xs"
         : "bg-[#06B6D4]/20 text-[#67E8F9] border border-[#06B6D4]/40 shadow-[0_0_10px_rgba(6,182,212,0.18)]",
       cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
       borderColor: isLight 
-        ? "border-[#A5F3FC] ring-1 ring-[#06B6D4]/20" 
+        ? "border-[#BBF7D0] ring-1 ring-[#16A34A]/20" 
         : "border-[#06B6D4]/35 ring-1 ring-[#06B6D4]/15",
       glowShadow: isLight 
-        ? "shadow-[0_8px_25px_rgba(6,182,212,0.08)]" 
+        ? "shadow-[0_8px_25px_rgba(22,163,74,0.08)]" 
         : "shadow-[0_8px_25px_rgba(6,182,212,0.15)]",
       titleColor: isLight ? "text-[#1A1614]" : "text-white",
       subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
@@ -417,24 +417,24 @@ export const getExamUrgencyTheme = (
       pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
       digitColor: isLight ? "text-[#1A1614]" : "text-white",
       unitColor: isLight ? "text-[#7A6E65]" : "text-[#67E8F9]",
-      dotColor: "bg-[#06B6D4]"
+      dotColor: isLight ? "bg-[#16A34A]" : "bg-[#06B6D4]"
     };
   }
 
-  // 8. TIER: Distant (> 35 Days) - Sky Blue
+  // 8. TIER: Distant (> 35 Days) - Calm Warm Stone in Light Mode
   return {
     tierId: "distant",
     tierName: "> 35 Days",
     badgeLabel: `Distant • ${days} days left`,
     badgeClasses: isLight
-      ? "bg-[#F0F9FF] text-[#0369A1] border border-[#BAE6FD] shadow-xs"
+      ? "bg-[#F5F4F0] text-[#57534E] border border-[#E2DFD8] shadow-xs"
       : "bg-[#38BDF8]/15 text-[#BAE6FD] border border-[#38BDF8]/30",
     cardBg: isLight ? "bg-white/95" : "bg-[#101322]/95",
     borderColor: isLight 
-      ? "border-[#BAE6FD] ring-1 ring-[#38BDF8]/20" 
+      ? "border-[#E5E0D8] ring-1 ring-[#78716C]/20" 
       : "border-[#38BDF8]/30 ring-1 ring-[#38BDF8]/15",
     glowShadow: isLight 
-      ? "shadow-[0_8px_25px_rgba(56,189,248,0.08)]" 
+      ? "shadow-[0_8px_25px_rgba(120,113,108,0.06)]" 
       : "shadow-[0_8px_20px_rgba(56,189,248,0.12)]",
     titleColor: isLight ? "text-[#1A1614]" : "text-white",
     subtitleColor: isLight ? "text-[#7A6E65]" : "text-slate-400",
@@ -442,7 +442,7 @@ export const getExamUrgencyTheme = (
     pillBorder: isLight ? "border-[#EBE4DC]" : "border-white/[0.08]",
     digitColor: isLight ? "text-[#1A1614]" : "text-white",
     unitColor: isLight ? "text-[#7A6E65]" : "text-[#BAE6FD]",
-    dotColor: "bg-[#38BDF8]"
+    dotColor: isLight ? "bg-[#78716C]" : "bg-[#38BDF8]"
   };
 };
 
@@ -1060,7 +1060,7 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                       } ${isLight ? tier.lightBadge : tier.darkBadge}`}
                       title={`Filter by ${tier.name} (${tier.label})`}
                     >
-                      <span className={`w-2.5 h-2.5 rounded-full ${tier.dot} shrink-0 shadow-xs`} />
+                      <span className={`w-2.5 h-2.5 rounded-full ${isLight ? tier.lightDot : tier.darkDot} shrink-0 shadow-xs`} />
                       <span>{tier.label}</span>
                     </button>
                   );
@@ -1285,13 +1285,19 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 <div className="relative flex-1 h-3 rounded-full bg-black/10 dark:bg-white/10 overflow-visible flex items-center">
                   {/* Elapsed Fill */}
                   <div 
-                    className="h-full rounded-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] transition-all duration-500"
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      isLight 
+                        ? "bg-gradient-to-r from-[#C25E42] to-[#EA580C]" 
+                        : "bg-gradient-to-r from-[#6366F1] to-[#8B5CF6]"
+                    }`}
                     style={{ width: `${seasonStats.percentage}%` }}
                   />
 
                   {/* Current progress badge pill */}
                   <div 
-                    className="absolute -top-2.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#6366F1] text-white shadow-xs transform -translate-x-1/2"
+                    className={`absolute -top-2.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold text-white shadow-xs transform -translate-x-1/2 ${
+                      isLight ? "bg-[#C25E42]" : "bg-[#6366F1]"
+                    }`}
                     style={{ left: `${Math.max(8, Math.min(92, seasonStats.percentage))}%` }}
                   >
                     {seasonStats.percentage}%

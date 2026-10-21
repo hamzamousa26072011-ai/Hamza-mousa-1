@@ -526,7 +526,7 @@ export default function FocusTab({
               {/* Fullscreen Header */}
               <div className="w-full flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#8B5CF6]" : "bg-[#8B5CF6]"} ${focusModeActive ? "animate-ping" : ""}`} />
+                  <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} ${focusModeActive ? "animate-ping" : ""}`} />
                   <span className="text-sm font-mono font-black tracking-wide uppercase">{getPresetLabel()}</span>
                 </div>
 
@@ -537,7 +537,7 @@ export default function FocusTab({
                     className={`py-2 px-3 border rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer ${
                       selectedSoundscape !== "silent"
                         ? isLight
-                          ? "bg-[#FAF5FF] border-[#E9D5FF] text-[#7E22CE]"
+                          ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#C25E42]"
                           : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
                         : isLight
                         ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#736B63]"
@@ -553,7 +553,7 @@ export default function FocusTab({
                     onClick={handleExitFullscreen}
                     className={`py-2 px-3.5 border rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer ${
                       isLight
-                        ? "bg-[#FFFFFF] hover:bg-[#FAF5FF] border-[#EBE4DC] text-[#1A1614]"
+                        ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
                         : "bg-[#101322] hover:bg-[#161A2B] border-white/10 text-white"
                     }`}
                   >

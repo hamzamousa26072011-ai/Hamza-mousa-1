@@ -992,6 +992,7 @@ html.theme-light body,
 
 .theme-light .border-\[\#8B5CF6\],
 .theme-light .border-\[\#8B5CF6\]\/50,
+.theme-light .border-\[\#8B5CF6\]\/45,
 .theme-light .border-\[\#8B5CF6\]\/40,
 .theme-light .border-\[\#8B5CF6\]\/30,
 .theme-light .border-\[\#8B5CF6\]\/25,
@@ -1005,7 +1006,14 @@ html.theme-light body,
 .theme-light .border-purple-500\/20,
 .theme-light .border-purple-500\/25,
 .theme-light .border-purple-500\/30 {
-  border-color: #F2D5CA !important;
+  border-color: #F0D5CC !important;
+}
+
+.theme-light .ring-\[\#8B5CF6\],
+.theme-light .ring-\[\#8B5CF6\]\/25,
+.theme-light .ring-\[\#8B5CF6\]\/20,
+.theme-light .ring-\[\#8B5CF6\]\/30 {
+  --tw-ring-color: rgba(194, 94, 66, 0.25) !important;
 }
 
 .theme-light .focus\:border-\[\#8B5CF6\]:focus,
