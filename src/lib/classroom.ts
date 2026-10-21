@@ -412,6 +412,7 @@ export interface UserWorkspace {
   habitStartDate?: string;
   exams?: any[];
   friends?: any[];
+  friendRequests?: any[];
   friendUsername?: string;
   inviteCode?: string;
   deepseekApiKey?: string;
@@ -719,12 +720,13 @@ export const saveUserFriendsData = async (
   uid: string, 
   friends: any[], 
   friendUsername?: string, 
-  inviteCode?: string
+  inviteCode?: string,
+  friendRequests?: any[]
 ) => {
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(`ENGEZ_USER_FRIENDS_${uid}`, JSON.stringify({ friends, friendUsername, inviteCode }));
-      localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({ friends, friendUsername, inviteCode }));
+      localStorage.setItem(`ENGEZ_USER_FRIENDS_${uid}`, JSON.stringify({ friends, friendUsername, inviteCode, friendRequests }));
+      localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({ friends, friendUsername, inviteCode, friendRequests }));
     } catch (e) {
       console.warn("Local storage cache write friends notice:", e);
     }
@@ -735,7 +737,7 @@ export const saveUserFriendsData = async (
     fetch("/api/user/friends", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid, friends, friendUsername, inviteCode })
+      body: JSON.stringify({ uid, friends, friendUsername, inviteCode, friendRequests })
     }).catch(() => {});
   } catch (e) {}
 
@@ -745,6 +747,7 @@ export const saveUserFriendsData = async (
     const updatePayload: Record<string, any> = { friends, updatedAt: serverTimestamp() };
     if (friendUsername) updatePayload.friendUsername = friendUsername;
     if (inviteCode) updatePayload.inviteCode = inviteCode;
+    if (friendRequests !== undefined) updatePayload.friendRequests = friendRequests;
     await setDoc(docRef, updatePayload, { merge: true });
     isFirestoreOffline = false;
   } catch (error) {
@@ -766,6 +769,7 @@ export const fetchUserFriendsData = async (uid: string): Promise<{
   friends: any[];
   friendUsername?: string;
   inviteCode?: string;
+  friendRequests?: any[];
 } | null> => {
   if (typeof window !== "undefined") {
     try {
@@ -781,7 +785,8 @@ export const fetchUserFriendsData = async (uid: string): Promise<{
     return {
       friends: workspace.friends,
       friendUsername: workspace.friendUsername,
-      inviteCode: workspace.inviteCode
+      inviteCode: workspace.inviteCode,
+      friendRequests: workspace.friendRequests
     };
   }
   return null;

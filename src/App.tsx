@@ -71,7 +71,7 @@ import SecurityLockdownModal from "./components/SecurityLockdownModal";
 import PrivacyPolicyModal from "./components/PrivacyPolicyModal";
 import { DomainDnsModal } from "./components/DomainDnsModal";
 import { ExamCountdownTab } from "./components/ExamCountdownTab";
-import { ExamItem, FriendItem } from "./types";
+import { ExamItem, FriendItem, FriendRequestItem } from "./types";
 import { CyberWaveBackground } from "./components/CyberWaveBackground";
 import { EngezBrandLogo } from "./components/EngezBrandLogo";
 import { pauseSoundscape } from "./lib/ambientSoundscapes";
@@ -1222,6 +1222,44 @@ export default function App() {
     return "";
   });
 
+  const [friendRequests, setFriendRequests] = useState<FriendRequestItem[]>(() => {
+    try {
+      const storedSimulated = localStorage.getItem("ENGEZ_SIMULATED_USER");
+      if (storedSimulated) {
+        const parsedUser = JSON.parse(storedSimulated);
+        if (parsedUser?.uid) {
+          const userFriends = localStorage.getItem(`ENGEZ_USER_FRIENDS_${parsedUser.uid}`);
+          if (userFriends) {
+            const parsed = JSON.parse(userFriends);
+            if (Array.isArray(parsed?.friendRequests)) return parsed.friendRequests;
+          }
+        }
+      }
+    } catch (e) {}
+
+    const saved = localStorage.getItem("ENGEZ_STUDY_FRIENDS_V1");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed?.friendRequests)) return parsed.friendRequests;
+      } catch (e) {}
+    }
+    // Default sample incoming request for immediate user testing and interactive acceptance
+    return [
+      {
+        id: "req_sarah_chem",
+        senderUsername: "@sarah_chem",
+        senderDisplayName: "Sarah (Chemistry)",
+        senderFocusMinutes: 195,
+        senderStreak: 5,
+        upcomingExamsCount: 3,
+        sentAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+        status: "pending",
+        direction: "incoming"
+      }
+    ];
+  });
+
   useEffect(() => {
     localStorage.setItem("ENGEZ_EXAM_COUNTDOWNS_V1", JSON.stringify(exams));
     if (currentUser?.uid) {
@@ -1233,16 +1271,18 @@ export default function App() {
     localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({
       friends,
       friendUsername,
-      inviteCode
+      inviteCode,
+      friendRequests
     }));
     if (currentUser?.uid) {
       localStorage.setItem(`ENGEZ_USER_FRIENDS_${currentUser.uid}`, JSON.stringify({
         friends,
         friendUsername,
-        inviteCode
+        inviteCode,
+        friendRequests
       }));
     }
-  }, [friends, friendUsername, inviteCode, currentUser]);
+  }, [friends, friendUsername, inviteCode, friendRequests, currentUser]);
 
   // Auth State & Cloud sync on mount
   useEffect(() => {
@@ -1298,6 +1338,7 @@ export default function App() {
             if (cloudData.papers !== undefined) setPapers(cloudData.papers);
             if (Array.isArray(cloudData.exams)) setExams(cloudData.exams);
             if (Array.isArray(cloudData.friends)) setFriends(cloudData.friends);
+            if (Array.isArray(cloudData.friendRequests)) setFriendRequests(cloudData.friendRequests);
             if (cloudData.friendUsername) setFriendUsername(cloudData.friendUsername);
             if (cloudData.inviteCode) setInviteCode(cloudData.inviteCode);
 
@@ -1329,6 +1370,7 @@ export default function App() {
                 habitStartDate,
                 exams,
                 friends,
+                friendRequests,
                 friendUsername,
                 inviteCode
               });
@@ -1381,6 +1423,7 @@ export default function App() {
               habitStartDate,
               exams,
               friends,
+              friendRequests,
               friendUsername,
               inviteCode
             });
@@ -1440,6 +1483,7 @@ export default function App() {
             habitStartDate,
             exams,
             friends,
+            friendRequests,
             friendUsername,
             inviteCode
           });
@@ -1456,7 +1500,7 @@ export default function App() {
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [currentUser, streak, subjects, tasks, apps, papers, habits, habitLogs, habitStartDate, exams, friends, friendUsername, inviteCode, isAuthLoading]);
+  }, [currentUser, streak, subjects, tasks, apps, papers, habits, habitLogs, habitStartDate, exams, friends, friendRequests, friendUsername, inviteCode, isAuthLoading]);
 
   // Guaranteed immediate saving when the window/tab is closed or refreshed
   useEffect(() => {
@@ -1471,7 +1515,7 @@ export default function App() {
         localStorage.setItem("ENGEZ_HABITS_LIST_V1", JSON.stringify(habits));
         localStorage.setItem("ENGEZ_HABIT_LOGS_V1", JSON.stringify(habitLogs));
         localStorage.setItem("ENGEZ_EXAM_COUNTDOWNS_V1", JSON.stringify(exams));
-        localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({ friends, friendUsername, inviteCode }));
+        localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({ friends, friendUsername, inviteCode, friendRequests }));
         localStorage.setItem("ENGEZ_HABIT_START_DATE_V1", habitStartDate);
 
         if (localStorage.getItem("ENGEZ_PENDING_CLOUD_SYNC") === "true") {
@@ -1486,7 +1530,12 @@ export default function App() {
             papers,
             habits,
             habitLogs,
-            habitStartDate
+            habitStartDate,
+            exams,
+            friends,
+            friendRequests,
+            friendUsername,
+            inviteCode
           }).then(() => {
             localStorage.removeItem("ENGEZ_PENDING_CLOUD_SYNC");
           }).catch((err) => {
@@ -1736,6 +1785,8 @@ export default function App() {
                   setExams={setExams}
                   friends={friends}
                   setFriends={setFriends}
+                  friendRequests={friendRequests}
+                  setFriendRequests={setFriendRequests}
                   friendUsername={friendUsername}
                   setFriendUsername={setFriendUsername}
                   inviteCode={inviteCode}

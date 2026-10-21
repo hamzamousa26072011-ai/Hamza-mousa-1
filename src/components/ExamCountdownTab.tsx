@@ -24,10 +24,13 @@ import {
   BookOpen,
   Calendar,
   Layers,
-  ArrowRight
+  ArrowRight,
+  UserCheck,
+  UserX,
+  Inbox
 } from "lucide-react";
 import { User } from "firebase/auth";
-import { ExamItem, FriendItem, FriendLeaderboardEntry } from "../types";
+import { ExamItem, FriendItem, FriendLeaderboardEntry, FriendRequestItem } from "../types";
 import { saveUserExams, saveUserFriendsData } from "../lib/classroom";
 
 interface ExamCountdownTabProps {
@@ -36,6 +39,8 @@ interface ExamCountdownTabProps {
   setExams: React.Dispatch<React.SetStateAction<ExamItem[]>>;
   friends: FriendItem[];
   setFriends: React.Dispatch<React.SetStateAction<FriendItem[]>>;
+  friendRequests?: FriendRequestItem[];
+  setFriendRequests?: React.Dispatch<React.SetStateAction<FriendRequestItem[]>>;
   friendUsername: string;
   setFriendUsername: React.Dispatch<React.SetStateAction<string>>;
   inviteCode: string;
@@ -452,6 +457,8 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
   setExams,
   friends,
   setFriends,
+  friendRequests = [],
+  setFriendRequests,
   friendUsername,
   setFriendUsername,
   inviteCode,
@@ -571,12 +578,21 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
   };
 
   // Save changes to user friends
-  const persistFriends = (newFriends: FriendItem[], newUsername?: string, newCode?: string) => {
+  const persistFriends = (
+    newFriends: FriendItem[], 
+    newUsername?: string, 
+    newCode?: string,
+    newRequests?: FriendRequestItem[]
+  ) => {
     setFriends(newFriends);
     const un = newUsername !== undefined ? newUsername : friendUsername;
     const cd = newCode !== undefined ? newCode : inviteCode;
+    const rq = newRequests !== undefined ? newRequests : (friendRequests || []);
+    if (setFriendRequests && newRequests !== undefined) {
+      setFriendRequests(newRequests);
+    }
     if (currentUser?.uid) {
-      saveUserFriendsData(currentUser.uid, newFriends, un, cd);
+      saveUserFriendsData(currentUser.uid, newFriends, un, cd, rq);
     }
   };
 
@@ -753,6 +769,87 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
     persistFriends(updated);
   };
 
+  // Pending incoming friend requests
+  const pendingRequests = useMemo(() => {
+    return (friendRequests || []).filter(r => r.status === "pending" || !r.status);
+  }, [friendRequests]);
+
+  // Accept incoming friend request (Option to accept friend requests requested by user)
+  const handleAcceptRequest = (requestId: string) => {
+    const currentRequests = friendRequests || [];
+    const targetReq = currentRequests.find(r => r.id === requestId);
+    if (!targetReq) return;
+
+    // Convert request into new FriendItem
+    const newFriend: FriendItem = {
+      id: "friend_" + Date.now(),
+      username: targetReq.senderUsername,
+      displayName: targetReq.senderDisplayName || targetReq.senderUsername.replace("@", ""),
+      avatarUrl: targetReq.senderAvatarUrl,
+      focusMinutesThisWeek: targetReq.senderFocusMinutes ?? Math.floor(90 + Math.random() * 180),
+      streak: targetReq.senderStreak ?? Math.floor(2 + Math.random() * 5),
+      upcomingExamsCount: targetReq.upcomingExamsCount ?? Math.floor(1 + Math.random() * 4),
+      status: "online",
+      addedAt: new Date().toISOString()
+    };
+
+    const updatedFriends = [
+      newFriend,
+      ...friends.filter(f => f.username.toLowerCase() !== targetReq.senderUsername.toLowerCase())
+    ];
+    const updatedRequests = currentRequests.filter(r => r.id !== requestId);
+
+    persistFriends(updatedFriends, undefined, undefined, updatedRequests);
+    setFriendFeedback(`Accepted friend request from ${targetReq.senderDisplayName || targetReq.senderUsername}! They are now in your Study Circle.`);
+    setTimeout(() => setFriendFeedback(null), 5000);
+  };
+
+  // Decline incoming friend request
+  const handleDeclineRequest = (requestId: string) => {
+    const currentRequests = friendRequests || [];
+    const targetReq = currentRequests.find(r => r.id === requestId);
+    const updatedRequests = currentRequests.filter(r => r.id !== requestId);
+    persistFriends(friends, undefined, undefined, updatedRequests);
+    if (targetReq) {
+      setFriendFeedback(`Declined friend request from ${targetReq.senderDisplayName || targetReq.senderUsername}.`);
+      setTimeout(() => setFriendFeedback(null), 4000);
+    }
+  };
+
+  // Helper to simulate a new incoming friend request for testing
+  const handleSimulateIncomingRequest = () => {
+    const samplePeers = [
+      { name: "Omar Farooq", username: "@omar_farooq", mins: 245, streak: 7, exams: 2 },
+      { name: "Layla Hassan", username: "@layla_hassan", mins: 180, streak: 4, exams: 4 },
+      { name: "Zaid Nabil", username: "@zaid_nabil", mins: 310, streak: 9, exams: 3 },
+      { name: "Mariam Taha", username: "@mariam_taha", mins: 140, streak: 3, exams: 1 }
+    ];
+    // Pick one not already a friend or in requests
+    const available = samplePeers.filter(p => 
+      !friends.some(f => f.username.toLowerCase() === p.username.toLowerCase()) &&
+      !(friendRequests || []).some(r => r.senderUsername.toLowerCase() === p.username.toLowerCase())
+    );
+    const pick = available.length > 0 ? available[0] : samplePeers[Math.floor(Math.random() * samplePeers.length)];
+    
+    const newReq: FriendRequestItem = {
+      id: "req_" + Date.now(),
+      senderUsername: pick.username,
+      senderDisplayName: pick.name,
+      senderFocusMinutes: pick.mins,
+      senderStreak: pick.streak,
+      upcomingExamsCount: pick.exams,
+      sentAt: new Date().toISOString(),
+      status: "pending",
+      direction: "incoming"
+    };
+
+    const currentRequests = friendRequests || [];
+    const updatedRequests = [newReq, ...currentRequests.filter(r => r.senderUsername.toLowerCase() !== pick.username.toLowerCase())];
+    persistFriends(friends, undefined, undefined, updatedRequests);
+    setFriendFeedback(`New friend request received from ${pick.name}!`);
+    setTimeout(() => setFriendFeedback(null), 4000);
+  };
+
   // Sorted and filtered exams
   const filteredExams = useMemo(() => {
     return exams.filter(exam => {
@@ -923,6 +1020,14 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                   activeSubView === "friends" ? "bg-white/20 text-white" : "bg-black/10 dark:bg-white/10"
                 }`}>
                   {friends.length}
+                </span>
+              )}
+              {pendingRequests.length > 0 && (
+                <span 
+                  className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse"
+                  title={`${pendingRequests.length} pending friend request${pendingRequests.length > 1 ? "s" : ""}`}
+                >
+                  {pendingRequests.length}
                 </span>
               )}
             </button>
@@ -1371,6 +1476,158 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
               </div>
             </div>
           )}
+
+          {/* =========================================================================
+              PENDING FRIEND REQUESTS SECTION (OPTION TO ACCEPT FRIEND REQUESTS)
+          ========================================================================= */}
+          <div className={`p-5 sm:p-6 rounded-3xl border shadow-xs space-y-4 ${
+            isLight ? "bg-white border-[#E8D7C9]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+          }`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-9 h-9 rounded-2xl ${
+                  isLight ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#C25E42]" : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                } border flex items-center justify-center shrink-0`}>
+                  <UserCheck size={18} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className={`font-extrabold text-base sm:text-lg font-sans tracking-tight ${isLight ? "text-[#1A1614]" : "text-white"}`}>
+                      Friend Requests
+                    </h3>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      pendingRequests.length > 0 
+                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30" 
+                        : isLight ? "bg-[#FAF8F5] text-[#77736B] border border-[#E8D7C9]" : "bg-white/5 text-white/50 border border-white/10"
+                    }`}>
+                      {pendingRequests.length} pending
+                    </span>
+                  </div>
+                  <p className={`text-xs font-sans mt-0.5 ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"}`}>
+                    Accept incoming invites to battle focus minutes on the leaderboard
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick simulation helper for testing acceptance flow */}
+              <button
+                type="button"
+                onClick={handleSimulateIncomingRequest}
+                className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                  isLight 
+                    ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:text-[#C25E42] hover:border-[#C25E42]" 
+                    : "bg-[#140E26] border-white/10 text-[#C4B5FD] hover:text-white hover:border-[#8B5CF6]/50"
+                }`}
+                title="Simulate receiving an incoming friend request to test the Accept flow"
+              >
+                <Sparkles size={12} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
+                <span>Simulate Request</span>
+              </button>
+            </div>
+
+            {/* LIST OF PENDING REQUESTS */}
+            {pendingRequests.length > 0 ? (
+              <div className="space-y-3 pt-1">
+                {pendingRequests.map((req) => {
+                  const initials = (req.senderDisplayName || req.senderUsername || "F")
+                    .replace("@", "")
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase();
+
+                  return (
+                    <div
+                      key={req.id}
+                      className={`p-3.5 sm:p-4 rounded-2xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        isLight 
+                          ? "bg-[#FAF8F5] border-[#E8D7C9] hover:border-[#C25E42]/40" 
+                          : "bg-[#120E22] border-white/10 hover:border-[#8B5CF6]/30"
+                      }`}
+                    >
+                      {/* Sender Details */}
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-2xl font-mono font-bold text-xs flex items-center justify-center shrink-0 border ${
+                          isLight 
+                            ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#C25E42]" 
+                            : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                        }`}>
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`font-bold text-sm truncate ${isLight ? "text-[#1A1614]" : "text-white"}`}>
+                              {req.senderDisplayName || req.senderUsername}
+                            </span>
+                            <span className={`font-mono text-xs ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"}`}>
+                              {req.senderUsername}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 text-[11px] font-sans">
+                            <span className={`flex items-center gap-1 ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/70"}`}>
+                              <Clock size={11} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
+                              {req.senderFocusMinutes ?? 0}m focus
+                            </span>
+                            <span className={`flex items-center gap-1 ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/70"}`}>
+                              <Flame size={11} className="text-amber-500" />
+                              {req.senderStreak ?? 1}d streak
+                            </span>
+                            {req.upcomingExamsCount !== undefined && req.upcomingExamsCount > 0 && (
+                              <span className={`flex items-center gap-1 ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/70"}`}>
+                                <BookOpen size={11} className="text-emerald-500" />
+                                {req.upcomingExamsCount} exam{req.upcomingExamsCount > 1 ? "s" : ""}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons: ACCEPT and DECLINE */}
+                      <div className="flex items-center gap-2 self-end sm:self-center shrink-0 pt-1 sm:pt-0">
+                        <button
+                          type="button"
+                          onClick={() => handleAcceptRequest(req.id)}
+                          className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                          title="Accept friend request and add to your Study Circle"
+                        >
+                          <Check size={14} className="stroke-[2.5]" />
+                          <span>Accept</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeclineRequest(req.id)}
+                          className={`px-3 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                            isLight 
+                              ? "border-[#E8D7C9] text-[#77736B] hover:text-red-600 hover:border-red-300 hover:bg-red-50" 
+                              : "border-white/10 text-[#C4B5FD]/80 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10"
+                          }`}
+                          title="Decline request"
+                        >
+                          <X size={14} />
+                          <span>Decline</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className={`p-4 rounded-2xl border text-center space-y-1.5 ${
+                isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#120E22]/60 border-white/5"
+              }`}>
+                <div className="flex items-center justify-center gap-2">
+                  <Inbox size={15} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
+                  <span className={`text-xs font-bold ${isLight ? "text-[#1A1614]" : "text-white"}`}>
+                    No pending friend requests
+                  </span>
+                </div>
+                <p className={`text-[11px] ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/70"}`}>
+                  When study buddies send you a request or join via your invite link, they will appear here for you to accept.
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* 2. PROFILE & INVITE CONTROLS CARD (MATCHING SCREENSHOT 2) */}
           <div className={`p-5 sm:p-6 rounded-3xl border shadow-xs space-y-5 ${

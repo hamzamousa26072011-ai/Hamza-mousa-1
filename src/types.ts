@@ -212,6 +212,19 @@ export interface FriendItem {
   addedAt: string;
 }
 
+export interface FriendRequestItem {
+  id: string;
+  senderUsername: string;
+  senderDisplayName: string;
+  senderAvatarUrl?: string;
+  senderFocusMinutes?: number;
+  senderStreak?: number;
+  upcomingExamsCount?: number;
+  sentAt: string;
+  status: "pending" | "accepted" | "declined";
+  direction?: "incoming" | "outgoing";
+}
+
 export interface FriendLeaderboardEntry {
   id: string;
   rank: number;
