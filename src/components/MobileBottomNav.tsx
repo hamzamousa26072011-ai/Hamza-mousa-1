@@ -6,13 +6,15 @@ import {
   Compass, 
   Settings, 
   CalendarCheck,
-  CalendarClock
+  CalendarClock,
+  Users
 } from "lucide-react";
 
 interface MobileBottomNavProps {
   currentTab: string;
   onTabChange: (tab: string) => void;
   pendingTasksCount?: number;
+  pendingRequestsCount?: number;
   focusModeActive: boolean;
   focusTimeRemaining: string;
   themeMode?: "light" | "dark";
@@ -30,6 +32,7 @@ export default function MobileBottomNav({
   currentTab,
   onTabChange,
   pendingTasksCount = 0,
+  pendingRequestsCount = 0,
   focusModeActive,
   focusTimeRemaining,
   themeMode = "dark"
@@ -39,6 +42,7 @@ export default function MobileBottomNav({
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Home", icon: LayoutGrid, badge: pendingTasksCount > 0 ? pendingTasksCount : undefined },
     { id: "countdown", label: "Exams", icon: CalendarClock },
+    { id: "friends", label: "Friends", icon: Users, badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined },
     { id: "habits", label: "Habits", icon: CalendarCheck },
     { id: "scholar", label: "Tutor", icon: GraduationCap },
     { id: "focus", label: "Timer", icon: Timer, isFocus: true },

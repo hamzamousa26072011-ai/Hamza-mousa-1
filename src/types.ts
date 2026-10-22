@@ -236,6 +236,30 @@ export interface FriendLeaderboardEntry {
   badge?: string;
 }
 
+export interface FriendGroupMember {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string;
+  focusMinutesThisWeek: number;
+  streak: number;
+  isCurrentUser?: boolean;
+  status: "online" | "studying" | "offline";
+  role?: "admin" | "member";
+}
+
+export interface FriendGroup {
+  id: string;
+  name: string;
+  description?: string;
+  code: string;
+  subject?: string;
+  weeklyGoalMinutes: number;
+  members: FriendGroupMember[];
+  createdAt: string;
+  isCustom?: boolean;
+}
+
 export interface UserFeedbackItem {
   id: string;
   pointsToImprove: string;
@@ -246,4 +270,5 @@ export interface UserFeedbackItem {
   userEmail?: string;
   submittedAt: string;
 }
+
 

@@ -71,7 +71,8 @@ import SecurityLockdownModal from "./components/SecurityLockdownModal";
 import PrivacyPolicyModal from "./components/PrivacyPolicyModal";
 import { DomainDnsModal } from "./components/DomainDnsModal";
 import { ExamCountdownTab } from "./components/ExamCountdownTab";
-import { ExamItem, FriendItem, FriendRequestItem } from "./types";
+import FriendsTab from "./components/FriendsTab";
+import { ExamItem, FriendItem, FriendRequestItem, FriendGroup } from "./types";
 import { CyberWaveBackground } from "./components/CyberWaveBackground";
 import { EngezBrandLogo } from "./components/EngezBrandLogo";
 import { pauseSoundscape } from "./lib/ambientSoundscapes";
@@ -488,12 +489,42 @@ export default function App() {
     localStorage.setItem("ENGEZ_POMODOROS_COUNT", pomodoroCompletedCount.toString());
   }, [pomodoroCompletedCount]);
 
-  // Focus Timer interval effect
+  // TOTAL FOCUS MINUTES (Counts every minute from Timer & Stopwatch, synced live to leaderboards)
+  const [totalFocusMinutes, setTotalFocusMinutes] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("ENGEZ_USER_TOTAL_FOCUS_MINUTES");
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return 145; // Starting reading (2h 25m)
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ENGEZ_USER_TOTAL_FOCUS_MINUTES", totalFocusMinutes.toString());
+  }, [totalFocusMinutes]);
+
+  const handleRecordFocusMinute = () => {
+    setTotalFocusMinutes((prev) => prev + 1);
+  };
+
+  const timerSecondsElapsedRef = useRef(0);
+
+  // Focus Timer interval effect: records each minute passed towards actual readings
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (focusModeActive && focusSecondsRemaining > 0) {
       interval = setInterval(() => {
-        setFocusSecondsRemaining((prev) => prev - 1);
+        setFocusSecondsRemaining((prev) => {
+          const next = prev - 1;
+          timerSecondsElapsedRef.current += 1;
+          if (timerSecondsElapsedRef.current >= 60) {
+            timerSecondsElapsedRef.current = 0;
+            handleRecordFocusMinute();
+          }
+          return next;
+        });
       }, 1000);
     } else if (focusSecondsRemaining === 0 && focusModeActive) {
       setFocusModeActive(false);
@@ -1267,22 +1298,174 @@ export default function App() {
     }
   }, [exams, currentUser]);
 
+  // FRIEND GROUPS WITH LEADERBOARDS & ACTUAL FOCUS READINGS
+  const [friendGroups, setFriendGroups] = useState<FriendGroup[]>(() => {
+    try {
+      const storedSimulated = localStorage.getItem("ENGEZ_SIMULATED_USER");
+      if (storedSimulated) {
+        const parsed = JSON.parse(storedSimulated);
+        if (parsed?.uid) {
+          const userFriends = localStorage.getItem(`ENGEZ_USER_FRIENDS_${parsed.uid}`);
+          if (userFriends) {
+            const p = JSON.parse(userFriends);
+            if (Array.isArray(p?.friendGroups) && p.friendGroups.length > 0) return p.friendGroups;
+          }
+        }
+      }
+    } catch (e) {}
+
+    const saved = localStorage.getItem("ENGEZ_STUDY_FRIEND_GROUPS_V1");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+
+    return [
+      {
+        id: "group_igcse_high",
+        name: "IGCSE High Achievers",
+        code: "IGCSE-TOP-2026",
+        description: "Targeting all 9s / A*s in Cambridge & Edexcel May/June sessions.",
+        weeklyGoalMinutes: 1500,
+        members: [
+          {
+            id: "mem_currentUser",
+            username: "@me",
+            displayName: "You",
+            focusMinutes: totalFocusMinutes,
+            streak: streak,
+            isCurrentUser: true,
+            avatarColor: "#C25E42",
+            currentActivity: "Online"
+          },
+          {
+            id: "mem_karim",
+            username: "@karim_phys",
+            displayName: "Karim M. (Physics)",
+            focusMinutes: 460,
+            streak: 8,
+            isCurrentUser: false,
+            avatarColor: "#3B82F6",
+            currentActivity: "Solving Past Papers"
+          },
+          {
+            id: "mem_nour",
+            username: "@nour_sat",
+            displayName: "Nour E. (Math 800)",
+            focusMinutes: 380,
+            streak: 6,
+            isCurrentUser: false,
+            avatarColor: "#10B981",
+            currentActivity: "Desmos Drills"
+          },
+          {
+            id: "mem_youssef",
+            username: "@youssef_bio",
+            displayName: "Youssef T. (Bio P4)",
+            focusMinutes: 290,
+            streak: 4,
+            isCurrentUser: false,
+            avatarColor: "#F59E0B",
+            currentActivity: "Resting"
+          },
+          {
+            id: "mem_mariam",
+            username: "@mariam_chem",
+            displayName: "Mariam K. (Organic)",
+            focusMinutes: 215,
+            streak: 3,
+            isCurrentUser: false,
+            avatarColor: "#8B5CF6",
+            currentActivity: "Flashcards"
+          }
+        ]
+      },
+      {
+        id: "group_midnight",
+        name: "Midnight Study Squad",
+        code: "MIDNIGHT-FOCUS",
+        description: "Late night silent library session for deep revision blocks.",
+        weeklyGoalMinutes: 1200,
+        members: [
+          {
+            id: "mem_currentUser",
+            username: "@me",
+            displayName: "You",
+            focusMinutes: totalFocusMinutes,
+            streak: streak,
+            isCurrentUser: true,
+            avatarColor: "#C25E42",
+            currentActivity: "Online"
+          },
+          {
+            id: "mem_ziad",
+            username: "@ziad_nightowl",
+            displayName: "Ziad (Night Owl)",
+            focusMinutes: 510,
+            streak: 11,
+            isCurrentUser: false,
+            avatarColor: "#6366F1",
+            currentActivity: "Calculus P3"
+          },
+          {
+            id: "mem_lina",
+            username: "@lina_grind",
+            displayName: "Lina S.",
+            focusMinutes: 330,
+            streak: 5,
+            isCurrentUser: false,
+            avatarColor: "#EC4899",
+            currentActivity: "Revision"
+          }
+        ]
+      }
+    ];
+  });
+
+  // Keep current user's actual focus minutes & activity synced across all group leaderboards
   useEffect(() => {
+    setFriendGroups((prevGroups) =>
+      prevGroups.map((grp) => ({
+        ...grp,
+        members: grp.members.map((m) =>
+          m.isCurrentUser
+            ? {
+                ...m,
+                focusMinutes: totalFocusMinutes,
+                streak: streak,
+                displayName: currentUser?.displayName || m.displayName || "You",
+                username: currentUser?.displayName ? `@${currentUser.displayName.toLowerCase().replace(/\s+/g, "_")}` : m.username,
+                currentActivity: focusModeActive ? "Focusing now 🔥" : "Online"
+              }
+            : m
+        )
+      }))
+    );
+  }, [totalFocusMinutes, streak, currentUser, focusModeActive]);
+
+  useEffect(() => {
+    localStorage.setItem("ENGEZ_STUDY_FRIEND_GROUPS_V1", JSON.stringify(friendGroups));
     localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({
       friends,
       friendUsername,
       inviteCode,
-      friendRequests
+      friendRequests,
+      friendGroups,
+      totalFocusMinutes
     }));
     if (currentUser?.uid) {
       localStorage.setItem(`ENGEZ_USER_FRIENDS_${currentUser.uid}`, JSON.stringify({
         friends,
         friendUsername,
         inviteCode,
-        friendRequests
+        friendRequests,
+        friendGroups,
+        totalFocusMinutes
       }));
     }
-  }, [friends, friendUsername, inviteCode, friendRequests, currentUser]);
+  }, [friendGroups, friends, friendUsername, inviteCode, friendRequests, totalFocusMinutes, currentUser]);
 
   // Auth State & Cloud sync on mount
   useEffect(() => {
@@ -1609,6 +1792,7 @@ export default function App() {
         onLogout={handleLogout}
         isFirestoreOffline={offlineMode}
         themeMode={settings.themeMode}
+        pendingRequestsCount={friendRequests.filter(r => r.status === "pending").length}
       />
 
       {/* CORE FRAMEWORK STAGE */}
@@ -1798,6 +1982,36 @@ export default function App() {
               </motion.div>
             )}
 
+            {currentTab === "friends" && (
+              <motion.div
+                key="friends"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="w-full flex-1 flex flex-col"
+              >
+                <FriendsTab
+                  currentUser={currentUser}
+                  friends={friends}
+                  setFriends={setFriends}
+                  friendRequests={friendRequests}
+                  setFriendRequests={setFriendRequests}
+                  friendUsername={friendUsername}
+                  setFriendUsername={setFriendUsername}
+                  inviteCode={inviteCode}
+                  setInviteCode={setInviteCode}
+                  friendGroups={friendGroups}
+                  setFriendGroups={setFriendGroups}
+                  totalFocusMinutes={totalFocusMinutes}
+                  onRecordMinute={handleRecordFocusMinute}
+                  userStreak={streak}
+                  focusModeActive={focusModeActive}
+                  themeMode={settings.themeMode}
+                />
+              </motion.div>
+            )}
+
             {currentTab === "habits" && (
               <motion.div
                 key="habits"
@@ -1867,6 +2081,7 @@ export default function App() {
                   pomodoroCount={pomodoroCompletedCount}
                   themeMode={settings.themeMode}
                   onFullScreenChange={setIsFocusFullscreen}
+                  onMinutePassed={handleRecordFocusMinute}
                 />
               </motion.div>
             )}
@@ -2470,6 +2685,7 @@ export default function App() {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           pendingTasksCount={tasks.filter(t => !t.completed).length}
+          pendingRequestsCount={friendRequests.filter(r => r.status === "pending").length}
           focusModeActive={focusModeActive}
           focusTimeRemaining={formatFocusTime()}
           themeMode={settings.themeMode}

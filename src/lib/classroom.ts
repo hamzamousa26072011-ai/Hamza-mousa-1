@@ -413,6 +413,8 @@ export interface UserWorkspace {
   exams?: any[];
   friends?: any[];
   friendRequests?: any[];
+  friendGroups?: any[];
+  totalFocusMinutes?: number;
   friendUsername?: string;
   inviteCode?: string;
   deepseekApiKey?: string;
@@ -721,12 +723,17 @@ export const saveUserFriendsData = async (
   friends: any[], 
   friendUsername?: string, 
   inviteCode?: string,
-  friendRequests?: any[]
+  friendRequests?: any[],
+  friendGroups?: any[],
+  totalFocusMinutes?: number
 ) => {
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(`ENGEZ_USER_FRIENDS_${uid}`, JSON.stringify({ friends, friendUsername, inviteCode, friendRequests }));
-      localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({ friends, friendUsername, inviteCode, friendRequests }));
+      localStorage.setItem(`ENGEZ_USER_FRIENDS_${uid}`, JSON.stringify({ friends, friendUsername, inviteCode, friendRequests, friendGroups, totalFocusMinutes }));
+      localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({ friends, friendUsername, inviteCode, friendRequests, friendGroups, totalFocusMinutes }));
+      if (totalFocusMinutes !== undefined) {
+        localStorage.setItem("ENGEZ_USER_TOTAL_FOCUS_MINUTES", totalFocusMinutes.toString());
+      }
     } catch (e) {
       console.warn("Local storage cache write friends notice:", e);
     }
@@ -737,7 +744,7 @@ export const saveUserFriendsData = async (
     fetch("/api/user/friends", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid, friends, friendUsername, inviteCode, friendRequests })
+      body: JSON.stringify({ uid, friends, friendUsername, inviteCode, friendRequests, friendGroups, totalFocusMinutes })
     }).catch(() => {});
   } catch (e) {}
 
@@ -748,6 +755,8 @@ export const saveUserFriendsData = async (
     if (friendUsername) updatePayload.friendUsername = friendUsername;
     if (inviteCode) updatePayload.inviteCode = inviteCode;
     if (friendRequests !== undefined) updatePayload.friendRequests = friendRequests;
+    if (friendGroups !== undefined) updatePayload.friendGroups = friendGroups;
+    if (totalFocusMinutes !== undefined) updatePayload.totalFocusMinutes = totalFocusMinutes;
     await setDoc(docRef, updatePayload, { merge: true });
     isFirestoreOffline = false;
   } catch (error) {
@@ -770,6 +779,8 @@ export const fetchUserFriendsData = async (uid: string): Promise<{
   friendUsername?: string;
   inviteCode?: string;
   friendRequests?: any[];
+  friendGroups?: any[];
+  totalFocusMinutes?: number;
 } | null> => {
   if (typeof window !== "undefined") {
     try {
@@ -786,7 +797,9 @@ export const fetchUserFriendsData = async (uid: string): Promise<{
       friends: workspace.friends,
       friendUsername: workspace.friendUsername,
       inviteCode: workspace.inviteCode,
-      friendRequests: workspace.friendRequests
+      friendRequests: workspace.friendRequests,
+      friendGroups: workspace.friendGroups,
+      totalFocusMinutes: workspace.totalFocusMinutes
     };
   }
   return null;

@@ -13,7 +13,8 @@ import {
   Loader2,
   Lock,
   CalendarCheck,
-  CalendarClock
+  CalendarClock,
+  Users
 } from "lucide-react";
 import { User } from "firebase/auth";
 import { EngezBrandLogo } from "./EngezBrandLogo";
@@ -29,6 +30,7 @@ interface SidebarProps {
   onLogout: () => void;
   isFirestoreOffline?: boolean;
   themeMode?: "light" | "dark";
+  pendingRequestsCount?: number;
 }
 
 export default function Sidebar({
@@ -41,7 +43,8 @@ export default function Sidebar({
   onLogin,
   onLogout,
   isFirestoreOffline = false,
-  themeMode = "dark"
+  themeMode = "dark",
+  pendingRequestsCount = 0
 }: SidebarProps) {
   // Auto-collapse sidebar on iPads & portrait tablets to maximize study workspace
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -64,6 +67,7 @@ export default function Sidebar({
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
     { id: "countdown", label: "Exam Countdown", icon: CalendarClock },
+    { id: "friends", label: "Friends & Groups", icon: Users, badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined },
     { id: "habits", label: "Habit Tracker", icon: CalendarCheck },
     { id: "scholar", label: "Ai tutor", icon: Sparkles },
     { id: "focus", label: "Timer", icon: Timer },
@@ -164,11 +168,21 @@ export default function Sidebar({
                 } 
               />
               
-              {/* If Sidebar is expanded, show label */}
+              {/* If Sidebar is expanded, show label & badge */}
               {!isCollapsed && (
-                <span className={`text-xs font-sans tracking-tight block truncate ${isActive ? (isLight ? "font-bold text-[#1A1614]" : "font-bold text-[#F8FAFC]") : "font-medium"}`}>
-                  {item.label}
-                </span>
+                <div className="flex items-center justify-between flex-1 min-w-0">
+                  <span className={`text-xs font-sans tracking-tight block truncate ${isActive ? (isLight ? "font-bold text-[#1A1614]" : "font-bold text-[#F8FAFC]") : "font-medium"}`}>
+                    {item.label}
+                  </span>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-white animate-pulse">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+              )}
+              {isCollapsed && item.badge !== undefined && item.badge > 0 && (
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               )}
 
               {/* Tooltip Overlay (when collapsed) */}

@@ -14,7 +14,10 @@ import {
   Clock, 
   Edit3,
   Coffee,
-  Activity
+  Activity,
+  Timer,
+  Flag,
+  Zap
 } from "lucide-react";
 import {
   SoundscapeType,
@@ -25,6 +28,14 @@ import {
 } from "../lib/ambientSoundscapes";
 
 export type TimerPresetId = "p2" | "p4" | "p6" | "math" | "custom" | "pomodoro" | "shortBreak";
+
+export interface StopwatchLap {
+  id: string;
+  lapNumber: number;
+  splitSeconds: number;
+  lapSeconds: number;
+  timestamp: string;
+}
 
 interface FocusTabProps {
   focusModeActive: boolean;
@@ -41,6 +52,7 @@ interface FocusTabProps {
   pomodoroCount?: number;
   themeMode?: "light" | "dark";
   onFullScreenChange?: (isFullScreen: boolean) => void;
+  onMinutePassed?: () => void;
 }
 
 interface FlipCardProps {
@@ -216,9 +228,19 @@ export default function FocusTab({
   onModeChange,
   pomodoroCount = 0,
   themeMode = "dark",
-  onFullScreenChange
+  onFullScreenChange,
+  onMinutePassed
 }: FocusTabProps) {
   const isLight = themeMode === "light";
+
+  // Tool mode: "timer" or "stopwatch"
+  const [focusToolMode, setFocusToolMode] = useState<"timer" | "stopwatch">("timer");
+
+  // STOPWATCH STATE (Accurate count-up with split-flap clock and laps)
+  const [stopwatchSeconds, setStopwatchSeconds] = useState(0);
+  const [stopwatchActive, setStopwatchActive] = useState(false);
+  const [stopwatchPaused, setStopwatchPaused] = useState(false);
+  const [stopwatchLaps, setStopwatchLaps] = useState<StopwatchLap[]>([]);
 
   // Active preset determination (Long break removed)
   const activePreset = useMemo<TimerPresetId>(() => {
@@ -239,6 +261,99 @@ export default function FocusTab({
     setCustomHours(Math.floor(focusMinutesSelected / 60));
     setCustomMinutes(focusMinutesSelected % 60);
   }, [focusMinutesSelected]);
+
+  // Stopwatch ticking interval: every 60s count as a study focus minute
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (stopwatchActive) {
+      interval = setInterval(() => {
+        setStopwatchSeconds((prev) => {
+          const next = prev + 1;
+          if (next > 0 && next % 60 === 0) {
+            onMinutePassed?.();
+          }
+          return next;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [stopwatchActive, onMinutePassed]);
+
+  // Stopwatch time strings for FlipCards
+  const swHours = Math.floor(stopwatchSeconds / 3600);
+  const swMins = Math.floor((stopwatchSeconds % 3600) / 60);
+  const swSecs = stopwatchSeconds % 60;
+  const swHoursStr = swHours.toString().padStart(2, "0");
+  const swMinsStr = swMins.toString().padStart(2, "0");
+  const swSecsStr = swSecs.toString().padStart(2, "0");
+
+  const handleStopwatchStart = () => {
+    setStopwatchActive(true);
+    setStopwatchPaused(false);
+    if (selectedSoundscape !== "silent") {
+      setSoundscape(selectedSoundscape, soundVolume);
+    }
+  };
+
+  const handleStopwatchPause = () => {
+    setStopwatchActive(false);
+    setStopwatchPaused(true);
+    pauseSoundscape();
+  };
+
+  const handleStopwatchReset = () => {
+    setStopwatchActive(false);
+    setStopwatchPaused(false);
+    setStopwatchSeconds(0);
+    setStopwatchLaps([]);
+    pauseSoundscape();
+  };
+
+  const handleStopwatchLap = () => {
+    if (stopwatchSeconds === 0) return;
+    const previousTotal = stopwatchLaps.length > 0 ? stopwatchLaps[0].splitSeconds : 0;
+    const lapTime = stopwatchSeconds - previousTotal;
+    const newLap: StopwatchLap = {
+      id: "lap_" + Date.now(),
+      lapNumber: stopwatchLaps.length + 1,
+      splitSeconds: stopwatchSeconds,
+      lapSeconds: Math.max(0, lapTime),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
+    setStopwatchLaps([newLap, ...stopwatchLaps]);
+  };
+
+  // Compute fastest & slowest lap IDs for highlight pills
+  const { fastestLapId, slowestLapId } = useMemo(() => {
+    if (stopwatchLaps.length < 2) return { fastestLapId: null, slowestLapId: null };
+    let minTime = Infinity;
+    let maxTime = -Infinity;
+    let minId = "";
+    let maxId = "";
+    stopwatchLaps.forEach((l) => {
+      if (l.lapSeconds < minTime) {
+        minTime = l.lapSeconds;
+        minId = l.id;
+      }
+      if (l.lapSeconds > maxTime) {
+        maxTime = l.lapSeconds;
+        maxId = l.id;
+      }
+    });
+    return { fastestLapId: minId, slowestLapId: maxId };
+  }, [stopwatchLaps]);
+
+  const formatLapTime = (sec: number) => {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) {
+      return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    }
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
 
   // Ambient Soundscapes state
   const [selectedSoundscape, setSelectedSoundscape] = useState<SoundscapeType>(() => {
@@ -397,21 +512,29 @@ export default function FocusTab({
         }
       } else if (e.code === "Space") {
         e.preventDefault();
-        if (focusModeActive) {
-          pauseSoundscape();
-          onPauseFocus ? onPauseFocus() : onStopFocus();
-        } else {
-          if (selectedSoundscape !== "silent") {
-            setSoundscape(selectedSoundscape, soundVolume);
+        if (focusToolMode === "stopwatch") {
+          if (stopwatchActive) {
+            handleStopwatchPause();
+          } else {
+            handleStopwatchStart();
           }
-          onStartFocus();
+        } else {
+          if (focusModeActive) {
+            pauseSoundscape();
+            onPauseFocus ? onPauseFocus() : onStopFocus();
+          } else {
+            if (selectedSoundscape !== "silent") {
+              setSoundscape(selectedSoundscape, soundVolume);
+            }
+            onStartFocus();
+          }
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullScreen, focusModeActive, showCompletionModal, onPauseFocus, onStopFocus, onStartFocus, selectedSoundscape, soundVolume]);
+  }, [isFullScreen, focusModeActive, showCompletionModal, onPauseFocus, onStopFocus, onStartFocus, selectedSoundscape, soundVolume, focusToolMode, stopwatchActive]);
 
   useEffect(() => {
     if (prevFocusActive && !focusModeActive && !isPaused) {
@@ -526,8 +649,12 @@ export default function FocusTab({
               {/* Fullscreen Header */}
               <div className="w-full flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} ${focusModeActive ? "animate-ping" : ""}`} />
-                  <span className="text-sm font-mono font-black tracking-wide uppercase">{getPresetLabel()}</span>
+                  <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} ${
+                    (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive) ? "animate-ping" : ""
+                  }`} />
+                  <span className="text-sm font-mono font-black tracking-wide uppercase">
+                    {focusToolMode === "stopwatch" ? "STOPWATCH (COUNT UP)" : getPresetLabel()}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -568,27 +695,27 @@ export default function FocusTab({
                 <div className="flex items-center justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-10 xl:gap-12 my-6">
                   {/* Hours Flip Card */}
                   <FlipCard 
-                    value={hoursStr} 
+                    value={focusToolMode === "stopwatch" ? swHoursStr : hoursStr} 
                     label="HOURS" 
                     isLight={isLight} 
-                    isPaused={isPaused} 
-                    isActive={focusModeActive}
+                    isPaused={focusToolMode === "stopwatch" ? stopwatchPaused : isPaused} 
+                    isActive={focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive}
                     size="fullscreen"
                   />
 
                   {/* Colon Separator 1 */}
                   <div className="flex flex-col gap-3 sm:gap-5 md:gap-7 items-center justify-center pb-6 sm:pb-10 md:pb-14">
                     <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
-                      isPaused 
+                      (focusToolMode === "stopwatch" ? stopwatchPaused : isPaused)
                         ? (isLight ? "bg-[#C25E42] shadow-[0_0_12px_rgba(194,94,66,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
-                        : focusModeActive 
+                        : (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive)
                         ? (isLight ? "bg-[#C25E42] shadow-[0_0_14px_rgba(194,94,66,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
                         : "bg-white/20"
                     }`} />
                     <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
-                      isPaused 
+                      (focusToolMode === "stopwatch" ? stopwatchPaused : isPaused)
                         ? (isLight ? "bg-[#C25E42] shadow-[0_0_12px_rgba(194,94,66,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
-                        : focusModeActive 
+                        : (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive)
                         ? (isLight ? "bg-[#C25E42] shadow-[0_0_14px_rgba(194,94,66,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
                         : "bg-white/20"
                     }`} />
@@ -596,27 +723,27 @@ export default function FocusTab({
 
                   {/* Minutes Flip Card */}
                   <FlipCard 
-                    value={minsStr} 
+                    value={focusToolMode === "stopwatch" ? swMinsStr : minsStr} 
                     label="MINUTES" 
                     isLight={isLight} 
-                    isPaused={isPaused} 
-                    isActive={focusModeActive}
+                    isPaused={focusToolMode === "stopwatch" ? stopwatchPaused : isPaused} 
+                    isActive={focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive}
                     size="fullscreen"
                   />
 
                   {/* Colon Separator 2 */}
                   <div className="flex flex-col gap-3 sm:gap-5 md:gap-7 items-center justify-center pb-6 sm:pb-10 md:pb-14">
                     <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
-                      isPaused 
+                      (focusToolMode === "stopwatch" ? stopwatchPaused : isPaused)
                         ? (isLight ? "bg-[#C25E42] shadow-[0_0_12px_rgba(194,94,66,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
-                        : focusModeActive 
+                        : (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive)
                         ? (isLight ? "bg-[#C25E42] shadow-[0_0_14px_rgba(194,94,66,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
                         : "bg-white/20"
                     }`} />
                     <span className={`w-2.5 h-2.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full ${
-                      isPaused 
+                      (focusToolMode === "stopwatch" ? stopwatchPaused : isPaused)
                         ? (isLight ? "bg-[#C25E42] shadow-[0_0_12px_rgba(194,94,66,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
-                        : focusModeActive 
+                        : (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive)
                         ? (isLight ? "bg-[#C25E42] shadow-[0_0_14px_rgba(194,94,66,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
                         : "bg-white/20"
                     }`} />
@@ -624,40 +751,67 @@ export default function FocusTab({
 
                   {/* Seconds Flip Card */}
                   <FlipCard 
-                    value={secsStr} 
+                    value={focusToolMode === "stopwatch" ? swSecsStr : secsStr} 
                     label="SECONDS" 
                     isLight={isLight} 
-                    isPaused={isPaused} 
-                    isActive={focusModeActive}
+                    isPaused={focusToolMode === "stopwatch" ? stopwatchPaused : isPaused} 
+                    isActive={focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive}
                     size="fullscreen"
                   />
                 </div>
 
                 {/* Status Pill (Orange in light theme, purple in dark theme) */}
                 <div className="mt-4">
-                  {isPaused ? (
-                    <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
-                      isLight 
-                        ? "border-[#C25E42]/50 bg-[#C25E42]/20 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.25)]" 
-                        : "border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.25)]"
-                    }`}>
-                      <Pause size={12} fill="currentColor" />
-                      <span>PAUSED</span>
-                    </div>
-                  ) : focusModeActive ? (
-                    <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
-                      isLight 
-                        ? "border-[#C25E42]/50 bg-[#C25E42]/15 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.25)]" 
-                        : "border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.25)]"
-                    }`}>
-                      <span className={`w-2 h-2 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} animate-ping`} />
-                      <span>STUDYING</span>
-                    </div>
+                  {focusToolMode === "stopwatch" ? (
+                    stopwatchPaused ? (
+                      <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                        isLight 
+                          ? "border-[#C25E42]/50 bg-[#C25E42]/20 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.25)]" 
+                          : "border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.25)]"
+                      }`}>
+                        <Pause size={12} fill="currentColor" />
+                        <span>PAUSED</span>
+                      </div>
+                    ) : stopwatchActive ? (
+                      <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                        isLight 
+                          ? "border-[#C25E42]/50 bg-[#C25E42]/15 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.25)]" 
+                          : "border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.25)]"
+                      }`}>
+                        <span className={`w-2 h-2 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} animate-ping`} />
+                        <span>COUNTING UP</span>
+                      </div>
+                    ) : (
+                      <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono text-xs font-bold flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                        <span>READY</span>
+                      </div>
+                    )
                   ) : (
-                    <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono text-xs font-bold flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                      <span>READY</span>
-                    </div>
+                    isPaused ? (
+                      <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                        isLight 
+                          ? "border-[#C25E42]/50 bg-[#C25E42]/20 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.25)]" 
+                          : "border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.25)]"
+                      }`}>
+                        <Pause size={12} fill="currentColor" />
+                        <span>PAUSED</span>
+                      </div>
+                    ) : focusModeActive ? (
+                      <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                        isLight 
+                          ? "border-[#C25E42]/50 bg-[#C25E42]/15 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.25)]" 
+                          : "border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.25)]"
+                      }`}>
+                        <span className={`w-2 h-2 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} animate-ping`} />
+                        <span>STUDYING</span>
+                      </div>
+                    ) : (
+                      <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono text-xs font-bold flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                        <span>READY</span>
+                      </div>
+                    )
                   )}
                 </div>
               </div>
@@ -665,57 +819,118 @@ export default function FocusTab({
               {/* Bottom Fullscreen Controls */}
               <div className="w-full flex flex-col items-center gap-3">
                 <div className="flex items-center gap-3">
-                  {focusModeActive ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        pauseSoundscape();
-                        onPauseFocus ? onPauseFocus() : onStopFocus();
-                      }}
-                      className={`py-3.5 px-8 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
-                        isLight
-                          ? "bg-[#C25E42]/20 border-[#C25E42]/40 text-[#C25E42]"
-                          : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
-                      }`}
-                    >
-                      <Pause size={16} fill="currentColor" />
-                      <span>Pause</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (selectedSoundscape !== "silent") {
-                          setSoundscape(selectedSoundscape, soundVolume);
-                        }
-                        onStartFocus();
-                      }}
-                      className={`py-3.5 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer ${
-                        isLight
-                          ? "bg-[#C25E42] hover:bg-[#B25136] shadow-xl shadow-[#C25E42]/35"
-                          : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-xl shadow-[#8B5CF6]/35"
-                      }`}
-                    >
-                      <Play size={16} fill="currentColor" />
-                      <span>{isPaused ? "Resume" : "Start"}</span>
-                    </button>
-                  )}
+                  {focusToolMode === "stopwatch" ? (
+                    <>
+                      {stopwatchActive ? (
+                        <button
+                          type="button"
+                          onClick={handleStopwatchPause}
+                          className={`py-3.5 px-8 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
+                            isLight
+                              ? "bg-[#C25E42]/20 border-[#C25E42]/40 text-[#C25E42]"
+                              : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                          }`}
+                        >
+                          <Pause size={16} fill="currentColor" />
+                          <span>Pause</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleStopwatchStart}
+                          className={`py-3.5 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer ${
+                            isLight
+                              ? "bg-[#C25E42] hover:bg-[#B25136] shadow-xl shadow-[#C25E42]/35"
+                              : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-xl shadow-[#8B5CF6]/35"
+                          }`}
+                        >
+                          <Play size={16} fill="currentColor" />
+                          <span>{stopwatchPaused ? "Resume" : "Start"}</span>
+                        </button>
+                      )}
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      pauseSoundscape();
-                      onResetFocus ? onResetFocus() : onStopFocus();
-                    }}
-                    className={`py-3.5 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
-                      isLight
-                        ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
-                        : "bg-[#101322] hover:bg-[#161A2B] border-white/10 text-white"
-                    }`}
-                  >
-                    <RotateCcw size={15} />
-                    <span>Reset</span>
-                  </button>
+                      <button
+                        type="button"
+                        onClick={handleStopwatchLap}
+                        disabled={!stopwatchActive}
+                        className={`py-3.5 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition disabled:opacity-40 ${
+                          isLight
+                            ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
+                            : "bg-[#101322] hover:bg-[#161A2B] border-white/10 text-white"
+                        }`}
+                      >
+                        <Flag size={15} />
+                        <span>Lap</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleStopwatchReset}
+                        className={`py-3.5 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition ${
+                          isLight
+                            ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
+                            : "bg-[#101322] hover:bg-[#161A2B] border-white/10 text-white"
+                        }`}
+                      >
+                        <RotateCcw size={15} />
+                        <span>Reset</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {focusModeActive ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            pauseSoundscape();
+                            onPauseFocus ? onPauseFocus() : onStopFocus();
+                          }}
+                          className={`py-3.5 px-8 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
+                            isLight
+                              ? "bg-[#C25E42]/20 border-[#C25E42]/40 text-[#C25E42]"
+                              : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                          }`}
+                        >
+                          <Pause size={16} fill="currentColor" />
+                          <span>Pause</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedSoundscape !== "silent") {
+                              setSoundscape(selectedSoundscape, soundVolume);
+                            }
+                            onStartFocus();
+                          }}
+                          className={`py-3.5 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer ${
+                            isLight
+                              ? "bg-[#C25E42] hover:bg-[#B25136] shadow-xl shadow-[#C25E42]/35"
+                              : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-xl shadow-[#8B5CF6]/35"
+                          }`}
+                        >
+                          <Play size={16} fill="currentColor" />
+                          <span>{isPaused ? "Resume" : "Start"}</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          pauseSoundscape();
+                          onResetFocus ? onResetFocus() : onStopFocus();
+                        }}
+                        className={`py-3.5 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer ${
+                          isLight
+                            ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
+                            : "bg-[#101322] hover:bg-[#161A2B] border-white/10 text-white"
+                        }`}
+                      >
+                        <RotateCcw size={15} />
+                        <span>Reset</span>
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <p className={`text-[11px] font-mono ${isLight ? "text-[#C25E42]" : "text-purple-300/80"}`}>
@@ -737,27 +952,75 @@ export default function FocusTab({
           isLight ? "bg-[#FFFFFF] border-[#EBE4DC] shadow-xs" : "bg-[#0C0D17] border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
         }`}>
           
-          {/* Top Bar: Mode Indicator + Full Screen Button */}
-          <div className="flex items-center justify-between pb-3 border-b border-inherit">
-            <div className="flex items-center gap-2.5">
-              <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} ${focusModeActive ? "animate-ping" : ""}`} />
-              <span className="text-sm font-mono font-black tracking-wide uppercase">{getPresetLabel()}</span>
+          {/* Top Bar: Mode Switcher Tabs (Timer vs Stopwatch) + Status & Full Screen Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-inherit gap-3">
+            <div className="flex items-center gap-2">
+              <div className={`p-1 rounded-2xl border flex items-center gap-1 ${
+                isLight ? "bg-[#FAF8F5] border-[#EBE4DC]" : "bg-[#101322] border-white/10"
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => setFocusToolMode("timer")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                    focusToolMode === "timer"
+                      ? isLight
+                        ? "bg-[#C25E42] text-white shadow-xs"
+                        : "bg-[#8B5CF6] text-white shadow-[0_2px_10px_rgba(139,92,246,0.35)]"
+                      : isLight
+                      ? "text-[#736B63] hover:text-[#1A1614]"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Timer size={14} />
+                  <span>Timer / Exam</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFocusToolMode("stopwatch")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                    focusToolMode === "stopwatch"
+                      ? isLight
+                        ? "bg-[#C25E42] text-white shadow-xs"
+                        : "bg-[#8B5CF6] text-white shadow-[0_2px_10px_rgba(139,92,246,0.35)]"
+                      : isLight
+                      ? "text-[#736B63] hover:text-[#1A1614]"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Clock size={14} />
+                  <span>Stopwatch</span>
+                </button>
+              </div>
+
+              <div className="hidden sm:flex items-center gap-2 ml-2">
+                <span className={`w-2.5 h-2.5 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} ${
+                  (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive) ? "animate-ping" : ""
+                }`} />
+                <span className="text-xs font-mono font-black tracking-wide uppercase">
+                  {focusToolMode === "stopwatch" ? "COUNT UP" : getPresetLabel()}
+                </span>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleEnterFullscreen}
-              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold text-white flex items-center gap-2 cursor-pointer transition shadow-md active:scale-95 ${
-                isLight ? "bg-[#C25E42] hover:bg-[#B25136]" : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_16px_rgba(139,92,246,0.35)]"
-              }`}
-            >
-              <Maximize2 size={13} />
-              <span className="uppercase tracking-wider">Full Screen</span>
-            </button>
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={handleEnterFullscreen}
+                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold text-white flex items-center gap-2 cursor-pointer transition shadow-md active:scale-95 ${
+                  isLight ? "bg-[#C25E42] hover:bg-[#B25136]" : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_16px_rgba(139,92,246,0.35)]"
+                }`}
+              >
+                <Maximize2 size={13} />
+                <span className="uppercase tracking-wider">Full Screen</span>
+              </button>
+            </div>
           </div>
 
-          {/* Preset Mode Selector Section */}
-          <div className="space-y-3">
+          {/* Mode-Specific Sub-Header: Presets for Timer, Stats/Live Counter for Stopwatch */}
+          {focusToolMode === "timer" ? (
+            <div className="space-y-4">
+              <div className="space-y-3">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className={`font-bold uppercase tracking-wider ${isLight ? "text-[#C25E42]" : "text-slate-400"}`}>
                 SELECT MODE OR TYPE TIME
@@ -939,6 +1202,50 @@ export default function FocusTab({
               </div>
             </div>
           </div>
+        </div>
+      ) : (
+            <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+              isLight ? "bg-[#FAF8F5] border-[#EBE4DC]" : "bg-[#121320] border-white/5"
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
+                }`}>
+                  <Zap size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-black uppercase tracking-wider">
+                      Live Study Stopwatch
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      stopwatchActive 
+                        ? (isLight ? "bg-[#C25E42]/15 text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#C084FC]")
+                        : stopwatchPaused
+                        ? (isLight ? "bg-amber-500/15 text-amber-700" : "bg-amber-400/20 text-amber-300")
+                        : (isLight ? "bg-black/5 text-[#736B63]" : "bg-white/10 text-slate-400")
+                    }`}>
+                      {stopwatchActive ? "RECORDING LIVE" : stopwatchPaused ? "PAUSED" : "READY"}
+                    </span>
+                  </div>
+                  <p className={`text-xs ${isLight ? "text-[#736B63]" : "text-slate-400"}`}>
+                    Every elapsed minute counts directly towards your Study Circle group leaderboards!
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs font-mono self-start sm:self-auto">
+                <div className="text-left sm:text-right">
+                  <div className={`font-bold ${isLight ? "text-[#C25E42]" : "text-[#C084FC]"}`}>
+                    {Math.floor(stopwatchSeconds / 60)} min recorded
+                  </div>
+                  <div className={isLight ? "text-[#736B63]" : "text-slate-500"}>
+                    {stopwatchLaps.length} {stopwatchLaps.length === 1 ? "lap" : "laps"} logged
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* =========================================================================
               MECHANICAL 3D FLIP CLOCK (HOURS : MINUTES : SECONDS)
@@ -956,31 +1263,31 @@ export default function FocusTab({
               />
             )}
 
-            {/* The Three Flip Cards */}
+            {/* The Three Flip Cards (Identical Authentic 3D Split-Flap Clock for both Timer and Stopwatch) */}
             <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6 lg:gap-8 my-2">
               
               {/* HOURS FLIP CARD */}
               <FlipCard
-                value={hoursStr}
+                value={focusToolMode === "stopwatch" ? swHoursStr : hoursStr}
                 label="HOURS"
                 isLight={isLight}
-                isPaused={isPaused}
-                isActive={focusModeActive}
+                isPaused={focusToolMode === "stopwatch" ? stopwatchPaused : isPaused}
+                isActive={focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive}
               />
 
               {/* COLON SEPARATOR 1 */}
               <div className="flex flex-col gap-2.5 sm:gap-3.5 md:gap-4 items-center justify-center pb-5 sm:pb-7 md:pb-9">
                 <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
-                  isPaused 
+                  (focusToolMode === "stopwatch" ? stopwatchPaused : isPaused)
                     ? (isLight ? "bg-[#C25E42] shadow-[0_0_12px_rgba(194,94,66,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
-                    : focusModeActive 
+                    : (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive) 
                     ? (isLight ? "bg-[#C25E42] shadow-[0_0_14px_rgba(194,94,66,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
                     : isLight ? "bg-[#FFEDD5]" : "bg-white/20"
                 }`} />
                 <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
-                  isPaused 
+                  (focusToolMode === "stopwatch" ? stopwatchPaused : isPaused)
                     ? (isLight ? "bg-[#C25E42] shadow-[0_0_12px_rgba(194,94,66,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
-                    : focusModeActive 
+                    : (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive) 
                     ? (isLight ? "bg-[#C25E42] shadow-[0_0_14px_rgba(194,94,66,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
                     : isLight ? "bg-[#FFEDD5]" : "bg-white/20"
                 }`} />
@@ -988,26 +1295,26 @@ export default function FocusTab({
 
               {/* MINUTES FLIP CARD */}
               <FlipCard
-                value={minsStr}
+                value={focusToolMode === "stopwatch" ? swMinsStr : minsStr}
                 label="MINUTES"
                 isLight={isLight}
-                isPaused={isPaused}
-                isActive={focusModeActive}
+                isPaused={focusToolMode === "stopwatch" ? stopwatchPaused : isPaused}
+                isActive={focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive}
               />
 
               {/* COLON SEPARATOR 2 */}
               <div className="flex flex-col gap-2.5 sm:gap-3.5 md:gap-4 items-center justify-center pb-5 sm:pb-7 md:pb-9">
                 <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
-                  isPaused 
+                  (focusToolMode === "stopwatch" ? stopwatchPaused : isPaused)
                     ? (isLight ? "bg-[#C25E42] shadow-[0_0_12px_rgba(194,94,66,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
-                    : focusModeActive 
+                    : (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive) 
                     ? (isLight ? "bg-[#C25E42] shadow-[0_0_14px_rgba(194,94,66,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
                     : isLight ? "bg-[#FFEDD5]" : "bg-white/20"
                 }`} />
                 <span className={`w-2 h-2 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full ${
-                  isPaused 
+                  (focusToolMode === "stopwatch" ? stopwatchPaused : isPaused)
                     ? (isLight ? "bg-[#C25E42] shadow-[0_0_12px_rgba(194,94,66,0.85)]" : "bg-[#A855F7] shadow-[0_0_12px_rgba(168,85,247,0.85)]") 
-                    : focusModeActive 
+                    : (focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive) 
                     ? (isLight ? "bg-[#C25E42] shadow-[0_0_14px_rgba(194,94,66,0.9)] animate-pulse" : "bg-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.9)] animate-pulse") 
                     : isLight ? "bg-[#FFEDD5]" : "bg-white/20"
                 }`} />
@@ -1015,96 +1322,256 @@ export default function FocusTab({
 
               {/* SECONDS FLIP CARD */}
               <FlipCard
-                value={secsStr}
+                value={focusToolMode === "stopwatch" ? swSecsStr : secsStr}
                 label="SECONDS"
                 isLight={isLight}
-                isPaused={isPaused}
-                isActive={focusModeActive}
+                isPaused={focusToolMode === "stopwatch" ? stopwatchPaused : isPaused}
+                isActive={focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive}
               />
             </div>
 
             {/* Status Indicator Pill */}
             <div className="mt-4">
-              {isPaused ? (
-                <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
-                  isLight 
-                    ? "border-[#C25E42]/50 bg-[#C25E42]/20 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.3)]" 
-                    : "border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.3)]"
-                }`}>
-                  <Pause size={12} fill="currentColor" />
-                  <span>PAUSED</span>
-                </div>
-              ) : focusModeActive ? (
-                <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
-                  isLight 
-                    ? "border-[#C25E42]/50 bg-[#C25E42]/15 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.3)]" 
-                    : "border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.3)]"
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} animate-ping`} />
-                  <span>STUDYING</span>
-                </div>
+              {focusToolMode === "stopwatch" ? (
+                stopwatchPaused ? (
+                  <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                    isLight 
+                      ? "border-[#C25E42]/50 bg-[#C25E42]/20 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.3)]" 
+                      : "border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                  }`}>
+                    <Pause size={12} fill="currentColor" />
+                    <span>STOPWATCH PAUSED</span>
+                  </div>
+                ) : stopwatchActive ? (
+                  <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                    isLight 
+                      ? "border-[#C25E42]/50 bg-[#C25E42]/15 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.3)]" 
+                      : "border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} animate-ping`} />
+                    <span>COUNTING UP · RECORDING</span>
+                  </div>
+                ) : (
+                  <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono text-xs font-bold flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    <span>STOPWATCH READY</span>
+                  </div>
+                )
               ) : (
-                <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono text-xs font-bold flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                  <span>READY</span>
-                </div>
+                isPaused ? (
+                  <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                    isLight 
+                      ? "border-[#C25E42]/50 bg-[#C25E42]/20 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.3)]" 
+                      : "border-[#8B5CF6]/50 bg-[#8B5CF6]/20 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                  }`}>
+                    <Pause size={12} fill="currentColor" />
+                    <span>PAUSED</span>
+                  </div>
+                ) : focusModeActive ? (
+                  <div className={`px-4 py-1.5 rounded-full border font-mono text-xs font-bold flex items-center gap-2 ${
+                    isLight 
+                      ? "border-[#C25E42]/50 bg-[#C25E42]/15 text-[#C25E42] shadow-[0_0_15px_rgba(194,94,66,0.3)]" 
+                      : "border-[#8B5CF6]/50 bg-[#8B5CF6]/15 text-[#C084FC] shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${isLight ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} animate-ping`} />
+                    <span>STUDYING</span>
+                  </div>
+                ) : (
+                  <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-400 font-mono text-xs font-bold flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    <span>READY</span>
+                  </div>
+                )
               )}
             </div>
 
-            {/* Action Buttons: Resume/Start + Reset */}
-            <div className="flex items-center gap-3 mt-6">
-              {focusModeActive ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    pauseSoundscape();
-                    onPauseFocus ? onPauseFocus() : onStopFocus();
-                  }}
-                  className={`py-3 px-8 rounded-2xl border text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 ${
-                    isLight 
-                      ? "bg-[#C25E42]/20 border-[#C25E42]/40 text-[#C25E42]" 
-                      : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
-                  }`}
-                >
-                  <Pause size={15} fill="currentColor" />
-                  <span>PAUSE</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (selectedSoundscape !== "silent") {
-                      setSoundscape(selectedSoundscape, soundVolume);
-                    }
-                    onStartFocus();
-                  }}
-                  className={`py-3 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 ${
-                    isLight 
-                      ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[0_4px_24px_rgba(194,94,66,0.45)]" 
-                      : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_24px_rgba(139,92,246,0.45)]"
-                  }`}
-                >
-                  <Play size={15} fill="currentColor" />
-                  <span>{isPaused ? "RESUME" : "START"}</span>
-                </button>
-              )}
+            {/* Action Buttons: Stopwatch (Start/Pause/Lap/Reset) or Timer (Start/Pause/Reset) */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+              {focusToolMode === "stopwatch" ? (
+                <>
+                  {stopwatchActive ? (
+                    <button
+                      type="button"
+                      onClick={handleStopwatchPause}
+                      className={`py-3 px-8 rounded-2xl border text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 ${
+                        isLight 
+                          ? "bg-[#C25E42]/20 border-[#C25E42]/40 text-[#C25E42]" 
+                          : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                      }`}
+                    >
+                      <Pause size={15} fill="currentColor" />
+                      <span>PAUSE</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleStopwatchStart}
+                      className={`py-3 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 ${
+                        isLight 
+                          ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[0_4px_24px_rgba(194,94,66,0.45)]" 
+                          : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_24px_rgba(139,92,246,0.45)]"
+                      }`}
+                    >
+                      <Play size={15} fill="currentColor" />
+                      <span>{stopwatchPaused ? "RESUME" : "START"}</span>
+                    </button>
+                  )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  pauseSoundscape();
-                  onResetFocus ? onResetFocus() : onStopFocus();
-                }}
-                className={`py-3 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition active:scale-95 ${
-                  isLight
-                    ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
-                    : "bg-[#18192A] hover:bg-[#202238] border-white/10 text-white"
-                }`}
-              >
-                <RotateCcw size={14} />
-                <span>RESET</span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={handleStopwatchLap}
+                    disabled={!stopwatchActive}
+                    className={`py-3 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isLight
+                        ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
+                        : "bg-[#18192A] hover:bg-[#202238] border-white/10 text-white"
+                    }`}
+                  >
+                    <Flag size={14} />
+                    <span>LAP</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleStopwatchReset}
+                    disabled={stopwatchSeconds === 0 && stopwatchLaps.length === 0}
+                    className={`py-3 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isLight
+                        ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
+                        : "bg-[#18192A] hover:bg-[#202238] border-white/10 text-white"
+                    }`}
+                  >
+                    <RotateCcw size={14} />
+                    <span>RESET</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  {focusModeActive ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        pauseSoundscape();
+                        onPauseFocus ? onPauseFocus() : onStopFocus();
+                      }}
+                      className={`py-3 px-8 rounded-2xl border text-xs font-mono font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 ${
+                        isLight 
+                          ? "bg-[#C25E42]/20 border-[#C25E42]/40 text-[#C25E42]" 
+                          : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+                      }`}
+                    >
+                      <Pause size={15} fill="currentColor" />
+                      <span>PAUSE</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedSoundscape !== "silent") {
+                          setSoundscape(selectedSoundscape, soundVolume);
+                        }
+                        onStartFocus();
+                      }}
+                      className={`py-3 px-10 rounded-2xl text-xs font-mono font-black uppercase tracking-wider text-white flex items-center gap-2 cursor-pointer transition shadow-lg active:scale-95 ${
+                        isLight 
+                          ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[0_4px_24px_rgba(194,94,66,0.45)]" 
+                          : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[0_4px_24px_rgba(139,92,246,0.45)]"
+                      }`}
+                    >
+                      <Play size={15} fill="currentColor" />
+                      <span>{isPaused ? "RESUME" : "START"}</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      pauseSoundscape();
+                      onResetFocus ? onResetFocus() : onStopFocus();
+                    }}
+                    className={`py-3 px-6 rounded-2xl border text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition active:scale-95 ${
+                      isLight
+                        ? "bg-[#FFFFFF] hover:bg-[#FFF2ED] border-[#EBE4DC] text-[#1A1614]"
+                        : "bg-[#18192A] hover:bg-[#202238] border-white/10 text-white"
+                    }`}
+                  >
+                    <RotateCcw size={14} />
+                    <span>RESET</span>
+                  </button>
+                </>
+              )}
             </div>
+
+            {/* Stopwatch Laps Table */}
+            {focusToolMode === "stopwatch" && stopwatchLaps.length > 0 && (
+              <div className="w-full max-w-xl mt-6 pt-5 border-t border-inherit space-y-3">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <div className="flex items-center gap-2 font-bold uppercase">
+                    <Flag size={13} className={isLight ? "text-[#C25E42]" : "text-[#8B5CF6]"} />
+                    <span>Laps Recorded ({stopwatchLaps.length})</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStopwatchLaps([])}
+                    className={`text-[11px] underline cursor-pointer ${
+                      isLight ? "text-[#736B63] hover:text-[#C25E42]" : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Clear Laps
+                  </button>
+                </div>
+
+                <div className={`rounded-2xl border overflow-hidden ${
+                  isLight ? "bg-[#FAF8F5] border-[#EBE4DC]" : "bg-[#101322] border-white/10"
+                }`}>
+                  <div className="max-h-48 overflow-y-auto divide-y divide-inherit font-mono text-xs">
+                    {stopwatchLaps.map((lap) => {
+                      const isFastest = lap.id === fastestLapId;
+                      const isSlowest = lap.id === slowestLapId;
+                      return (
+                        <div
+                          key={lap.id}
+                          className={`px-4 py-2.5 flex items-center justify-between transition ${
+                            isFastest
+                              ? isLight ? "bg-emerald-500/10" : "bg-emerald-500/15"
+                              : isSlowest
+                              ? isLight ? "bg-rose-500/10" : "bg-rose-500/15"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="font-bold opacity-60">
+                              #{lap.lapNumber.toString().padStart(2, "0")}
+                            </span>
+                            {isFastest && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-md font-bold bg-emerald-500 text-white">
+                                FASTEST
+                              </span>
+                            )}
+                            {isSlowest && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-md font-bold bg-rose-500 text-white">
+                                SLOWEST
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-4 text-right">
+                            <span className={`font-bold ${
+                              isFastest ? "text-emerald-600 dark:text-emerald-400" : ""
+                            }`}>
+                              +{formatLapTime(lap.lapSeconds)}
+                            </span>
+                            <span className="text-slate-400 text-[11px]">
+                              {formatLapTime(lap.splitSeconds)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Ambient Focus Soundscapes Section */}
