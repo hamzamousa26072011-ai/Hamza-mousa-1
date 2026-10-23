@@ -72,7 +72,7 @@ import PrivacyPolicyModal from "./components/PrivacyPolicyModal";
 import { DomainDnsModal } from "./components/DomainDnsModal";
 import { ExamCountdownTab } from "./components/ExamCountdownTab";
 import FriendsTab from "./components/FriendsTab";
-import { ExamItem, FriendItem, FriendRequestItem, FriendGroup } from "./types";
+import { ExamItem, FriendItem, FriendRequestItem, FriendGroup, FriendGroupMember } from "./types";
 import { CyberWaveBackground } from "./components/CyberWaveBackground";
 import { EngezBrandLogo } from "./components/EngezBrandLogo";
 import { pauseSoundscape } from "./lib/ambientSoundscapes";
@@ -1326,7 +1326,38 @@ export default function App() {
     }
   }, [exams, currentUser]);
 
-  // FRIEND GROUPS WITH LEADERBOARDS & ACTUAL FOCUS READINGS
+  // Helper to identify and purge test dummy group members / test subjects
+  const isTestGroupMember = (m: any) => {
+    if (!m) return false;
+    const testIds = ["mem_karim", "mem_nour", "mem_youssef", "mem_mariam", "mem_ziad", "mem_lina", "peer_lead"];
+    const testHandles = ["@karim_phys", "@nour_sat", "@youssef_bio", "@mariam_chem", "@ziad_nightowl", "@lina_grind", "@study_lead"];
+    const testNames = ["Karim M. (Physics)", "Nour E. (Math 800)", "Youssef T. (Bio P4)", "Mariam K. (Organic)", "Ziad (Night Owl)", "Lina S.", "Group Host"];
+    return (
+      testIds.some(id => String(m.id || "").includes(id)) ||
+      testHandles.includes(String(m.username || "").toLowerCase()) ||
+      testNames.includes(String(m.displayName || ""))
+    );
+  };
+
+  const sanitizeGroupMembers = (members: any[]): FriendGroupMember[] => {
+    return (members || [])
+      .filter((m: any) => !isTestGroupMember(m))
+      .map((m: any) => ({
+        id: m.id || "user_" + Math.random().toString(36).substring(2, 7),
+        username: m.username || "@student",
+        displayName: m.displayName || "Scholar",
+        avatarUrl: m.avatarUrl,
+        focusMinutesThisWeek: typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek)
+          ? m.focusMinutesThisWeek
+          : (typeof m.focusMinutes === "number" && !isNaN(m.focusMinutes) ? m.focusMinutes : 0),
+        streak: typeof m.streak === "number" ? m.streak : 1,
+        isCurrentUser: !!m.isCurrentUser,
+        status: m.status || "online",
+        role: m.role || "member"
+      }));
+  };
+
+  // FRIEND GROUPS WITH LEADERBOARDS & ACTUAL FOCUS READINGS (ZERO TEST SUBJECTS)
   const [friendGroups, setFriendGroups] = useState<FriendGroup[]>(() => {
     try {
       const storedSimulated = localStorage.getItem("ENGEZ_SIMULATED_USER");
@@ -1336,7 +1367,13 @@ export default function App() {
           const userFriends = localStorage.getItem(`ENGEZ_USER_FRIENDS_${parsed.uid}`);
           if (userFriends) {
             const p = JSON.parse(userFriends);
-            if (Array.isArray(p?.friendGroups) && p.friendGroups.length > 0) return p.friendGroups;
+            if (Array.isArray(p?.friendGroups) && p.friendGroups.length > 0) {
+              return p.friendGroups.map((g: any) => ({
+                ...g,
+                weeklyGoalMinutes: typeof g.weeklyGoalMinutes === "number" ? g.weeklyGoalMinutes : 1500,
+                members: sanitizeGroupMembers(g.members)
+              }));
+            }
           }
         }
       }
@@ -1346,7 +1383,13 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((g: any) => ({
+            ...g,
+            weeklyGoalMinutes: typeof g.weeklyGoalMinutes === "number" ? g.weeklyGoalMinutes : 1500,
+            members: sanitizeGroupMembers(g.members)
+          }));
+        }
       } catch (e) {}
     }
 
@@ -1360,53 +1403,13 @@ export default function App() {
         members: [
           {
             id: "mem_currentUser",
-            username: "@me",
-            displayName: "You",
-            focusMinutes: totalFocusMinutes,
-            streak: streak,
+            username: friendUsername || "@student",
+            displayName: currentUser?.displayName || "You",
+            focusMinutesThisWeek: totalFocusMinutes || 0,
+            streak: streak || 0,
             isCurrentUser: true,
-            avatarColor: "#C25E42",
-            currentActivity: "Online"
-          },
-          {
-            id: "mem_karim",
-            username: "@karim_phys",
-            displayName: "Karim M. (Physics)",
-            focusMinutes: 460,
-            streak: 8,
-            isCurrentUser: false,
-            avatarColor: "#3B82F6",
-            currentActivity: "Solving Past Papers"
-          },
-          {
-            id: "mem_nour",
-            username: "@nour_sat",
-            displayName: "Nour E. (Math 800)",
-            focusMinutes: 380,
-            streak: 6,
-            isCurrentUser: false,
-            avatarColor: "#10B981",
-            currentActivity: "Desmos Drills"
-          },
-          {
-            id: "mem_youssef",
-            username: "@youssef_bio",
-            displayName: "Youssef T. (Bio P4)",
-            focusMinutes: 290,
-            streak: 4,
-            isCurrentUser: false,
-            avatarColor: "#F59E0B",
-            currentActivity: "Resting"
-          },
-          {
-            id: "mem_mariam",
-            username: "@mariam_chem",
-            displayName: "Mariam K. (Organic)",
-            focusMinutes: 215,
-            streak: 3,
-            isCurrentUser: false,
-            avatarColor: "#8B5CF6",
-            currentActivity: "Flashcards"
+            status: focusModeActive ? "studying" : "online",
+            role: "admin"
           }
         ]
       },
@@ -1419,59 +1422,66 @@ export default function App() {
         members: [
           {
             id: "mem_currentUser",
-            username: "@me",
-            displayName: "You",
-            focusMinutes: totalFocusMinutes,
-            streak: streak,
+            username: friendUsername || "@student",
+            displayName: currentUser?.displayName || "You",
+            focusMinutesThisWeek: totalFocusMinutes || 0,
+            streak: streak || 0,
             isCurrentUser: true,
-            avatarColor: "#C25E42",
-            currentActivity: "Online"
-          },
-          {
-            id: "mem_ziad",
-            username: "@ziad_nightowl",
-            displayName: "Ziad (Night Owl)",
-            focusMinutes: 510,
-            streak: 11,
-            isCurrentUser: false,
-            avatarColor: "#6366F1",
-            currentActivity: "Calculus P3"
-          },
-          {
-            id: "mem_lina",
-            username: "@lina_grind",
-            displayName: "Lina S.",
-            focusMinutes: 330,
-            streak: 5,
-            isCurrentUser: false,
-            avatarColor: "#EC4899",
-            currentActivity: "Revision"
+            status: focusModeActive ? "studying" : "online",
+            role: "admin"
           }
         ]
       }
     ];
   });
 
-  // Keep current user's actual focus minutes & activity synced across all group leaderboards
+  // Keep current user's actual focus minutes & activity synced across all group leaderboards (purging test subjects)
   useEffect(() => {
     setFriendGroups((prevGroups) =>
-      prevGroups.map((grp) => ({
-        ...grp,
-        members: grp.members.map((m) =>
-          m.isCurrentUser
+      prevGroups.map((grp) => {
+        const cleanMembers = grp.members.filter((m) => !isTestGroupMember(m));
+        const hasCurrentUser = cleanMembers.some((m) => m.isCurrentUser || m.id === currentUser?.uid || m.id === "mem_currentUser");
+
+        const updatedMembers = cleanMembers.map((m) =>
+          m.isCurrentUser || m.id === currentUser?.uid || m.id === "mem_currentUser"
             ? {
                 ...m,
-                focusMinutes: totalFocusMinutes,
+                focusMinutesThisWeek: totalFocusMinutes,
                 streak: streak,
-                displayName: currentUser?.displayName || m.displayName || "You",
-                username: currentUser?.displayName ? `@${currentUser.displayName.toLowerCase().replace(/\s+/g, "_")}` : m.username,
-                currentActivity: focusModeActive ? "Focusing now 🔥" : "Online"
+                displayName: currentUser?.displayName || (m.displayName !== "You" ? m.displayName : "You"),
+                username: currentUser?.displayName
+                  ? `@${currentUser.displayName.toLowerCase().replace(/\s+/g, "_")}`
+                  : (friendUsername || m.username),
+                status: focusModeActive ? ("studying" as const) : ("online" as const)
               }
-            : m
-        )
-      }))
+            : {
+                ...m,
+                focusMinutesThisWeek: typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek)
+                  ? m.focusMinutesThisWeek
+                  : 0
+              }
+        );
+
+        if (!hasCurrentUser) {
+          updatedMembers.unshift({
+            id: currentUser?.uid || "mem_currentUser",
+            username: friendUsername || "@student",
+            displayName: currentUser?.displayName || "You",
+            focusMinutesThisWeek: totalFocusMinutes,
+            streak: streak,
+            isCurrentUser: true,
+            status: focusModeActive ? "studying" : "online",
+            role: "admin"
+          });
+        }
+
+        return {
+          ...grp,
+          members: updatedMembers
+        };
+      })
     );
-  }, [totalFocusMinutes, streak, currentUser, focusModeActive]);
+  }, [totalFocusMinutes, streak, currentUser, friendUsername, focusModeActive]);
 
   useEffect(() => {
     localStorage.setItem("ENGEZ_STUDY_FRIEND_GROUPS_V1", JSON.stringify(friendGroups));

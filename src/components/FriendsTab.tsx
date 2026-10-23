@@ -95,11 +95,12 @@ export default function FriendsTab({
   const [joinGroupCodeInput, setJoinGroupCodeInput] = useState("");
   const [isJoinGroupOpen, setIsJoinGroupOpen] = useState(false);
 
-  // Format focus minutes to "Xh Ym" or "Xm"
-  const formatMinutes = (mins: number) => {
-    if (mins < 60) return `${mins}m`;
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
+  // Format focus minutes to "Xh Ym" or "Xm" (safe against NaN)
+  const formatMinutes = (mins?: number) => {
+    const safeMins = typeof mins === "number" && !isNaN(mins) ? Math.max(0, mins) : 0;
+    if (safeMins < 60) return `${safeMins}m`;
+    const h = Math.floor(safeMins / 60);
+    const m = safeMins % 60;
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   };
 
@@ -336,7 +337,7 @@ export default function FriendsTab({
       return;
     }
 
-    // Create a new joined group representation
+    // Create a new joined group representation (real members only)
     const joinedGroup: FriendGroup = {
       id: "grp_joined_" + Date.now(),
       name: `Study Squad (${code})`,
@@ -351,20 +352,11 @@ export default function FriendsTab({
           id: currentUser?.uid || "user_current",
           username: friendUsername || "@student",
           displayName: currentUser?.displayName || friendUsername || "You",
-          focusMinutesThisWeek: totalFocusMinutes,
-          streak: userStreak,
+          focusMinutesThisWeek: totalFocusMinutes || 0,
+          streak: userStreak || 0,
           isCurrentUser: true,
           status: focusModeActive ? "studying" : "online",
           role: "member"
-        },
-        {
-          id: "peer_lead_" + Date.now(),
-          username: "@study_lead",
-          displayName: "Group Host",
-          focusMinutesThisWeek: Math.floor(180 + Math.random() * 150),
-          streak: 8,
-          status: "online",
-          role: "admin"
         }
       ]
     };
@@ -378,26 +370,46 @@ export default function FriendsTab({
     setTimeout(() => setFriendFeedback(null), 4000);
   };
 
+  // Helper to identify test dummy group members
+  const isTestMember = (m: any) => {
+    if (!m) return false;
+    const testIds = ["mem_karim", "mem_nour", "mem_youssef", "mem_mariam", "mem_ziad", "mem_lina", "peer_lead"];
+    const testHandles = ["@karim_phys", "@nour_sat", "@youssef_bio", "@mariam_chem", "@ziad_nightowl", "@lina_grind", "@study_lead"];
+    const testNames = ["Karim M. (Physics)", "Nour E. (Math 800)", "Youssef T. (Bio P4)", "Mariam K. (Organic)", "Ziad (Night Owl)", "Lina S.", "Group Host"];
+    return (
+      testIds.some(id => String(m.id || "").includes(id)) ||
+      testHandles.includes(String(m.username || "").toLowerCase()) ||
+      testNames.includes(String(m.displayName || ""))
+    );
+  };
+
   // Find currently active group
   const activeGroup = useMemo(() => {
     return friendGroups.find(g => g.id === selectedGroupId) || friendGroups[0];
   }, [friendGroups, selectedGroupId]);
 
-  // Compute live leaderboard readings for the active group
+  // Compute live leaderboard readings for the active group (ZERO TEST SUBJECTS)
   // CRITICAL: Always inject the current user's live recorded focus minutes!
   const activeLeaderboard = useMemo(() => {
     if (!activeGroup) return [];
 
-    let membersList = [...activeGroup.members];
+    let membersList = (activeGroup.members || [])
+      .filter(m => !isTestMember(m))
+      .map(m => ({
+        ...m,
+        focusMinutesThisWeek: typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek)
+          ? m.focusMinutesThisWeek
+          : (typeof (m as any).focusMinutes === "number" && !isNaN((m as any).focusMinutes) ? (m as any).focusMinutes : 0)
+      }));
 
     // Ensure current user is in the list with their live recorded focus minutes
-    const currentUserIdx = membersList.findIndex(m => m.isCurrentUser || m.id === currentUser?.uid);
+    const currentUserIdx = membersList.findIndex(m => m.isCurrentUser || m.id === currentUser?.uid || m.id === "mem_currentUser");
     const currentUserMember: FriendGroupMember = {
       id: currentUser?.uid || "user_current",
       username: friendUsername || "@student",
       displayName: currentUser?.displayName || (friendUsername ? friendUsername.replace("@", "") : "You"),
-      focusMinutesThisWeek: totalFocusMinutes, // ACTUAL LIVE READING
-      streak: userStreak,
+      focusMinutesThisWeek: typeof totalFocusMinutes === "number" && !isNaN(totalFocusMinutes) ? totalFocusMinutes : 0,
+      streak: userStreak || 0,
       isCurrentUser: true,
       status: focusModeActive ? "studying" : "online",
       role: currentUserIdx >= 0 ? membersList[currentUserIdx].role : "admin"
@@ -417,9 +429,9 @@ export default function FriendsTab({
             id: f.id,
             username: f.username,
             displayName: f.displayName,
-            focusMinutesThisWeek: f.focusMinutesThisWeek,
-            streak: f.streak,
-            status: f.status,
+            focusMinutesThisWeek: typeof f.focusMinutesThisWeek === "number" && !isNaN(f.focusMinutesThisWeek) ? f.focusMinutesThisWeek : 0,
+            streak: f.streak || 0,
+            status: f.status || "online",
             role: "member"
           });
         }
@@ -435,9 +447,9 @@ export default function FriendsTab({
     }));
   }, [activeGroup, totalFocusMinutes, userStreak, friendUsername, currentUser, focusModeActive, friends, selectedGroupId]);
 
-  // Group total focus minutes
+  // Group total focus minutes (safe against NaN)
   const groupTotalMinutes = useMemo(() => {
-    return activeLeaderboard.reduce((acc, m) => acc + m.focusMinutesThisWeek, 0);
+    return activeLeaderboard.reduce((acc, m) => acc + (typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek) ? m.focusMinutesThisWeek : 0), 0);
   }, [activeLeaderboard]);
 
   const groupProgressPercent = useMemo(() => {
@@ -996,15 +1008,50 @@ export default function FriendsTab({
             })}
           </div>
 
-          {/* Loser owes coffee note */}
-          <div className={`p-4 rounded-2xl border flex items-center gap-3 mt-4 ${
-            isLight ? "bg-[#FFF5F0] border-[#F0D5CC]" : "bg-[#140E26] border-[#8B5CF6]/30"
-          }`}>
-            <Coffee size={18} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
-            <span className={`text-xs font-sans ${isLight ? "text-[#7A6E65]" : "text-[#C4B5FD]/85"}`}>
-              <strong>Friendly Wager:</strong> The member at the bottom of the weekly leaderboard owes coffee to the #1 rank when the board resets Sunday midnight!
-            </span>
-          </div>
+          {/* If alone in the squad, show friendly invite helper */}
+          {activeLeaderboard.length <= 1 ? (
+            <div className={`p-4 rounded-2xl border text-center space-y-2.5 mt-3 ${
+              isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#120E22] border-white/10"
+            }`}>
+              <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#77736B] dark:text-[#C4B5FD]">
+                <Users size={15} />
+                <span>You are currently the only scholar in this squad</span>
+              </div>
+              <p className="text-[11px] font-sans text-[#77736B] dark:text-[#C4B5FD]/70 max-w-md mx-auto">
+                Share this group code <span className="font-mono font-bold text-[#C25E42] dark:text-[#C084FC]">{activeGroup?.code}</span> with your study circle so actual classmates can join and compete on this weekly leaderboard!
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeGroup?.code) {
+                    navigator.clipboard.writeText(activeGroup.code);
+                    setCopiedGroupCode(true);
+                    setTimeout(() => setCopiedGroupCode(false), 2000);
+                  }
+                }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition cursor-pointer inline-flex items-center gap-1.5 ${
+                  copiedGroupCode
+                    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                    : isLight
+                    ? "bg-white border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#F0EEE8]"
+                    : "bg-[#1A1432] border-white/10 text-white hover:bg-[#231A44]"
+                }`}
+              >
+                {copiedGroupCode ? <Check size={12} /> : <Copy size={12} />}
+                <span>{copiedGroupCode ? "Group Code Copied!" : "Copy Group Code"}</span>
+              </button>
+            </div>
+          ) : (
+            /* Loser owes coffee note when multiple real members */
+            <div className={`p-4 rounded-2xl border flex items-center gap-3 mt-4 ${
+              isLight ? "bg-[#FFF5F0] border-[#F0D5CC]" : "bg-[#140E26] border-[#8B5CF6]/30"
+            }`}>
+              <Coffee size={18} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
+              <span className={`text-xs font-sans ${isLight ? "text-[#7A6E65]" : "text-[#C4B5FD]/85"}`}>
+                <strong>Friendly Wager:</strong> The member at the bottom of the weekly leaderboard owes coffee to the #1 rank when the board resets Sunday midnight!
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
