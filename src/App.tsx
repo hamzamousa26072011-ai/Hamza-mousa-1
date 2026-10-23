@@ -1354,27 +1354,35 @@ export default function App() {
       focusModeActive ? "studying" : "online"
     );
 
-    // 2. Subscribe to incoming friend requests from actual students in real time (ZERO TEST SUBJECTS)
-    const unsubIncoming = subscribeToRealFriendRequests(currentUser.uid, (incoming) => {
-      setFriendRequests((prev) => {
-        const cleanPrev = prev.filter((r) => !isTestSubject(r));
-        const outgoing = cleanPrev.filter((r) => r.direction === "outgoing");
-        const cleanIncoming = incoming.filter((r) => !isTestSubject(r));
-        const incomingIds = new Set(cleanIncoming.map((r) => r.id));
-        const nonDuplicatePrevIncoming = cleanPrev.filter((r) => r.direction === "incoming" && !incomingIds.has(r.id));
-        return [...cleanIncoming, ...outgoing, ...nonDuplicatePrevIncoming];
-      });
-    });
+    // 2. Subscribe to incoming friend requests from actual students in real time (matches UID and 5-digit code, ZERO TEST SUBJECTS)
+    const unsubIncoming = subscribeToRealFriendRequests(
+      currentUser.uid, 
+      (incoming) => {
+        setFriendRequests((prev) => {
+          const cleanPrev = (prev || []).filter((r) => !isTestSubject(r));
+          const outgoing = cleanPrev.filter((r) => r.direction === "outgoing");
+          const cleanIncoming = incoming.filter((r) => !isTestSubject(r));
+          const incomingIds = new Set(cleanIncoming.map((r) => r.id));
+          const nonDuplicatePrevIncoming = cleanPrev.filter((r) => r.direction === "incoming" && !incomingIds.has(r.id));
+          return [...cleanIncoming, ...outgoing, ...nonDuplicatePrevIncoming];
+        });
+      },
+      userCode
+    );
 
     // 3. Subscribe to accepted friend requests: when friend accepts, sender automatically gets them in friends list!
-    const unsubAccepted = subscribeToAcceptedFriendRequests(currentUser.uid, (newAcceptedFriend) => {
-      setFriends((prevFriends) => {
-        if (prevFriends.some(f => f.username.toLowerCase() === newAcceptedFriend.username.toLowerCase() || f.id === newAcceptedFriend.id)) {
-          return prevFriends;
-        }
-        return [newAcceptedFriend, ...prevFriends];
-      });
-    });
+    const unsubAccepted = subscribeToAcceptedFriendRequests(
+      currentUser.uid, 
+      (newAcceptedFriend) => {
+        setFriends((prevFriends) => {
+          if (prevFriends.some(f => f.username.toLowerCase() === newAcceptedFriend.username.toLowerCase() || f.id === newAcceptedFriend.id || (f.fiveDigitCode && f.fiveDigitCode === newAcceptedFriend.fiveDigitCode))) {
+            return prevFriends;
+          }
+          return [newAcceptedFriend, ...prevFriends];
+        });
+      },
+      userCode
+    );
 
     // 4. Subscribe to collaborative study rooms user has created or joined
     const unsubRooms = subscribeToUserStudyRooms(currentUser.uid, (cloudRooms) => {

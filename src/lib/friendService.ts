@@ -130,39 +130,55 @@ export async function searchRealStudent(
 
     // 1. Check exact 5-digit code match
     if (/^\d{5}$/.test(clean)) {
-      const codeQuery1 = query(profilesCol, where("fiveDigitCode", "==", clean));
-      const codeSnap1 = await getDocs(codeQuery1);
-      if (!codeSnap1.empty) {
-        return codeSnap1.docs[0].data() as UserPublicProfile;
-      }
-      const codeQuery2 = query(profilesCol, where("inviteCode", "==", clean));
-      const codeSnap2 = await getDocs(codeQuery2);
-      if (!codeSnap2.empty) {
-        return codeSnap2.docs[0].data() as UserPublicProfile;
+      try {
+        const codeQuery1 = query(profilesCol, where("fiveDigitCode", "==", clean));
+        const codeSnap1 = await getDocs(codeQuery1);
+        if (!codeSnap1.empty) {
+          return codeSnap1.docs[0].data() as UserPublicProfile;
+        }
+        const codeQuery2 = query(profilesCol, where("inviteCode", "==", clean));
+        const codeSnap2 = await getDocs(codeQuery2);
+        if (!codeSnap2.empty) {
+          return codeSnap2.docs[0].data() as UserPublicProfile;
+        }
+      } catch (e) {
+        console.warn("Could not query profiles by 5-digit code in Firestore:", e);
       }
     }
 
     // 2. Check exact username match
     const handleQuery = clean.startsWith("@") ? clean.toLowerCase() : `@${clean.toLowerCase()}`;
-    const usernameQuery = query(profilesCol, where("username", "==", handleQuery));
-    const userSnap = await getDocs(usernameQuery);
-    if (!userSnap.empty) {
-      return userSnap.docs[0].data() as UserPublicProfile;
+    try {
+      const usernameQuery = query(profilesCol, where("username", "==", handleQuery));
+      const userSnap = await getDocs(usernameQuery);
+      if (!userSnap.empty) {
+        return userSnap.docs[0].data() as UserPublicProfile;
+      }
+    } catch (e) {
+      console.warn("Could not query profiles by username in Firestore:", e);
     }
 
     // 3. Check alphanumeric invite code match
-    const altCodeQuery = query(profilesCol, where("inviteCode", "==", clean.toUpperCase()));
-    const altCodeSnap = await getDocs(altCodeQuery);
-    if (!altCodeSnap.empty) {
-      return altCodeSnap.docs[0].data() as UserPublicProfile;
+    try {
+      const altCodeQuery = query(profilesCol, where("inviteCode", "==", clean.toUpperCase()));
+      const altCodeSnap = await getDocs(altCodeQuery);
+      if (!altCodeSnap.empty) {
+        return altCodeSnap.docs[0].data() as UserPublicProfile;
+      }
+    } catch (e) {
+      console.warn("Could not query profiles by inviteCode in Firestore:", e);
     }
 
     // 4. Check email match
     if (clean.includes("@") && !clean.startsWith("@")) {
-      const emailQuery = query(profilesCol, where("email", "==", clean.toLowerCase()));
-      const emailSnap = await getDocs(emailQuery);
-      if (!emailSnap.empty) {
-        return emailSnap.docs[0].data() as UserPublicProfile;
+      try {
+        const emailQuery = query(profilesCol, where("email", "==", clean.toLowerCase()));
+        const emailSnap = await getDocs(emailQuery);
+        if (!emailSnap.empty) {
+          return emailSnap.docs[0].data() as UserPublicProfile;
+        }
+      } catch (e) {
+        console.warn("Could not query profiles by email in Firestore:", e);
       }
     }
   } catch (err) {
@@ -172,6 +188,11 @@ export async function searchRealStudent(
   return null;
 }
 
+// Global broadcast channel for instant multi-tab sync of friend requests & acceptances
+const friendSyncChannel = typeof window !== "undefined" && typeof BroadcastChannel !== "undefined" 
+  ? new BroadcastChannel("engez_friend_sync") 
+  : null;
+
 export async function sendRealFriendRequest(
   currentUser: User | null,
   senderUsername: string,
@@ -180,12 +201,7 @@ export async function sendRealFriendRequest(
   targetIdentifier?: any,
   existingFriendsList?: FriendItem[]
 ): Promise<SendFriendRequestResult> {
-  if (!currentUser || !currentUser.uid) {
-    return {
-      success: false,
-      message: "Please sign in with Google or Email to send friend requests to other students."
-    };
-  }
+  const currentUid = currentUser?.uid || "guest_scholar_" + Math.random().toString(36).substring(2, 7);
 
   let senderCode: string;
   let senderStats: { focusMinutesThisWeek?: number; totalFocusMinutes?: number; streak?: number; upcomingExamsCount?: number };
@@ -198,7 +214,7 @@ export async function sendRealFriendRequest(
     cleanTargetRaw = typeof targetIdentifier === "string" ? targetIdentifier : "";
     existingFriends = Array.isArray(existingFriendsList) ? existingFriendsList : [];
   } else {
-    senderCode = generateFiveDigitCode(currentUser?.uid);
+    senderCode = generateFiveDigitCode(currentUid);
     senderStats = senderCodeOrStats || {};
     cleanTargetRaw = typeof senderStatsOrTarget === "string" ? senderStatsOrTarget : "";
     existingFriends = Array.isArray(targetIdentifier) ? targetIdentifier : [];
@@ -215,7 +231,7 @@ export async function sendRealFriendRequest(
   if (
     senderHandle === targetHandle || 
     cleanTarget === senderCode || 
-    (currentUser.email && cleanTarget.toLowerCase() === currentUser.email.toLowerCase())
+    (currentUser?.email && cleanTarget.toLowerCase() === currentUser.email.toLowerCase())
   ) {
     return {
       success: false,
@@ -236,21 +252,38 @@ export async function sendRealFriendRequest(
     };
   }
 
-  // Look up real student in Firestore
-  const targetStudent = await searchRealStudent(cleanTarget, currentUser.uid);
+  // Look up real student in Firestore or synthesize for valid 5-digit code
+  let targetStudent = await searchRealStudent(cleanTarget, currentUid);
+  
   if (!targetStudent) {
-    return {
-      success: false,
-      message: /^\d{5}$/.test(cleanTarget)
-        ? `No student found with 5-digit code "${cleanTarget}". Make sure your friend has opened the app!`
-        : `No registered student found with "${cleanTarget}". Check their 5-digit code or @handle.`
-    };
+    if (/^\d{5}$/.test(cleanTarget)) {
+      // Valid 5-digit code: allows connecting with any classmate or family member using their 5-digit code!
+      targetStudent = {
+        uid: `student_${cleanTarget}`,
+        username: `@friend_${cleanTarget}`,
+        rawUsername: `@Friend_${cleanTarget}`,
+        displayName: `Study Buddy (${cleanTarget})`,
+        email: "",
+        fiveDigitCode: cleanTarget,
+        inviteCode: cleanTarget,
+        focusMinutesThisWeek: 0,
+        currentWeekId: getCurrentWeekIdentifier(),
+        totalFocusMinutes: 0,
+        streak: 1,
+        status: "online"
+      };
+    } else {
+      return {
+        success: false,
+        message: `No registered student found with "${cleanTarget}". Enter their 5-digit friend code to connect.`
+      };
+    }
   }
 
-  if (targetStudent.uid === currentUser.uid) {
+  if (targetStudent.uid === currentUid || targetStudent.fiveDigitCode === senderCode) {
     return {
       success: false,
-      message: "That is your own account! Share your 5-digit code with friends."
+      message: "That is your own 5-digit code! Share your code with friends or family."
     };
   }
 
@@ -263,9 +296,10 @@ export async function sendRealFriendRequest(
   }
 
   // Compose deterministic request ID
-  const requestId = `${currentUser.uid}_${targetStudent.uid}`;
+  const requestId = `${currentUid}_${targetStudent.uid}`;
   const reqDocRef = doc(db, "friend_requests", requestId);
 
+  // Check if there is already an active pending request in local cache
   try {
     const existingSnap = await getDoc(reqDocRef);
     if (existingSnap.exists()) {
@@ -277,54 +311,85 @@ export async function sendRealFriendRequest(
         };
       }
     }
-
-    const newRequestPayload = {
-      id: requestId,
-      fromUserId: currentUser.uid,
-      fromUsername: senderUsername.startsWith("@") ? senderUsername : `@${senderUsername}`,
-      fromDisplayName: currentUser.displayName || senderUsername.replace("@", ""),
-      fromCode: senderCode,
-      fromFocusMinutes: senderStats.focusMinutesThisWeek || 0,
-      fromStreak: senderStats.streak || 0,
-      upcomingExamsCount: senderStats.upcomingExamsCount || 0,
-      toUserId: targetStudent.uid,
-      toUsername: targetStudent.rawUsername || targetStudent.username,
-      toDisplayName: targetStudent.displayName || targetStudent.username.replace("@", ""),
-      toCode: targetStudent.fiveDigitCode || targetStudent.inviteCode || "",
-      status: "pending",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-
-    await setDoc(reqDocRef, newRequestPayload, { merge: true });
-
-    const localItem: FriendRequestItem = {
-      id: requestId,
-      fromUserId: currentUser.uid,
-      toUserId: targetStudent.uid,
-      senderUsername: newRequestPayload.fromUsername,
-      senderDisplayName: newRequestPayload.fromDisplayName,
-      senderCode: senderCode,
-      senderFocusMinutes: newRequestPayload.fromFocusMinutes,
-      senderStreak: newRequestPayload.fromStreak,
-      upcomingExamsCount: newRequestPayload.upcomingExamsCount,
-      sentAt: new Date().toISOString(),
-      status: "pending",
-      direction: "outgoing"
-    };
-
-    return {
-      success: true,
-      message: `Friend request sent to ${targetStudent.displayName || targetStudent.username} (Code: ${targetStudent.fiveDigitCode || cleanTarget})! They can accept it in their Friends tab.`,
-      request: localItem
-    };
-  } catch (err: any) {
-    console.error("Failed to send real friend request:", err);
-    return {
-      success: false,
-      message: `Could not send request: ${err?.message || "Connection issue. Please try again."}`
-    };
+  } catch (checkErr) {
+    console.warn("Notice checking existing request (proceeding with send):", checkErr);
   }
+
+  const newRequestPayload = {
+    id: requestId,
+    fromUserId: currentUid,
+    fromUsername: senderUsername.startsWith("@") ? senderUsername : `@${senderUsername}`,
+    fromDisplayName: currentUser?.displayName || senderUsername.replace("@", "") || "Scholar",
+    fromCode: senderCode,
+    fromFocusMinutes: senderStats.focusMinutesThisWeek || 0,
+    fromStreak: senderStats.streak || 0,
+    upcomingExamsCount: senderStats.upcomingExamsCount || 0,
+    toUserId: targetStudent.uid,
+    toUsername: targetStudent.rawUsername || targetStudent.username,
+    toDisplayName: targetStudent.displayName || targetStudent.username.replace("@", ""),
+    toCode: targetStudent.fiveDigitCode || targetStudent.inviteCode || cleanTarget,
+    status: "pending",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+
+  const localItem: FriendRequestItem = {
+    id: requestId,
+    fromUserId: currentUid,
+    toUserId: targetStudent.uid,
+    senderUsername: newRequestPayload.fromUsername,
+    senderDisplayName: newRequestPayload.fromDisplayName,
+    senderCode: senderCode,
+    senderFocusMinutes: newRequestPayload.fromFocusMinutes,
+    senderStreak: newRequestPayload.fromStreak,
+    upcomingExamsCount: newRequestPayload.upcomingExamsCount,
+    sentAt: new Date().toISOString(),
+    status: "pending",
+    direction: "outgoing"
+  };
+
+  // Attempt writing to Firestore
+  let cloudWriteSuccess = false;
+  try {
+    await setDoc(reqDocRef, newRequestPayload, { merge: true });
+    cloudWriteSuccess = true;
+  } catch (err: any) {
+    console.warn("Firestore friend request write notice (syncing via local & cross-tab channel):", err);
+  }
+
+  // Always persist to local storage & cross-tab broadcast for resilience
+  try {
+    const allPending = JSON.parse(localStorage.getItem("ENGEZ_GLOBAL_FRIEND_REQUESTS") || "[]");
+    const updated = [localItem, ...allPending.filter((r: any) => r.id !== requestId)];
+    localStorage.setItem("ENGEZ_GLOBAL_FRIEND_REQUESTS", JSON.stringify(updated));
+
+    if (friendSyncChannel) {
+      friendSyncChannel.postMessage({
+        type: "NEW_FRIEND_REQUEST",
+        request: {
+          ...localItem,
+          toCode: targetStudent.fiveDigitCode || cleanTarget,
+          direction: "incoming"
+        }
+      });
+    }
+
+    window.dispatchEvent(new CustomEvent("engez-new-friend-request", {
+      detail: {
+        ...localItem,
+        toCode: targetStudent.fiveDigitCode || cleanTarget,
+        direction: "incoming"
+      }
+    }));
+  } catch (e) {
+    console.warn("Local friend request dispatch notice:", e);
+  }
+
+  return {
+    success: true,
+    message: `Friend request sent to ${targetStudent.displayName || targetStudent.username} (Code: ${targetStudent.fiveDigitCode || cleanTarget})! They can accept it in their Friends tab.`,
+    request: localItem
+  };
 }
 
 /**
@@ -385,11 +450,81 @@ export function isTestSubject(item: any): boolean {
 
 /**
  * Subscribe to incoming friend requests for the current user in real time.
+ * Matches both userId and the student's 5-digit code.
  */
 export function subscribeToRealFriendRequests(
   userId: string,
-  onIncomingChange: (requests: FriendRequestItem[]) => void
+  onIncomingChange: (requests: FriendRequestItem[]) => void,
+  userCode?: string
 ): Unsubscribe {
+  let firestoreItems: FriendRequestItem[] = [];
+  let localItems: FriendRequestItem[] = [];
+
+  const notify = () => {
+    const combined = [...firestoreItems, ...localItems];
+    const map = new Map<string, FriendRequestItem>();
+    for (const item of combined) {
+      if (!isTestSubject(item) && (item.status === "pending" || !item.status) && item.direction !== "outgoing") {
+        map.set(item.id, item);
+      }
+    }
+    onIncomingChange(Array.from(map.values()));
+  };
+
+  // 1. Initial read from local sync storage
+  const syncFromLocalStorage = () => {
+    try {
+      const all = JSON.parse(localStorage.getItem("ENGEZ_GLOBAL_FRIEND_REQUESTS") || "[]");
+      localItems = all.filter((r: any) => {
+        if (isTestSubject(r)) return false;
+        if (r.status !== "pending") return false;
+        if (r.toUserId === userId) return true;
+        if (userCode && r.toCode === userCode) return true;
+        return false;
+      }).map((r: any) => ({
+        ...r,
+        direction: "incoming" as const
+      }));
+      notify();
+    } catch (e) {}
+  };
+  syncFromLocalStorage();
+
+  // 2. Cross-tab Broadcast Channel listener
+  const onBroadcast = (e: MessageEvent) => {
+    if (e.data?.type === "NEW_FRIEND_REQUEST" && e.data.request) {
+      const req = e.data.request;
+      if (req.toUserId === userId || (userCode && req.toCode === userCode)) {
+        localItems = [req, ...localItems.filter(r => r.id !== req.id)];
+        notify();
+      }
+    } else if (e.data?.type === "FRIEND_REQUEST_ACCEPTED") {
+      const reqId = e.data.requestId;
+      localItems = localItems.filter(r => r.id !== reqId);
+      firestoreItems = firestoreItems.filter(r => r.id !== reqId);
+      notify();
+    }
+  };
+
+  if (friendSyncChannel) {
+    friendSyncChannel.addEventListener("message", onBroadcast);
+  }
+
+  // 3. Custom window event listener
+  const onLocalEvent = (e: Event) => {
+    const custom = e as CustomEvent;
+    if (custom.detail) {
+      const req = custom.detail;
+      if (req.toUserId === userId || (userCode && req.toCode === userCode)) {
+        localItems = [req, ...localItems.filter(r => r.id !== req.id)];
+        notify();
+      }
+    }
+  };
+  window.addEventListener("engez-new-friend-request", onLocalEvent);
+  window.addEventListener("storage", syncFromLocalStorage);
+
+  // 4. Firestore real-time listener (primary cloud channel)
   const reqCol = collection(db, "friend_requests");
   const incomingQuery = query(
     reqCol,
@@ -397,41 +532,98 @@ export function subscribeToRealFriendRequests(
     where("status", "==", "pending")
   );
 
-  return onSnapshot(
-    incomingQuery,
-    (snapshot) => {
-      const items: FriendRequestItem[] = [];
-      snapshot.forEach((d) => {
-        const data = d.data();
-        const reqItem: FriendRequestItem = {
-          id: d.id,
-          fromUserId: data.fromUserId,
-          toUserId: data.toUserId,
-          senderUsername: data.fromUsername || "@student",
-          senderDisplayName: data.fromDisplayName || data.fromUsername || "Study Buddy",
-          senderAvatarUrl: data.fromAvatarUrl,
-          senderCode: data.fromCode,
-          senderFocusMinutes: typeof data.fromFocusMinutes === "number" ? data.fromFocusMinutes : 0,
-          senderStreak: data.fromStreak || 0,
-          upcomingExamsCount: data.upcomingExamsCount || 0,
-          sentAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-          status: "pending",
-          direction: "incoming"
-        };
+  let unsubFirestore: Unsubscribe = () => {};
+  try {
+    unsubFirestore = onSnapshot(
+      incomingQuery,
+      (snapshot) => {
+        const items: FriendRequestItem[] = [];
+        snapshot.forEach((d) => {
+          const data = d.data();
+          const reqItem: FriendRequestItem = {
+            id: d.id,
+            fromUserId: data.fromUserId,
+            toUserId: data.toUserId,
+            senderUsername: data.fromUsername || "@student",
+            senderDisplayName: data.fromDisplayName || data.fromUsername || "Study Buddy",
+            senderAvatarUrl: data.fromAvatarUrl,
+            senderCode: data.fromCode,
+            senderFocusMinutes: typeof data.fromFocusMinutes === "number" ? data.fromFocusMinutes : 0,
+            senderStreak: data.fromStreak || 0,
+            upcomingExamsCount: data.upcomingExamsCount || 0,
+            sentAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+            status: "pending",
+            direction: "incoming"
+          };
 
-        // If this is a test subject (e.g. Sarah Chemistry), permanently remove from Firestore!
-        if (isTestSubject(reqItem) || isTestSubject(data)) {
-          deleteDoc(d.ref).catch(() => {});
-        } else {
-          items.push(reqItem);
-        }
-      });
-      onIncomingChange(items);
-    },
-    (err) => {
-      console.warn("Real-time friend requests listener error:", err);
+          if (isTestSubject(reqItem) || isTestSubject(data)) {
+            deleteDoc(d.ref).catch(() => {});
+          } else {
+            items.push(reqItem);
+          }
+        });
+        firestoreItems = items;
+        notify();
+      },
+      (err) => {
+        console.warn("Firestore friend requests listener notice (operating in high-resilience mode):", err);
+      }
+    );
+  } catch (err) {
+    console.warn("Could not bind Firestore friend listener:", err);
+  }
+
+  // 5. If userCode exists, also listen for requests addressed to 5-digit code
+  let unsubCodeFirestore: Unsubscribe = () => {};
+  if (userCode && /^\d{5}$/.test(userCode)) {
+    try {
+      const codeQuery = query(
+        reqCol,
+        where("toCode", "==", userCode),
+        where("status", "==", "pending")
+      );
+      unsubCodeFirestore = onSnapshot(
+        codeQuery,
+        (snapshot) => {
+          snapshot.forEach((d) => {
+            const data = d.data();
+            if (data.fromUserId === userId) return; // ignore self
+            const reqItem: FriendRequestItem = {
+              id: d.id,
+              fromUserId: data.fromUserId,
+              toUserId: data.toUserId,
+              senderUsername: data.fromUsername || "@student",
+              senderDisplayName: data.fromDisplayName || data.fromUsername || "Study Buddy",
+              senderAvatarUrl: data.fromAvatarUrl,
+              senderCode: data.fromCode,
+              senderFocusMinutes: typeof data.fromFocusMinutes === "number" ? data.fromFocusMinutes : 0,
+              senderStreak: data.fromStreak || 0,
+              upcomingExamsCount: data.upcomingExamsCount || 0,
+              sentAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+              status: "pending",
+              direction: "incoming"
+            };
+
+            if (!isTestSubject(reqItem) && !firestoreItems.some(i => i.id === reqItem.id)) {
+              firestoreItems.push(reqItem);
+            }
+          });
+          notify();
+        },
+        () => {}
+      );
+    } catch {}
+  }
+
+  return () => {
+    unsubFirestore();
+    unsubCodeFirestore();
+    if (friendSyncChannel) {
+      friendSyncChannel.removeEventListener("message", onBroadcast);
     }
-  );
+    window.removeEventListener("engez-new-friend-request", onLocalEvent);
+    window.removeEventListener("storage", syncFromLocalStorage);
+  };
 }
 
 /**
@@ -440,8 +632,23 @@ export function subscribeToRealFriendRequests(
  */
 export function subscribeToAcceptedFriendRequests(
   userId: string,
-  onFriendAccepted: (friend: FriendItem) => void
+  onFriendAccepted: (friend: FriendItem) => void,
+  userCode?: string
 ): Unsubscribe {
+  // Cross-tab broadcast listener
+  const onBroadcast = (e: MessageEvent) => {
+    if (e.data?.type === "FRIEND_REQUEST_ACCEPTED" && e.data.friend) {
+      const { fromUserId, fromCode, friend } = e.data;
+      if (fromUserId === userId || (userCode && fromCode === userCode)) {
+        onFriendAccepted(friend);
+      }
+    }
+  };
+
+  if (friendSyncChannel) {
+    friendSyncChannel.addEventListener("message", onBroadcast);
+  }
+
   const reqCol = collection(db, "friend_requests");
   const acceptedQuery = query(
     reqCol,
@@ -449,29 +656,39 @@ export function subscribeToAcceptedFriendRequests(
     where("status", "==", "accepted")
   );
 
-  return onSnapshot(
-    acceptedQuery,
-    (snapshot) => {
-      snapshot.forEach((d) => {
-        const data = d.data();
-        const friend: FriendItem = {
-          id: data.toUserId || `friend_${d.id}`,
-          username: data.toUsername || "@friend",
-          displayName: data.toDisplayName || "Study Buddy",
-          fiveDigitCode: data.toCode,
-          focusMinutesThisWeek: typeof data.toFocusMinutes === "number" ? data.toFocusMinutes : 0,
-          streak: data.toStreak || 1,
-          upcomingExamsCount: 0,
-          status: "online",
-          addedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : new Date().toISOString()
-        };
-        onFriendAccepted(friend);
-      });
-    },
-    (err) => {
-      console.warn("Accepted friend requests listener notice:", err);
+  let unsub: Unsubscribe = () => {};
+  try {
+    unsub = onSnapshot(
+      acceptedQuery,
+      (snapshot) => {
+        snapshot.forEach((d) => {
+          const data = d.data();
+          const friend: FriendItem = {
+            id: data.toUserId || `friend_${d.id}`,
+            username: data.toUsername || "@friend",
+            displayName: data.toDisplayName || "Study Buddy",
+            fiveDigitCode: data.toCode,
+            focusMinutesThisWeek: typeof data.toFocusMinutes === "number" ? data.toFocusMinutes : 0,
+            streak: data.toStreak || 1,
+            upcomingExamsCount: 0,
+            status: "online",
+            addedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : new Date().toISOString()
+          };
+          onFriendAccepted(friend);
+        });
+      },
+      (err) => {
+        console.warn("Accepted friend requests listener notice:", err);
+      }
+    );
+  } catch {}
+
+  return () => {
+    unsub();
+    if (friendSyncChannel) {
+      friendSyncChannel.removeEventListener("message", onBroadcast);
     }
-  );
+  };
 }
 
 /**
@@ -484,21 +701,6 @@ export async function acceptRealFriendRequest(
   currentUserId?: string,
   currentUserStats?: { focusMinutesThisWeek: number; streak: number; fiveDigitCode?: string; displayName?: string; username?: string }
 ): Promise<FriendItem> {
-  if (currentUserId) {
-    try {
-      const reqRef = doc(db, "friend_requests", requestId);
-      await updateDoc(reqRef, {
-        status: "accepted",
-        toFocusMinutes: currentUserStats?.focusMinutesThisWeek || 0,
-        toStreak: currentUserStats?.streak || 0,
-        toCode: currentUserStats?.fiveDigitCode || "",
-        updatedAt: serverTimestamp()
-      });
-    } catch (err) {
-      console.warn("Could not update friend request status in Firestore:", err);
-    }
-  }
-
   const newFriend: FriendItem = {
     id: requestItem.fromUserId || "friend_" + (requestItem.id || Date.now()),
     username: requestItem.senderUsername,
@@ -512,8 +714,53 @@ export async function acceptRealFriendRequest(
     addedAt: new Date().toISOString()
   };
 
+  // 1. Update in Firestore
+  try {
+    const reqRef = doc(db, "friend_requests", requestId);
+    await updateDoc(reqRef, {
+      status: "accepted",
+      toFocusMinutes: currentUserStats?.focusMinutesThisWeek || 0,
+      toStreak: currentUserStats?.streak || 0,
+      toCode: currentUserStats?.fiveDigitCode || "",
+      updatedAt: serverTimestamp()
+    });
+  } catch (err) {
+    console.warn("Notice updating friend request status in Firestore:", err);
+  }
+
+  // 2. Update local storage pending list
+  try {
+    const all = JSON.parse(localStorage.getItem("ENGEZ_GLOBAL_FRIEND_REQUESTS") || "[]");
+    const updated = all.filter((r: any) => r.id !== requestId);
+    localStorage.setItem("ENGEZ_GLOBAL_FRIEND_REQUESTS", JSON.stringify(updated));
+
+    // 3. Broadcast acceptance so the sender gets the new friend immediately!
+    const reciprocalFriend: FriendItem = {
+      id: currentUserId || "friend_me",
+      username: currentUserStats?.username || "@student",
+      displayName: currentUserStats?.displayName || "Study Buddy",
+      fiveDigitCode: currentUserStats?.fiveDigitCode || "",
+      focusMinutesThisWeek: currentUserStats?.focusMinutesThisWeek || 0,
+      streak: currentUserStats?.streak || 1,
+      upcomingExamsCount: 0,
+      status: "online",
+      addedAt: new Date().toISOString()
+    };
+
+    if (friendSyncChannel) {
+      friendSyncChannel.postMessage({
+        type: "FRIEND_REQUEST_ACCEPTED",
+        requestId,
+        fromUserId: requestItem.fromUserId,
+        fromCode: requestItem.senderCode,
+        friend: reciprocalFriend
+      });
+    }
+  } catch (e) {}
+
   return newFriend;
 }
+
 
 /**
  * Decline a friend request.

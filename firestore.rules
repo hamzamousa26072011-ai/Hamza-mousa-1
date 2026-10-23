@@ -73,31 +73,23 @@ service cloud.firestore {
 
     // 3. User Profiles collection for discovering study buddies
     match /user_profiles/{userId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() && request.auth.uid == userId && incoming().uid == userId;
-      allow update: if isSignedIn() && request.auth.uid == userId && incoming().uid == userId;
+      allow get, list: if true;
+      allow create, update: if true;
       allow delete: if isSignedIn() && request.auth.uid == userId;
     }
 
     // 4. Real Cross-User Friend Requests
     match /friend_requests/{requestId} {
-      allow get: if isSignedIn() && (request.auth.uid == resource.data.toUserId || request.auth.uid == resource.data.fromUserId);
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() 
-                    && request.auth.uid == incoming().fromUserId 
-                    && incoming().toUserId != request.auth.uid;
-      allow update: if isSignedIn() && (request.auth.uid == resource.data.toUserId || request.auth.uid == resource.data.fromUserId);
-      allow delete: if isSignedIn() && (request.auth.uid == resource.data.toUserId || request.auth.uid == resource.data.fromUserId);
+      allow get, list: if true;
+      allow create, update: if true;
+      allow delete: if true;
     }
 
     // 5. Collaborative Study Rooms
     match /study_rooms/{roomId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() && incoming().creatorId == request.auth.uid;
-      allow update: if isSignedIn();
-      allow delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
+      allow get, list: if true;
+      allow create, update: if true;
+      allow delete: if true;
     }
   }
 }

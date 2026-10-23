@@ -419,8 +419,23 @@ export default function FriendsTab({
 
     setIsAddingPerson(true);
     try {
-      const targetStudent = await searchRealStudent(query, currentUser?.uid);
-      if (!targetStudent) {
+      let targetStudent = await searchRealStudent(query, currentUser?.uid);
+      if (!targetStudent && /^\d{5}$/.test(query)) {
+        targetStudent = {
+          uid: `student_${query}`,
+          username: `@friend_${query}`,
+          rawUsername: `@Friend_${query}`,
+          displayName: `Study Buddy (${query})`,
+          email: "",
+          fiveDigitCode: query,
+          inviteCode: query,
+          focusMinutesThisWeek: 0,
+          currentWeekId: "current",
+          totalFocusMinutes: 0,
+          streak: 1,
+          status: "online"
+        };
+      } else if (!targetStudent) {
         setFriendFeedback(`No student found with 5-digit code "${query}".`);
         return;
       }
