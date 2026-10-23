@@ -64,5 +64,25 @@ service cloud.firestore {
                     && incoming().updatedAt == request.time;
       allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
     }
+
+    // 3. User Profiles collection for discovering study buddies
+    match /user_profiles/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId && incoming().uid == userId;
+      allow update: if isSignedIn() && request.auth.uid == userId && incoming().uid == userId;
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 4. Real Cross-User Friend Requests
+    match /friend_requests/{requestId} {
+      allow get: if isSignedIn() && (request.auth.uid == resource.data.toUserId || request.auth.uid == resource.data.fromUserId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() 
+                    && request.auth.uid == incoming().fromUserId 
+                    && incoming().toUserId != request.auth.uid;
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.toUserId || request.auth.uid == resource.data.fromUserId);
+      allow delete: if isSignedIn() && (request.auth.uid == resource.data.toUserId || request.auth.uid == resource.data.fromUserId);
+    }
   }
 }

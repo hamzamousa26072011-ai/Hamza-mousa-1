@@ -88,12 +88,117 @@
         }
       },
       "required": ["uid", "email"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public discoverable student profile for study buddy matching and friend requests.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase user UID"
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique handle e.g. @ahmed_chem"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Student display name"
+        },
+        "email": {
+          "type": "string",
+          "description": "Student email address"
+        },
+        "inviteCode": {
+          "type": "string",
+          "description": "Unique 6-8 char student invitation code"
+        },
+        "totalFocusMinutes": {
+          "type": "integer",
+          "description": "Total authenticated study focus minutes logged"
+        },
+        "streak": {
+          "type": "integer",
+          "description": "Consecutive days study streak"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "username"]
+    },
+    "FriendRequest": {
+      "title": "FriendRequest",
+      "description": "Cross-user live friend invitation between actual students.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Request identifier combining sender and recipient"
+        },
+        "fromUserId": {
+          "type": "string",
+          "description": "Sender UID"
+        },
+        "fromUsername": {
+          "type": "string",
+          "description": "Sender @handle"
+        },
+        "fromDisplayName": {
+          "type": "string",
+          "description": "Sender display name"
+        },
+        "fromFocusMinutes": {
+          "type": "integer",
+          "description": "Sender focus minutes reading"
+        },
+        "fromStreak": {
+          "type": "integer",
+          "description": "Sender streak"
+        },
+        "toUserId": {
+          "type": "string",
+          "description": "Recipient UID"
+        },
+        "toUsername": {
+          "type": "string",
+          "description": "Recipient @handle"
+        },
+        "toDisplayName": {
+          "type": "string",
+          "description": "Recipient display name"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "accepted", "declined"],
+          "description": "Request state"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "fromUserId", "toUserId", "status"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "UserWorkspace",
       "description": "Main document that persists all study portal workspace criteria for a single student."
+    },
+    "/user_profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "Public student profile index for searching buddies by username or invite code."
+    },
+    "/friend_requests/{requestId}": {
+      "schema": "FriendRequest",
+      "description": "Live cross-user friend requests delivered in real time."
     }
   }
 }

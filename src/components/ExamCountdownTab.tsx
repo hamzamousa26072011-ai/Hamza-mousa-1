@@ -32,6 +32,11 @@ import {
 import { User } from "firebase/auth";
 import { ExamItem, FriendItem, FriendLeaderboardEntry, FriendRequestItem } from "../types";
 import { saveUserExams, saveUserFriendsData } from "../lib/classroom";
+import { 
+  sendRealFriendRequest, 
+  acceptRealFriendRequest, 
+  declineRealFriendRequest 
+} from "../lib/friendService";
 
 interface ExamCountdownTabProps {
   currentUser: User | null;
@@ -726,41 +731,48 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
     setTimeout(() => setCopiedInvite(false), 2500);
   };
 
-  // Add friend by username
-  const handleAddFriend = (e: React.FormEvent) => {
+  // Add friend / send request to real student by @username, invite code, or email
+  const handleAddFriend = async (e: React.FormEvent) => {
     e.preventDefault();
-    let query = addFriendInput.trim();
+    const query = addFriendInput.trim();
     if (!query) return;
-    if (!query.startsWith("@")) query = "@" + query;
 
-    if (query.toLowerCase() === friendUsername.toLowerCase()) {
-      setFriendFeedback("That is your own username! Share your link with friends.");
+    if (!currentUser) {
+      setFriendFeedback("Please log in to send real friend requests.");
+      setTimeout(() => setFriendFeedback(null), 4000);
       return;
     }
 
-    const alreadyExists = friends.some(f => f.username.toLowerCase() === query.toLowerCase());
-    if (alreadyExists) {
-      setFriendFeedback(`${query} is already in your study circle!`);
-      return;
+    try {
+      const activeHandle = friendUsername || `@student_${currentUser.uid.slice(0, 5)}`;
+      const res = await sendRealFriendRequest(
+        currentUser,
+        activeHandle,
+        {
+          totalFocusMinutes: totalFocusMinutes || 0,
+          streak: userStreak || 0,
+          upcomingExamsCount: exams.length
+        },
+        query,
+        friends
+      );
+
+      if (res.success) {
+        if (res.request && setFriendRequests) {
+          const currentRequests = friendRequests || [];
+          const updatedRequests = [res.request, ...currentRequests.filter(r => r.id !== res.request!.id)];
+          persistFriends(friends, undefined, undefined, updatedRequests);
+        }
+        setFriendFeedback(res.message);
+        setAddFriendInput("");
+      } else {
+        setFriendFeedback(res.message);
+      }
+    } catch (err: any) {
+      setFriendFeedback(`Could not send request: ${err?.message || "Please try again"}`);
+    } finally {
+      setTimeout(() => setFriendFeedback(null), 5000);
     }
-
-    // Add new friend
-    const newFriend: FriendItem = {
-      id: "friend_" + Date.now(),
-      username: query,
-      displayName: query.replace("@", ""),
-      focusMinutesThisWeek: Math.floor(60 + Math.random() * 240),
-      streak: Math.floor(1 + Math.random() * 8),
-      upcomingExamsCount: Math.floor(1 + Math.random() * 5),
-      status: Math.random() > 0.5 ? "studying" : "online",
-      addedAt: new Date().toISOString()
-    };
-
-    const updated = [newFriend, ...friends];
-    persistFriends(updated);
-    setAddFriendInput("");
-    setFriendFeedback(`Success! Added ${query} to your study friends leaderboard.`);
-    setTimeout(() => setFriendFeedback(null), 4000);
   };
 
   // Remove a friend
@@ -771,83 +783,49 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
 
   // Pending incoming friend requests
   const pendingRequests = useMemo(() => {
-    return (friendRequests || []).filter(r => r.status === "pending" || !r.status);
+    return (friendRequests || []).filter(r => (r.status === "pending" || !r.status) && r.direction !== "outgoing");
   }, [friendRequests]);
 
-  // Accept incoming friend request (Option to accept friend requests requested by user)
-  const handleAcceptRequest = (requestId: string) => {
+  // Accept incoming friend request from real student
+  const handleAcceptRequest = async (requestId: string) => {
     const currentRequests = friendRequests || [];
     const targetReq = currentRequests.find(r => r.id === requestId);
     if (!targetReq) return;
 
-    // Convert request into new FriendItem
-    const newFriend: FriendItem = {
-      id: "friend_" + Date.now(),
-      username: targetReq.senderUsername,
-      displayName: targetReq.senderDisplayName || targetReq.senderUsername.replace("@", ""),
-      avatarUrl: targetReq.senderAvatarUrl,
-      focusMinutesThisWeek: targetReq.senderFocusMinutes ?? Math.floor(90 + Math.random() * 180),
-      streak: targetReq.senderStreak ?? Math.floor(2 + Math.random() * 5),
-      upcomingExamsCount: targetReq.upcomingExamsCount ?? Math.floor(1 + Math.random() * 4),
-      status: "online",
-      addedAt: new Date().toISOString()
-    };
+    try {
+      const newFriend = await acceptRealFriendRequest(requestId, targetReq, currentUser?.uid);
 
-    const updatedFriends = [
-      newFriend,
-      ...friends.filter(f => f.username.toLowerCase() !== targetReq.senderUsername.toLowerCase())
-    ];
-    const updatedRequests = currentRequests.filter(r => r.id !== requestId);
+      const updatedFriends = [
+        newFriend,
+        ...friends.filter(f => f.username.toLowerCase() !== targetReq.senderUsername.toLowerCase())
+      ];
+      const updatedRequests = currentRequests.filter(r => r.id !== requestId);
 
-    persistFriends(updatedFriends, undefined, undefined, updatedRequests);
-    setFriendFeedback(`Accepted friend request from ${targetReq.senderDisplayName || targetReq.senderUsername}! They are now in your Study Circle.`);
-    setTimeout(() => setFriendFeedback(null), 5000);
-  };
-
-  // Decline incoming friend request
-  const handleDeclineRequest = (requestId: string) => {
-    const currentRequests = friendRequests || [];
-    const targetReq = currentRequests.find(r => r.id === requestId);
-    const updatedRequests = currentRequests.filter(r => r.id !== requestId);
-    persistFriends(friends, undefined, undefined, updatedRequests);
-    if (targetReq) {
-      setFriendFeedback(`Declined friend request from ${targetReq.senderDisplayName || targetReq.senderUsername}.`);
-      setTimeout(() => setFriendFeedback(null), 4000);
+      persistFriends(updatedFriends, undefined, undefined, updatedRequests);
+      setFriendFeedback(`Accepted friend request from ${targetReq.senderDisplayName || targetReq.senderUsername}! They are now in your Study Circle.`);
+    } catch (err: any) {
+      setFriendFeedback(`Error accepting request: ${err?.message || "Please check connection"}`);
+    } finally {
+      setTimeout(() => setFriendFeedback(null), 5000);
     }
   };
 
-  // Helper to simulate a new incoming friend request for testing
-  const handleSimulateIncomingRequest = () => {
-    const samplePeers = [
-      { name: "Omar Farooq", username: "@omar_farooq", mins: 245, streak: 7, exams: 2 },
-      { name: "Layla Hassan", username: "@layla_hassan", mins: 180, streak: 4, exams: 4 },
-      { name: "Zaid Nabil", username: "@zaid_nabil", mins: 310, streak: 9, exams: 3 },
-      { name: "Mariam Taha", username: "@mariam_taha", mins: 140, streak: 3, exams: 1 }
-    ];
-    // Pick one not already a friend or in requests
-    const available = samplePeers.filter(p => 
-      !friends.some(f => f.username.toLowerCase() === p.username.toLowerCase()) &&
-      !(friendRequests || []).some(r => r.senderUsername.toLowerCase() === p.username.toLowerCase())
-    );
-    const pick = available.length > 0 ? available[0] : samplePeers[Math.floor(Math.random() * samplePeers.length)];
-    
-    const newReq: FriendRequestItem = {
-      id: "req_" + Date.now(),
-      senderUsername: pick.username,
-      senderDisplayName: pick.name,
-      senderFocusMinutes: pick.mins,
-      senderStreak: pick.streak,
-      upcomingExamsCount: pick.exams,
-      sentAt: new Date().toISOString(),
-      status: "pending",
-      direction: "incoming"
-    };
-
+  // Decline incoming friend request
+  const handleDeclineRequest = async (requestId: string) => {
     const currentRequests = friendRequests || [];
-    const updatedRequests = [newReq, ...currentRequests.filter(r => r.senderUsername.toLowerCase() !== pick.username.toLowerCase())];
-    persistFriends(friends, undefined, undefined, updatedRequests);
-    setFriendFeedback(`New friend request received from ${pick.name}!`);
-    setTimeout(() => setFriendFeedback(null), 4000);
+    const targetReq = currentRequests.find(r => r.id === requestId);
+    try {
+      await declineRealFriendRequest(requestId, currentUser?.uid);
+      const updatedRequests = currentRequests.filter(r => r.id !== requestId);
+      persistFriends(friends, undefined, undefined, updatedRequests);
+      if (targetReq) {
+        setFriendFeedback(`Declined friend request from ${targetReq.senderDisplayName || targetReq.senderUsername}.`);
+      }
+    } catch (err: any) {
+      setFriendFeedback(`Error declining request: ${err?.message || "Please check connection"}`);
+    } finally {
+      setTimeout(() => setFriendFeedback(null), 4000);
+    }
   };
 
   // Sorted and filtered exams
@@ -1509,20 +1487,11 @@ export const ExamCountdownTab: React.FC<ExamCountdownTabProps> = ({
                 </div>
               </div>
 
-              {/* Quick simulation helper for testing acceptance flow */}
-              <button
-                type="button"
-                onClick={handleSimulateIncomingRequest}
-                className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
-                  isLight 
-                    ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:text-[#C25E42] hover:border-[#C25E42]" 
-                    : "bg-[#140E26] border-white/10 text-[#C4B5FD] hover:text-white hover:border-[#8B5CF6]/50"
-                }`}
-                title="Simulate receiving an incoming friend request to test the Accept flow"
-              >
-                <Sparkles size={12} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
-                <span>Simulate Request</span>
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  ● Real-Time
+                </span>
+              </div>
             </div>
 
             {/* LIST OF PENDING REQUESTS */}

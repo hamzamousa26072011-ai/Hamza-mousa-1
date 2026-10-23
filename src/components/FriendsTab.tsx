@@ -23,10 +23,16 @@ import {
   Crown,
   Medal,
   CheckCircle2,
-  Inbox
+  Inbox,
+  Loader2
 } from "lucide-react";
 import { FriendItem, FriendRequestItem, FriendGroup, FriendGroupMember } from "../types";
 import { saveUserFriendsData } from "../lib/classroom";
+import { 
+  sendRealFriendRequest, 
+  acceptRealFriendRequest, 
+  declineRealFriendRequest 
+} from "../lib/friendService";
 
 interface FriendsTabProps {
   currentUser: User | null;
@@ -72,6 +78,7 @@ export default function FriendsTab({
 
   // Input states
   const [addFriendInput, setAddFriendInput] = useState("");
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
   const [isChangingUsername, setIsChangingUsername] = useState(false);
   const [usernameInput, setUsernameInput] = useState(friendUsername || "");
   const [copiedInvite, setCopiedInvite] = useState(false);
@@ -116,152 +123,114 @@ export default function FriendsTab({
 
   // Pending incoming requests
   const pendingRequests = useMemo(() => {
-    return (friendRequests || []).filter(r => r.status === "pending" || !r.status);
+    return (friendRequests || []).filter(r => (r.status === "pending" || !r.status) && r.direction !== "outgoing");
   }, [friendRequests]);
 
-  // Option to ACCEPT friend request
-  const handleAcceptRequest = (requestId: string) => {
+  // Option to ACCEPT real friend request
+  const handleAcceptRequest = async (requestId: string) => {
     const targetReq = friendRequests.find(r => r.id === requestId);
     if (!targetReq) return;
 
-    const newFriend: FriendItem = {
-      id: "friend_" + Date.now(),
-      username: targetReq.senderUsername,
-      displayName: targetReq.senderDisplayName || targetReq.senderUsername.replace("@", ""),
-      avatarUrl: targetReq.senderAvatarUrl,
-      focusMinutesThisWeek: targetReq.senderFocusMinutes ?? Math.floor(90 + Math.random() * 180),
-      streak: targetReq.senderStreak ?? Math.floor(2 + Math.random() * 6),
-      upcomingExamsCount: targetReq.upcomingExamsCount ?? 2,
-      status: "online",
-      addedAt: new Date().toISOString()
-    };
+    try {
+      const newFriend = await acceptRealFriendRequest(requestId, targetReq, currentUser?.uid);
 
-    const updatedFriends = [
-      newFriend,
-      ...friends.filter(f => f.username.toLowerCase() !== targetReq.senderUsername.toLowerCase())
-    ];
-    const updatedRequests = friendRequests.filter(r => r.id !== requestId);
+      const updatedFriends = [
+        newFriend,
+        ...friends.filter(f => f.username.toLowerCase() !== targetReq.senderUsername.toLowerCase())
+      ];
+      const updatedRequests = friendRequests.filter(r => r.id !== requestId);
 
-    // Also add this friend to the active groups as a member
-    const updatedGroups = friendGroups.map(grp => {
-      if (!grp.members.some(m => m.username.toLowerCase() === targetReq.senderUsername.toLowerCase())) {
-        return {
-          ...grp,
-          members: [
-            ...grp.members,
-            {
-              id: newFriend.id,
-              username: newFriend.username,
-              displayName: newFriend.displayName,
-              focusMinutesThisWeek: newFriend.focusMinutesThisWeek,
-              streak: newFriend.streak,
-              status: newFriend.status,
-              role: "member" as const
-            }
-          ]
-        };
-      }
-      return grp;
-    });
+      // Also add this friend to the active groups as a member
+      const updatedGroups = friendGroups.map(grp => {
+        if (!grp.members.some(m => m.username.toLowerCase() === targetReq.senderUsername.toLowerCase())) {
+          return {
+            ...grp,
+            members: [
+              ...grp.members,
+              {
+                id: newFriend.id,
+                username: newFriend.username,
+                displayName: newFriend.displayName,
+                focusMinutesThisWeek: newFriend.focusMinutesThisWeek,
+                streak: newFriend.streak,
+                status: newFriend.status,
+                role: "member" as const
+              }
+            ]
+          };
+        }
+        return grp;
+      });
 
-    persistAllFriendsData(updatedFriends, updatedRequests, updatedGroups);
-    setFriendFeedback(`Accepted study friend request from ${targetReq.senderDisplayName || targetReq.senderUsername}! They are now in your Study Circle.`);
-    setTimeout(() => setFriendFeedback(null), 5000);
+      persistAllFriendsData(updatedFriends, updatedRequests, updatedGroups);
+      setFriendFeedback(`Accepted study friend request from ${targetReq.senderDisplayName || targetReq.senderUsername}! They are now in your Study Circle.`);
+    } catch (err: any) {
+      setFriendFeedback(`Error accepting request: ${err?.message || "Please check connection"}`);
+    } finally {
+      setTimeout(() => setFriendFeedback(null), 5000);
+    }
   };
 
-  // Option to DECLINE friend request
-  const handleDeclineRequest = (requestId: string) => {
+  // Option to DECLINE real friend request
+  const handleDeclineRequest = async (requestId: string) => {
     const targetReq = friendRequests.find(r => r.id === requestId);
-    const updatedRequests = friendRequests.filter(r => r.id !== requestId);
-    persistAllFriendsData(friends, updatedRequests, friendGroups);
-    if (targetReq) {
-      setFriendFeedback(`Declined request from ${targetReq.senderDisplayName || targetReq.senderUsername}.`);
+    try {
+      await declineRealFriendRequest(requestId, currentUser?.uid);
+      const updatedRequests = friendRequests.filter(r => r.id !== requestId);
+      persistAllFriendsData(friends, updatedRequests, friendGroups);
+      if (targetReq) {
+        setFriendFeedback(`Declined request from ${targetReq.senderDisplayName || targetReq.senderUsername}.`);
+      }
+    } catch (err: any) {
+      setFriendFeedback(`Error declining request: ${err?.message || "Please check connection"}`);
+    } finally {
       setTimeout(() => setFriendFeedback(null), 4000);
     }
   };
 
-  // Helper to simulate a new incoming request for testing
-  const handleSimulateIncomingRequest = () => {
-    const samplePeers = [
-      { name: "Omar Farooq", username: "@omar_farooq", mins: 245, streak: 7, exams: 2 },
-      { name: "Layla Hassan", username: "@layla_hassan", mins: 180, streak: 4, exams: 4 },
-      { name: "Zaid Nabil", username: "@zaid_nabil", mins: 310, streak: 9, exams: 3 },
-      { name: "Mariam Taha", username: "@mariam_taha", mins: 140, streak: 3, exams: 1 }
-    ];
-    const pick = samplePeers[Math.floor(Math.random() * samplePeers.length)];
-    const newReq: FriendRequestItem = {
-      id: "req_" + Date.now(),
-      senderUsername: pick.username,
-      senderDisplayName: pick.name,
-      senderFocusMinutes: pick.mins,
-      senderStreak: pick.streak,
-      upcomingExamsCount: pick.exams,
-      sentAt: new Date().toISOString(),
-      status: "pending",
-      direction: "incoming"
-    };
-
-    const updatedRequests = [newReq, ...friendRequests.filter(r => r.senderUsername.toLowerCase() !== pick.username.toLowerCase())];
-    persistAllFriendsData(friends, updatedRequests, friendGroups);
-    setFriendFeedback(`New friend request received from ${pick.name}!`);
-    setTimeout(() => setFriendFeedback(null), 4000);
-  };
-
-  // Send request / add friend by username
-  const handleAddFriend = (e: React.FormEvent) => {
+  // Send request / add real student by @username, invite code, or email
+  const handleAddFriend = async (e: React.FormEvent) => {
     e.preventDefault();
-    let query = addFriendInput.trim();
+    const query = addFriendInput.trim();
     if (!query) return;
-    if (!query.startsWith("@")) query = "@" + query;
 
-    if (query.toLowerCase() === friendUsername.toLowerCase()) {
-      setFriendFeedback("That is your own username! Share your link with friends.");
+    if (!currentUser) {
+      setFriendFeedback("Please log in with Google or Email to send real friend requests.");
+      setTimeout(() => setFriendFeedback(null), 5000);
       return;
     }
 
-    if (friends.some(f => f.username.toLowerCase() === query.toLowerCase())) {
-      setFriendFeedback(`${query} is already in your study circle!`);
-      return;
-    }
+    setIsSendingRequest(true);
+    try {
+      const activeHandle = friendUsername || `@student_${currentUser.uid.slice(0, 5)}`;
+      const res = await sendRealFriendRequest(
+        currentUser,
+        activeHandle,
+        {
+          totalFocusMinutes,
+          streak: userStreak,
+          upcomingExamsCount: 0
+        },
+        query,
+        friends
+      );
 
-    const newFriend: FriendItem = {
-      id: "friend_" + Date.now(),
-      username: query,
-      displayName: query.replace("@", ""),
-      focusMinutesThisWeek: Math.floor(60 + Math.random() * 240),
-      streak: Math.floor(1 + Math.random() * 8),
-      upcomingExamsCount: Math.floor(1 + Math.random() * 4),
-      status: Math.random() > 0.5 ? "studying" : "online",
-      addedAt: new Date().toISOString()
-    };
-
-    const updatedFriends = [newFriend, ...friends];
-    // Also add to current active group
-    const updatedGroups = friendGroups.map(grp => {
-      if (grp.id === selectedGroupId || selectedGroupId === "all") {
-        return {
-          ...grp,
-          members: [
-            ...grp.members,
-            {
-              id: newFriend.id,
-              username: newFriend.username,
-              displayName: newFriend.displayName,
-              focusMinutesThisWeek: newFriend.focusMinutesThisWeek,
-              streak: newFriend.streak,
-              status: newFriend.status,
-              role: "member" as const
-            }
-          ]
-        };
+      if (res.success) {
+        if (res.request) {
+          const updatedRequests = [res.request, ...friendRequests.filter(r => r.id !== res.request!.id)];
+          persistAllFriendsData(friends, updatedRequests, friendGroups);
+        }
+        setFriendFeedback(res.message);
+        setAddFriendInput("");
+      } else {
+        setFriendFeedback(res.message);
       }
-      return grp;
-    });
-
-    persistAllFriendsData(updatedFriends, friendRequests, updatedGroups);
-    setAddFriendInput("");
-    setFriendFeedback(`Success! Added ${query} to your study friends leaderboard.`);
-    setTimeout(() => setFriendFeedback(null), 4000);
+    } catch (err: any) {
+      setFriendFeedback(`Could not send request: ${err?.message || "Please try again"}`);
+    } finally {
+      setIsSendingRequest(false);
+      setTimeout(() => setFriendFeedback(null), 6000);
+    }
   };
 
   // Remove a friend
@@ -561,19 +530,9 @@ export default function FriendsTab({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleSimulateIncomingRequest}
-              className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold flex items-center gap-1 transition cursor-pointer ${
-                isLight 
-                  ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:text-[#C25E42]" 
-                  : "bg-white/5 border-white/10 text-[#C4B5FD] hover:text-white"
-              }`}
-              title="Simulate receiving an incoming friend request to test the Accept flow"
-            >
-              <Sparkles size={11} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
-              <span>Simulate Request</span>
-            </button>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              ● Firestore Live
+            </span>
           </div>
         </div>
       </div>
@@ -598,34 +557,40 @@ export default function FriendsTab({
         </div>
       )}
 
-      {/* 2. PENDING FRIEND REQUESTS SECTION (OPTION TO ACCEPT FRIEND REQUESTS) */}
-      {pendingRequests.length > 0 && (
-        <div className={`p-5 sm:p-6 rounded-3xl border shadow-xs space-y-4 ${
-          isLight ? "bg-white border-[#E8D7C9]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
-        }`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className={`w-9 h-9 rounded-2xl ${
-                isLight ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#C25E42]" : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
-              } border flex items-center justify-center shrink-0`}>
-                <UserCheck size={18} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className={`font-extrabold text-base sm:text-lg font-sans tracking-tight ${isLight ? "text-[#1A1614]" : "text-white"}`}>
-                    Pending Friend Requests
-                  </h3>
+      {/* 2. REAL CROSS-USER FRIEND REQUESTS SECTION */}
+      <div className={`p-5 sm:p-6 rounded-3xl border shadow-xs space-y-4 ${
+        isLight ? "bg-white border-[#E8D7C9]" : "bg-[#0A0714]/85 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-9 h-9 rounded-2xl ${
+              isLight ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#C25E42]" : "bg-[#8B5CF6]/20 border-[#8B5CF6]/40 text-[#C084FC]"
+            } border flex items-center justify-center shrink-0`}>
+              <UserCheck size={18} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className={`font-extrabold text-base sm:text-lg font-sans tracking-tight ${isLight ? "text-[#1A1614]" : "text-white"}`}>
+                  Friend Requests
+                </h3>
+                {pendingRequests.length > 0 ? (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                     {pendingRequests.length} waiting
                   </span>
-                </div>
-                <p className={`text-xs font-sans mt-0.5 ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"}`}>
-                  Accept incoming requests to add friends to your Study Circle and group leaderboards.
-                </p>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Live Real-Time
+                  </span>
+                )}
               </div>
+              <p className={`text-xs font-sans mt-0.5 ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"}`}>
+                Real-time study requests from actual students across sessions and devices.
+              </p>
             </div>
           </div>
+        </div>
 
+        {pendingRequests.length > 0 ? (
           <div className="space-y-3 pt-1">
             {pendingRequests.map((req) => {
               const initials = (req.senderDisplayName || req.senderUsername || "F")
@@ -704,8 +669,20 @@ export default function FriendsTab({
               );
             })}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className={`p-4 sm:p-5 rounded-2xl border text-center space-y-2.5 ${
+            isLight ? "bg-[#FAF8F5] border-[#E8D7C9]" : "bg-[#120E22] border-white/10"
+          }`}>
+            <div className="flex items-center justify-center gap-2 text-xs font-sans font-medium text-[#77736B] dark:text-[#C4B5FD]/75">
+              <Inbox size={15} />
+              <span>No incoming friend requests right now.</span>
+            </div>
+            <p className="text-[11px] font-sans text-[#77736B] dark:text-[#C4B5FD]/60 max-w-md mx-auto">
+              Share your personal invite code <span className="font-mono font-bold text-[#C25E42] dark:text-[#C084FC]">{inviteCode || "ENG-..."}</span> or handle <span className="font-mono font-bold text-[#C25E42] dark:text-[#C084FC]">{friendUsername || "@student"}</span> with classmates. Any requests they send arrive here in real time.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* 3. FRIEND GROUPS SWITCHER & LEADERBOARD SECTION */}
       <div className={`p-5 sm:p-7 rounded-3xl border shadow-xs space-y-6 ${
@@ -1137,12 +1114,12 @@ export default function FriendsTab({
           </div>
         </div>
 
-        {/* ADD BY USERNAME (TERRACOTTA ORANGE IN LIGHT THEME, PURPLE IN DARK) */}
+        {/* ADD BY USERNAME, INVITE CODE, OR EMAIL */}
         <form onSubmit={handleAddFriend} className="space-y-1.5">
           <label className={`text-xs font-mono font-bold uppercase tracking-wider block ${
             isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"
           }`}>
-            Add by username
+            Add study buddy (@username, invite code, or email)
           </label>
 
           <div className="flex items-center gap-2">
@@ -1150,24 +1127,34 @@ export default function FriendsTab({
               type="text"
               value={addFriendInput}
               onChange={(e) => setAddFriendInput(e.target.value)}
-              placeholder="@username"
+              placeholder="e.g. @sarah_chem or ENG-4B2K"
+              disabled={isSendingRequest}
               className={`flex-1 px-4 py-2.5 rounded-2xl border text-sm font-mono font-medium outline-none transition ${
                 isLight 
                   ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] focus:border-[#C25E42] focus:bg-white" 
                   : "bg-[#120E22] border-white/10 text-white focus:border-[#8B5CF6] focus:bg-[#1A1432]"
-              }`}
+              } disabled:opacity-60`}
             />
             <button
               type="submit"
-              disabled={!addFriendInput.trim()}
+              disabled={!addFriendInput.trim() || isSendingRequest}
               className={`px-5 py-2.5 rounded-2xl text-xs font-bold text-white transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98] ${
                 isLight 
                   ? "bg-[#C25E42] hover:bg-[#B25136] shadow-md shadow-[#C25E42]/20" 
                   : "bg-[#7C3AED] hover:bg-[#6D28D9] shadow-lg shadow-[#7C3AED]/30"
               } disabled:opacity-50`}
             >
-              <span>Send</span>
-              <ArrowRight size={13} className="text-white" />
+              {isSendingRequest ? (
+                <>
+                  <Loader2 size={13} className="animate-spin text-white" />
+                  <span>Sending...</span>
+                </>
+              ) : (
+                <>
+                  <span>Send Request</span>
+                  <ArrowRight size={13} className="text-white" />
+                </>
+              )}
             </button>
           </div>
         </form>

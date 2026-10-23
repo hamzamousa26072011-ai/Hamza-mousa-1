@@ -82,6 +82,10 @@ import {
   setClientQuarantine, 
   reportThreatToServer 
 } from "./lib/securityShield";
+import { 
+  syncUserProfileToFirestore, 
+  subscribeToRealFriendRequests 
+} from "./lib/friendService";
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
@@ -1262,7 +1266,10 @@ export default function App() {
           const userFriends = localStorage.getItem(`ENGEZ_USER_FRIENDS_${parsedUser.uid}`);
           if (userFriends) {
             const parsed = JSON.parse(userFriends);
-            if (Array.isArray(parsed?.friendRequests)) return parsed.friendRequests;
+            if (Array.isArray(parsed?.friendRequests)) {
+              // Strip out any legacy simulated fake requests
+              return parsed.friendRequests.filter((r: any) => r.id !== "req_sarah_chem");
+            }
           }
         }
       }
@@ -1272,24 +1279,45 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed?.friendRequests)) return parsed.friendRequests;
+        if (Array.isArray(parsed?.friendRequests)) {
+          return parsed.friendRequests.filter((r: any) => r.id !== "req_sarah_chem");
+        }
       } catch (e) {}
     }
-    // Default sample incoming request for immediate user testing and interactive acceptance
-    return [
-      {
-        id: "req_sarah_chem",
-        senderUsername: "@sarah_chem",
-        senderDisplayName: "Sarah (Chemistry)",
-        senderFocusMinutes: 195,
-        senderStreak: 5,
-        upcomingExamsCount: 3,
-        sentAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-        status: "pending",
-        direction: "incoming"
-      }
-    ];
+    // No simulated placeholders; start clean for actual students
+    return [];
   });
+
+  // Sync discoverable profile and subscribe to real friend requests across users via Firestore
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    // 1. Sync current user's discoverable public profile so other actual students can search and connect
+    syncUserProfileToFirestore(
+      currentUser,
+      friendUsername || `@user_${currentUser.uid.slice(0, 5)}`,
+      inviteCode || `ENG-${currentUser.uid.slice(0, 4).toUpperCase()}`,
+      totalFocusMinutes,
+      streak,
+      exams.length
+    );
+
+    // 2. Subscribe to incoming friend requests from actual students in real time
+    const unsubscribe = subscribeToRealFriendRequests(currentUser.uid, (incoming) => {
+      setFriendRequests((prev) => {
+        // Filter out any legacy fake requests
+        const cleanPrev = prev.filter((r) => r.id !== "req_sarah_chem");
+        const outgoing = cleanPrev.filter((r) => r.direction === "outgoing");
+        const incomingIds = new Set(incoming.map((r) => r.id));
+        const nonDuplicatePrevIncoming = cleanPrev.filter((r) => r.direction === "incoming" && !incomingIds.has(r.id));
+        return [...incoming, ...outgoing, ...nonDuplicatePrevIncoming];
+      });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [currentUser, friendUsername, inviteCode, totalFocusMinutes, streak, exams.length]);
 
   useEffect(() => {
     localStorage.setItem("ENGEZ_EXAM_COUNTDOWNS_V1", JSON.stringify(exams));
