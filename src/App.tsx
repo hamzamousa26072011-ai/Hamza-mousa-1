@@ -498,7 +498,7 @@ export default function App() {
     localStorage.setItem("ENGEZ_POMODOROS_COUNT", pomodoroCompletedCount.toString());
   }, [pomodoroCompletedCount]);
 
-  // TOTAL & WEEKLY FOCUS MINUTES (Counts every minute from Timer & Stopwatch, synced live to leaderboards)
+  // TOTAL & WEEKLY FOCUS MINUTES (Real minutes counted from Timer & Stopwatch, resets every Monday)
   const [focusMinutesThisWeek, setFocusMinutesThisWeek] = useState<number>(() => {
     try {
       const currentWeek = getCurrentWeekIdentifier();
@@ -511,10 +511,15 @@ export default function App() {
       const saved = localStorage.getItem("ENGEZ_USER_WEEKLY_FOCUS_MINUTES");
       if (saved) {
         const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed)) return parsed;
+        // Wipe legacy fake 145 minutes so student starts with real minutes
+        if (parsed === 145) {
+          localStorage.setItem("ENGEZ_USER_WEEKLY_FOCUS_MINUTES", "0");
+          return 0;
+        }
+        if (!isNaN(parsed) && parsed >= 0) return parsed;
       }
     } catch (e) {}
-    return 145; // Starting reading for current week
+    return 0; // Pure 0 for real study counting
   });
 
   useEffect(() => {
@@ -527,41 +532,70 @@ export default function App() {
       const saved = localStorage.getItem("ENGEZ_USER_TOTAL_FOCUS_MINUTES");
       if (saved) {
         const parsed = parseInt(saved, 10);
-        if (!isNaN(parsed)) return parsed;
+        if (parsed === 145) {
+          localStorage.setItem("ENGEZ_USER_TOTAL_FOCUS_MINUTES", "0");
+          return 0;
+        }
+        if (!isNaN(parsed) && parsed >= 0) return parsed;
       }
     } catch (e) {}
-    return 145;
+    return 0;
   });
 
   useEffect(() => {
     localStorage.setItem("ENGEZ_USER_TOTAL_FOCUS_MINUTES", totalFocusMinutes.toString());
   }, [totalFocusMinutes]);
 
-  const handleRecordFocusMinute = () => {
+  const handleRecordFocusMinute = (minutesToAdd = 1) => {
     const currentWeek = getCurrentWeekIdentifier();
     const savedWeek = localStorage.getItem("ENGEZ_USER_CURRENT_WEEK_ID");
+    
+    // Automatic weekly reset every Monday
     if (savedWeek && savedWeek !== currentWeek) {
       localStorage.setItem("ENGEZ_USER_CURRENT_WEEK_ID", currentWeek);
-      setFocusMinutesThisWeek(1);
+      setFocusMinutesThisWeek(minutesToAdd);
+      localStorage.setItem("ENGEZ_USER_WEEKLY_FOCUS_MINUTES", minutesToAdd.toString());
     } else {
-      setFocusMinutesThisWeek((prev) => prev + 1);
+      setFocusMinutesThisWeek((prev) => {
+        const cleanPrev = prev === 145 ? 0 : Math.max(0, prev);
+        const next = cleanPrev + minutesToAdd;
+        localStorage.setItem("ENGEZ_USER_WEEKLY_FOCUS_MINUTES", next.toString());
+        return next;
+      });
     }
-    setTotalFocusMinutes((prev) => prev + 1);
+
+    setTotalFocusMinutes((prev) => {
+      const cleanPrev = prev === 145 ? 0 : Math.max(0, prev);
+      const next = cleanPrev + minutesToAdd;
+      localStorage.setItem("ENGEZ_USER_TOTAL_FOCUS_MINUTES", next.toString());
+      return next;
+    });
   };
 
   const timerSecondsElapsedRef = useRef(0);
+  const lastTickTimeRef = useRef<number>(Date.now());
 
-  // Focus Timer interval effect: records each minute passed towards actual readings
+  // Focus Timer interval effect: accurately records each 60 seconds passed towards real study minutes
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (focusModeActive && focusSecondsRemaining > 0) {
+      lastTickTimeRef.current = Date.now();
       interval = setInterval(() => {
+        const now = Date.now();
+        const deltaMs = now - lastTickTimeRef.current;
+        lastTickTimeRef.current = now;
+        
+        // Accurate elapsed seconds calculation (resilient to tab switching & throttling)
+        const secondsElapsed = Math.max(1, Math.round(deltaMs / 1000));
+
         setFocusSecondsRemaining((prev) => {
-          const next = prev - 1;
-          timerSecondsElapsedRef.current += 1;
+          const next = Math.max(0, prev - secondsElapsed);
+          timerSecondsElapsedRef.current += secondsElapsed;
+          
           if (timerSecondsElapsedRef.current >= 60) {
-            timerSecondsElapsedRef.current = 0;
-            handleRecordFocusMinute();
+            const minutesCompleted = Math.floor(timerSecondsElapsedRef.current / 60);
+            timerSecondsElapsedRef.current = timerSecondsElapsedRef.current % 60;
+            handleRecordFocusMinute(minutesCompleted);
           }
           return next;
         });
@@ -569,6 +603,12 @@ export default function App() {
     } else if (focusSecondsRemaining === 0 && focusModeActive) {
       setFocusModeActive(false);
       pauseSoundscape();
+      
+      // If there were >= 30 seconds of study remaining in this cycle, credit 1 full minute
+      if (timerSecondsElapsedRef.current >= 30) {
+        timerSecondsElapsedRef.current = 0;
+        handleRecordFocusMinute(1);
+      }
       
       setStreak((prev) => prev + 1);
       setPomodoroCompletedCount((prev) => prev + 1);
@@ -578,7 +618,7 @@ export default function App() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [focusModeActive, focusSecondsRemaining, pomodoroMode]);
+  }, [focusModeActive, focusSecondsRemaining, pomodoroMode, focusMinutesSelected]);
 
   const handleDurationChange = (mins: number) => {
     setFocusMinutesSelected(mins);
@@ -1245,6 +1285,18 @@ export default function App() {
     return [];
   });
 
+  const sanitizeFriendItem = (f: any): FriendItem => {
+    let minsThisWeek = typeof f.focusMinutesThisWeek === "number" && !isNaN(f.focusMinutesThisWeek) ? f.focusMinutesThisWeek : 0;
+    if (minsThisWeek === 145) minsThisWeek = 0;
+    let totalMins = typeof f.totalFocusMinutes === "number" && !isNaN(f.totalFocusMinutes) ? f.totalFocusMinutes : minsThisWeek;
+    if (totalMins === 145) totalMins = 0;
+    return {
+      ...f,
+      focusMinutesThisWeek: minsThisWeek,
+      totalFocusMinutes: totalMins
+    };
+  };
+
   const [friends, setFriends] = useState<FriendItem[]>(() => {
     try {
       const storedSimulated = localStorage.getItem("ENGEZ_SIMULATED_USER");
@@ -1254,7 +1306,7 @@ export default function App() {
           const userFriends = localStorage.getItem(`ENGEZ_USER_FRIENDS_${parsedUser.uid}`);
           if (userFriends) {
             const parsed = JSON.parse(userFriends);
-            if (Array.isArray(parsed?.friends)) return parsed.friends;
+            if (Array.isArray(parsed?.friends)) return parsed.friends.filter((f: any) => !isTestSubject(f)).map(sanitizeFriendItem);
           }
         }
       }
@@ -1264,8 +1316,8 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed?.friends)) return parsed.friends.filter((f: any) => !isTestSubject(f));
-        if (Array.isArray(parsed)) return parsed.filter((f: any) => !isTestSubject(f));
+        if (Array.isArray(parsed?.friends)) return parsed.friends.filter((f: any) => !isTestSubject(f)).map(sanitizeFriendItem);
+        if (Array.isArray(parsed)) return parsed.filter((f: any) => !isTestSubject(f)).map(sanitizeFriendItem);
       } catch (e) {}
     }
     return [];
@@ -1519,7 +1571,8 @@ export default function App() {
           m.isCurrentUser || m.id === currentUser?.uid || m.id === "mem_currentUser"
             ? {
                 ...m,
-                focusMinutesThisWeek: totalFocusMinutes,
+                focusMinutesThisWeek: focusMinutesThisWeek,
+                totalFocusMinutes: totalFocusMinutes,
                 streak: streak,
                 displayName: currentUser?.displayName || (m.displayName !== "You" ? m.displayName : "You"),
                 username: currentUser?.displayName
@@ -1529,9 +1582,8 @@ export default function App() {
               }
             : {
                 ...m,
-                focusMinutesThisWeek: typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek)
-                  ? m.focusMinutesThisWeek
-                  : 0
+                focusMinutesThisWeek: m.focusMinutesThisWeek === 145 ? 0 : (typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek) ? m.focusMinutesThisWeek : 0),
+                totalFocusMinutes: m.totalFocusMinutes === 145 ? 0 : (typeof m.totalFocusMinutes === "number" && !isNaN(m.totalFocusMinutes) ? m.totalFocusMinutes : 0)
               }
         );
 
@@ -1540,7 +1592,8 @@ export default function App() {
             id: currentUser?.uid || "mem_currentUser",
             username: friendUsername || "@student",
             displayName: currentUser?.displayName || "You",
-            focusMinutesThisWeek: totalFocusMinutes,
+            focusMinutesThisWeek: focusMinutesThisWeek,
+            totalFocusMinutes: totalFocusMinutes,
             streak: streak,
             isCurrentUser: true,
             status: focusModeActive ? "studying" : "online",
@@ -1554,7 +1607,7 @@ export default function App() {
         };
       })
     );
-  }, [totalFocusMinutes, streak, currentUser, friendUsername, focusModeActive]);
+  }, [focusMinutesThisWeek, totalFocusMinutes, streak, currentUser, friendUsername, focusModeActive]);
 
   useEffect(() => {
     localStorage.setItem("ENGEZ_STUDY_FRIEND_GROUPS_V1", JSON.stringify(friendGroups));

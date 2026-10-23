@@ -262,15 +262,29 @@ export default function FocusTab({
     setCustomMinutes(focusMinutesSelected % 60);
   }, [focusMinutesSelected]);
 
-  // Stopwatch ticking interval: every 60s count as a study focus minute
+  // Stopwatch ticking interval: accurately counts every 60s as a real study focus minute
+  const swLastTickRef = React.useRef<number>(Date.now());
+  const swElapsedRef = React.useRef<number>(0);
+
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (stopwatchActive) {
+      swLastTickRef.current = Date.now();
       interval = setInterval(() => {
+        const now = Date.now();
+        const deltaMs = now - swLastTickRef.current;
+        swLastTickRef.current = now;
+        const deltaSecs = Math.max(1, Math.round(deltaMs / 1000));
+
         setStopwatchSeconds((prev) => {
-          const next = prev + 1;
-          if (next > 0 && next % 60 === 0) {
-            onMinutePassed?.();
+          const next = prev + deltaSecs;
+          swElapsedRef.current += deltaSecs;
+          if (swElapsedRef.current >= 60) {
+            const minutesToAdd = Math.floor(swElapsedRef.current / 60);
+            swElapsedRef.current = swElapsedRef.current % 60;
+            for (let i = 0; i < minutesToAdd; i++) {
+              onMinutePassed?.();
+            }
           }
           return next;
         });

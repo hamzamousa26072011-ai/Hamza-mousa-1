@@ -465,15 +465,16 @@ export default function FriendsTab({
 
     let membersList: FriendGroupMember[] = (activeRoom.members || []).map(m => {
       const isCur = m.isCurrentUser || m.id === currentUser?.uid || m.id === "mem_currentUser";
+      let memWeekMins = typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek) ? m.focusMinutesThisWeek : 0;
+      if (memWeekMins === 145) memWeekMins = 0;
+      let memTotalMins = typeof m.totalFocusMinutes === "number" && !isNaN(m.totalFocusMinutes) ? m.totalFocusMinutes : memWeekMins;
+      if (memTotalMins === 145) memTotalMins = 0;
+
       return {
         ...m,
         fiveDigitCode: isCur ? my5DigitCode : m.fiveDigitCode,
-        focusMinutesThisWeek: isCur
-          ? focusMinutesThisWeek
-          : (typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek) ? m.focusMinutesThisWeek : 0),
-        totalFocusMinutes: isCur
-          ? totalFocusMinutes
-          : (typeof m.totalFocusMinutes === "number" && !isNaN(m.totalFocusMinutes) ? m.totalFocusMinutes : 0)
+        focusMinutesThisWeek: isCur ? focusMinutesThisWeek : memWeekMins,
+        totalFocusMinutes: isCur ? totalFocusMinutes : memTotalMins
       };
     });
 
@@ -677,6 +678,25 @@ export default function FriendsTab({
           </div>
 
           <div className="flex items-center gap-2">
+            {onRecordMinute && (
+              <button
+                type="button"
+                onClick={() => {
+                  onRecordMinute();
+                  setFriendFeedback("Added 1 real minute of study time to your weekly score!");
+                  setTimeout(() => setFriendFeedback(null), 3000);
+                }}
+                className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-bold transition flex items-center gap-1 cursor-pointer active:scale-95 border ${
+                  isLight 
+                    ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B] hover:text-[#C25E42]" 
+                    : "bg-[#140E26] border-white/10 text-[#C4B5FD] hover:text-white"
+                }`}
+                title="Add 1 minute of study time directly to weekly leaderboard"
+              >
+                <Plus size={11} />
+                <span>Log +1m</span>
+              </button>
+            )}
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               ● Live Weekly Reset
             </span>
