@@ -47,9 +47,15 @@ service cloud.firestore {
         && (!data.keys().hasAll(['friends']) || (data.friends is list && data.friends.size() <= 100))
         && (!data.keys().hasAll(['friendUsername']) || (data.friendUsername is string && data.friendUsername.size() <= 64))
         && (!data.keys().hasAll(['inviteCode']) || (data.inviteCode is string && data.inviteCode.size() <= 64))
+        && (!data.keys().hasAll(['friendGroups']) || (data.friendGroups is list && data.friendGroups.size() <= 50))
+        && (!data.keys().hasAll(['friendRequests']) || (data.friendRequests is list && data.friendRequests.size() <= 100))
+        && (!data.keys().hasAll(['totalFocusMinutes']) || (data.totalFocusMinutes is int && data.totalFocusMinutes >= 0))
+        && (!data.keys().hasAll(['focusMinutesThisWeek']) || (data.focusMinutesThisWeek is int && data.focusMinutesThisWeek >= 0))
+        && (!data.keys().hasAll(['fiveDigitCode']) || (data.fiveDigitCode is string && data.fiveDigitCode.size() <= 16))
+        && (!data.keys().hasAll(['currentWeekId']) || (data.currentWeekId is string && data.currentWeekId.size() <= 32))
         // strict key checks to prevent ghost/shadow fields and privilege escalation
         && data.keys().hasAll(['uid', 'email', 'streak', 'subjects', 'tasks', 'classes', 'apps'])
-        && data.keys().size() <= 25;
+        && data.keys().size() <= 32;
     }
 
     // 2. Main users/ workspace collection rules
@@ -83,6 +89,15 @@ service cloud.firestore {
                     && incoming().toUserId != request.auth.uid;
       allow update: if isSignedIn() && (request.auth.uid == resource.data.toUserId || request.auth.uid == resource.data.fromUserId);
       allow delete: if isSignedIn() && (request.auth.uid == resource.data.toUserId || request.auth.uid == resource.data.fromUserId);
+    }
+
+    // 5. Collaborative Study Rooms
+    match /study_rooms/{roomId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && incoming().creatorId == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
     }
   }
 }

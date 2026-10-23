@@ -205,7 +205,9 @@ export interface FriendItem {
   username: string;
   displayName: string;
   avatarUrl?: string;
+  fiveDigitCode?: string;
   focusMinutesThisWeek: number;
+  totalFocusMinutes?: number;
   streak: number;
   upcomingExamsCount: number;
   status: "online" | "studying" | "offline";
@@ -214,9 +216,12 @@ export interface FriendItem {
 
 export interface FriendRequestItem {
   id: string;
+  fromUserId?: string;
+  toUserId?: string;
   senderUsername: string;
   senderDisplayName: string;
   senderAvatarUrl?: string;
+  senderCode?: string;
   senderFocusMinutes?: number;
   senderStreak?: number;
   upcomingExamsCount?: number;
@@ -230,7 +235,9 @@ export interface FriendLeaderboardEntry {
   rank: number;
   username: string;
   displayName: string;
+  fiveDigitCode?: string;
   focusMinutes: number;
+  focusMinutesThisWeek?: number;
   streak: number;
   isCurrentUser?: boolean;
   badge?: string;
@@ -241,7 +248,9 @@ export interface FriendGroupMember {
   username: string;
   displayName: string;
   avatarUrl?: string;
+  fiveDigitCode?: string;
   focusMinutesThisWeek: number;
+  totalFocusMinutes?: number;
   streak: number;
   isCurrentUser?: boolean;
   status: "online" | "studying" | "offline";
@@ -252,9 +261,12 @@ export interface FriendGroup {
   id: string;
   name: string;
   description?: string;
-  code: string;
+  code: string; // 5-digit room code
   subject?: string;
   weeklyGoalMinutes: number;
+  creatorId?: string;
+  creatorName?: string;
+  memberIds?: string[];
   members: FriendGroupMember[];
   createdAt: string;
   isCustom?: boolean;

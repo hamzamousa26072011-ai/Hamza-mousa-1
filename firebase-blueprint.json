@@ -122,6 +122,18 @@
           "type": "integer",
           "description": "Consecutive days study streak"
         },
+        "fiveDigitCode": {
+          "type": "string",
+          "description": "5-digit numeric friend code"
+        },
+        "focusMinutesThisWeek": {
+          "type": "integer",
+          "description": "Minutes studied during the current week"
+        },
+        "currentWeekId": {
+          "type": "string",
+          "description": "Week identifier e.g. 2026-W43"
+        },
         "updatedAt": {
           "type": "string",
           "format": "date-time"
@@ -150,6 +162,10 @@
           "type": "string",
           "description": "Sender display name"
         },
+        "fromCode": {
+          "type": "string",
+          "description": "Sender 5-digit friend code"
+        },
         "fromFocusMinutes": {
           "type": "integer",
           "description": "Sender focus minutes reading"
@@ -170,6 +186,10 @@
           "type": "string",
           "description": "Recipient display name"
         },
+        "toCode": {
+          "type": "string",
+          "description": "Recipient 5-digit friend code"
+        },
         "status": {
           "type": "string",
           "enum": ["pending", "accepted", "declined"],
@@ -185,6 +205,60 @@
         }
       },
       "required": ["id", "fromUserId", "toUserId", "status"]
+    },
+    "StudyRoom": {
+      "title": "StudyRoom",
+      "description": "Collaborative study room where students study together and view weekly leaderboards.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique room ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Room name"
+        },
+        "code": {
+          "type": "string",
+          "description": "5-digit numeric room code"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Room study topic or subject"
+        },
+        "description": {
+          "type": "string"
+        },
+        "creatorId": {
+          "type": "string",
+          "description": "UID of the student who created the room"
+        },
+        "creatorName": {
+          "type": "string"
+        },
+        "weeklyGoalMinutes": {
+          "type": "integer",
+          "description": "Weekly target study minutes for the squad"
+        },
+        "memberIds": {
+          "type": "array",
+          "description": "List of user UIDs of members in the room"
+        },
+        "members": {
+          "type": "array",
+          "description": "List of member objects with names, codes, and weekly minutes"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "code", "creatorId"]
     }
   },
   "firestore": {
@@ -199,6 +273,10 @@
     "/friend_requests/{requestId}": {
       "schema": "FriendRequest",
       "description": "Live cross-user friend requests delivered in real time."
+    },
+    "/study_rooms/{roomId}": {
+      "schema": "StudyRoom",
+      "description": "Collaborative study rooms where students and family can study together and view weekly leaderboards."
     }
   }
 }

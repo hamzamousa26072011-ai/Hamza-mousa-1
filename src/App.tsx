@@ -84,7 +84,12 @@ import {
 } from "./lib/securityShield";
 import { 
   syncUserProfileToFirestore, 
-  subscribeToRealFriendRequests 
+  subscribeToRealFriendRequests,
+  subscribeToAcceptedFriendRequests,
+  subscribeToUserStudyRooms,
+  generateFiveDigitCode,
+  getCurrentWeekIdentifier,
+  isTestSubject
 } from "./lib/friendService";
 
 export default function App() {
@@ -493,7 +498,30 @@ export default function App() {
     localStorage.setItem("ENGEZ_POMODOROS_COUNT", pomodoroCompletedCount.toString());
   }, [pomodoroCompletedCount]);
 
-  // TOTAL FOCUS MINUTES (Counts every minute from Timer & Stopwatch, synced live to leaderboards)
+  // TOTAL & WEEKLY FOCUS MINUTES (Counts every minute from Timer & Stopwatch, synced live to leaderboards)
+  const [focusMinutesThisWeek, setFocusMinutesThisWeek] = useState<number>(() => {
+    try {
+      const currentWeek = getCurrentWeekIdentifier();
+      const savedWeek = localStorage.getItem("ENGEZ_USER_CURRENT_WEEK_ID");
+      if (savedWeek && savedWeek !== currentWeek) {
+        localStorage.setItem("ENGEZ_USER_CURRENT_WEEK_ID", currentWeek);
+        localStorage.setItem("ENGEZ_USER_WEEKLY_FOCUS_MINUTES", "0");
+        return 0;
+      }
+      const saved = localStorage.getItem("ENGEZ_USER_WEEKLY_FOCUS_MINUTES");
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return 145; // Starting reading for current week
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ENGEZ_USER_WEEKLY_FOCUS_MINUTES", focusMinutesThisWeek.toString());
+    localStorage.setItem("ENGEZ_USER_CURRENT_WEEK_ID", getCurrentWeekIdentifier());
+  }, [focusMinutesThisWeek]);
+
   const [totalFocusMinutes, setTotalFocusMinutes] = useState<number>(() => {
     try {
       const saved = localStorage.getItem("ENGEZ_USER_TOTAL_FOCUS_MINUTES");
@@ -502,7 +530,7 @@ export default function App() {
         if (!isNaN(parsed)) return parsed;
       }
     } catch (e) {}
-    return 145; // Starting reading (2h 25m)
+    return 145;
   });
 
   useEffect(() => {
@@ -510,6 +538,14 @@ export default function App() {
   }, [totalFocusMinutes]);
 
   const handleRecordFocusMinute = () => {
+    const currentWeek = getCurrentWeekIdentifier();
+    const savedWeek = localStorage.getItem("ENGEZ_USER_CURRENT_WEEK_ID");
+    if (savedWeek && savedWeek !== currentWeek) {
+      localStorage.setItem("ENGEZ_USER_CURRENT_WEEK_ID", currentWeek);
+      setFocusMinutesThisWeek(1);
+    } else {
+      setFocusMinutesThisWeek((prev) => prev + 1);
+    }
     setTotalFocusMinutes((prev) => prev + 1);
   };
 
@@ -1228,8 +1264,8 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed?.friends)) return parsed.friends;
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed?.friends)) return parsed.friends.filter((f: any) => !isTestSubject(f));
+        if (Array.isArray(parsed)) return parsed.filter((f: any) => !isTestSubject(f));
       } catch (e) {}
     }
     return [];
@@ -1246,16 +1282,30 @@ export default function App() {
     return "";
   });
 
-  const [inviteCode, setInviteCode] = useState<string>(() => {
+  const [fiveDigitCode, setFiveDigitCode] = useState<string>(() => {
     try {
+      const savedCode = localStorage.getItem("ENGEZ_USER_5DIGIT_CODE");
+      if (savedCode && /^\d{5}$/.test(savedCode)) return savedCode;
       const saved = localStorage.getItem("ENGEZ_STUDY_FRIENDS_V1");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed?.inviteCode) return parsed.inviteCode;
+        if (parsed?.fiveDigitCode && /^\d{5}$/.test(parsed.fiveDigitCode)) return parsed.fiveDigitCode;
+        if (parsed?.inviteCode && /^\d{5}$/.test(parsed.inviteCode)) return parsed.inviteCode;
       }
     } catch (e) {}
-    return "";
+    return generateFiveDigitCode();
   });
+
+  const [inviteCode, setInviteCode] = useState<string>(() => fiveDigitCode);
+
+  useEffect(() => {
+    if (currentUser?.uid) {
+      const code = generateFiveDigitCode(currentUser.uid);
+      setFiveDigitCode(code);
+      setInviteCode(code);
+      localStorage.setItem("ENGEZ_USER_5DIGIT_CODE", code);
+    }
+  }, [currentUser]);
 
   const [friendRequests, setFriendRequests] = useState<FriendRequestItem[]>(() => {
     try {
@@ -1267,8 +1317,7 @@ export default function App() {
           if (userFriends) {
             const parsed = JSON.parse(userFriends);
             if (Array.isArray(parsed?.friendRequests)) {
-              // Strip out any legacy simulated fake requests
-              return parsed.friendRequests.filter((r: any) => r.id !== "req_sarah_chem");
+              return parsed.friendRequests.filter((r: any) => !isTestSubject(r));
             }
           }
         }
@@ -1280,44 +1329,68 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed?.friendRequests)) {
-          return parsed.friendRequests.filter((r: any) => r.id !== "req_sarah_chem");
+          return parsed.friendRequests.filter((r: any) => !isTestSubject(r));
         }
       } catch (e) {}
     }
-    // No simulated placeholders; start clean for actual students
     return [];
   });
 
-  // Sync discoverable profile and subscribe to real friend requests across users via Firestore
+  // Sync discoverable profile and subscribe to real friend requests & rooms across users via Firestore
   useEffect(() => {
     if (!currentUser?.uid) return;
+
+    const userCode = fiveDigitCode || generateFiveDigitCode(currentUser.uid);
 
     // 1. Sync current user's discoverable public profile so other actual students can search and connect
     syncUserProfileToFirestore(
       currentUser,
       friendUsername || `@user_${currentUser.uid.slice(0, 5)}`,
-      inviteCode || `ENG-${currentUser.uid.slice(0, 4).toUpperCase()}`,
+      userCode,
+      focusMinutesThisWeek,
       totalFocusMinutes,
       streak,
-      exams.length
+      exams.length,
+      focusModeActive ? "studying" : "online"
     );
 
-    // 2. Subscribe to incoming friend requests from actual students in real time
-    const unsubscribe = subscribeToRealFriendRequests(currentUser.uid, (incoming) => {
+    // 2. Subscribe to incoming friend requests from actual students in real time (ZERO TEST SUBJECTS)
+    const unsubIncoming = subscribeToRealFriendRequests(currentUser.uid, (incoming) => {
       setFriendRequests((prev) => {
-        // Filter out any legacy fake requests
-        const cleanPrev = prev.filter((r) => r.id !== "req_sarah_chem");
+        const cleanPrev = prev.filter((r) => !isTestSubject(r));
         const outgoing = cleanPrev.filter((r) => r.direction === "outgoing");
-        const incomingIds = new Set(incoming.map((r) => r.id));
+        const cleanIncoming = incoming.filter((r) => !isTestSubject(r));
+        const incomingIds = new Set(cleanIncoming.map((r) => r.id));
         const nonDuplicatePrevIncoming = cleanPrev.filter((r) => r.direction === "incoming" && !incomingIds.has(r.id));
-        return [...incoming, ...outgoing, ...nonDuplicatePrevIncoming];
+        return [...cleanIncoming, ...outgoing, ...nonDuplicatePrevIncoming];
+      });
+    });
+
+    // 3. Subscribe to accepted friend requests: when friend accepts, sender automatically gets them in friends list!
+    const unsubAccepted = subscribeToAcceptedFriendRequests(currentUser.uid, (newAcceptedFriend) => {
+      setFriends((prevFriends) => {
+        if (prevFriends.some(f => f.username.toLowerCase() === newAcceptedFriend.username.toLowerCase() || f.id === newAcceptedFriend.id)) {
+          return prevFriends;
+        }
+        return [newAcceptedFriend, ...prevFriends];
+      });
+    });
+
+    // 4. Subscribe to collaborative study rooms user has created or joined
+    const unsubRooms = subscribeToUserStudyRooms(currentUser.uid, (cloudRooms) => {
+      setFriendGroups((prevGroups) => {
+        const cloudRoomIds = new Set(cloudRooms.map(r => r.id));
+        const nonDuplicateLocal = prevGroups.filter(g => !cloudRoomIds.has(g.id));
+        return [...cloudRooms, ...nonDuplicateLocal];
       });
     });
 
     return () => {
-      unsubscribe();
+      unsubIncoming();
+      unsubAccepted();
+      unsubRooms();
     };
-  }, [currentUser, friendUsername, inviteCode, totalFocusMinutes, streak, exams.length]);
+  }, [currentUser, friendUsername, fiveDigitCode, focusMinutesThisWeek, totalFocusMinutes, streak, exams.length, focusModeActive]);
 
   useEffect(() => {
     localStorage.setItem("ENGEZ_EXAM_COUNTDOWNS_V1", JSON.stringify(exams));
@@ -1328,15 +1401,7 @@ export default function App() {
 
   // Helper to identify and purge test dummy group members / test subjects
   const isTestGroupMember = (m: any) => {
-    if (!m) return false;
-    const testIds = ["mem_karim", "mem_nour", "mem_youssef", "mem_mariam", "mem_ziad", "mem_lina", "peer_lead"];
-    const testHandles = ["@karim_phys", "@nour_sat", "@youssef_bio", "@mariam_chem", "@ziad_nightowl", "@lina_grind", "@study_lead"];
-    const testNames = ["Karim M. (Physics)", "Nour E. (Math 800)", "Youssef T. (Bio P4)", "Mariam K. (Organic)", "Ziad (Night Owl)", "Lina S.", "Group Host"];
-    return (
-      testIds.some(id => String(m.id || "").includes(id)) ||
-      testHandles.includes(String(m.username || "").toLowerCase()) ||
-      testNames.includes(String(m.displayName || ""))
-    );
+    return isTestSubject(m);
   };
 
   const sanitizeGroupMembers = (members: any[]): FriendGroupMember[] => {
@@ -2011,9 +2076,9 @@ export default function App() {
                   setFriendRequests={setFriendRequests}
                   friendUsername={friendUsername}
                   setFriendUsername={setFriendUsername}
-                  inviteCode={inviteCode}
+                  inviteCode={fiveDigitCode || inviteCode}
                   setInviteCode={setInviteCode}
-                  totalFocusMinutes={Math.floor((50 * 60 - focusSecondsRemaining) / 60) + pomodoroCompletedCount * 25}
+                  totalFocusMinutes={focusMinutesThisWeek || totalFocusMinutes}
                   userStreak={streak}
                   themeMode={settings.themeMode}
                 />
@@ -2037,10 +2102,13 @@ export default function App() {
                   setFriendRequests={setFriendRequests}
                   friendUsername={friendUsername}
                   setFriendUsername={setFriendUsername}
-                  inviteCode={inviteCode}
+                  inviteCode={fiveDigitCode || inviteCode}
                   setInviteCode={setInviteCode}
+                  fiveDigitCode={fiveDigitCode}
+                  setFiveDigitCode={setFiveDigitCode}
                   friendGroups={friendGroups}
                   setFriendGroups={setFriendGroups}
+                  focusMinutesThisWeek={focusMinutesThisWeek}
                   totalFocusMinutes={totalFocusMinutes}
                   onRecordMinute={handleRecordFocusMinute}
                   userStreak={streak}
