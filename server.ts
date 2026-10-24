@@ -560,6 +560,17 @@ app.get(["/user_white_noise.mp3", "/custom_calm_rain.mp3"], (req: Request, res: 
   return res.status(404).json({ error: "Sound file not found" });
 });
 
+// Zoho Domain Verification Endpoints for engeznafsak.com custom email setup
+app.get([
+  "/zoho-domain-verification_8433c16d.html",
+  "/zoho-domain-verification.html",
+  "/zohoverify/verifyforzoho.html"
+], (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  return res.status(200).send("11211489");
+});
+
 // =========================================================================
 // 1.5 USER WORKSPACE & APPS PERSISTENCE (ACCOUNT PERSISTENCE ENGINE)
 // =========================================================================
