@@ -145,7 +145,7 @@ export default function SettingsTab({
   };
 
   const DURATION_OPTIONS = [
-    { mins: 25, label: "25m (Pomodoro)" },
+    { mins: 25, label: "25m (Quick Focus)" },
     { mins: 45, label: "45m (Paper 2)" },
     { mins: 50, label: "50m (Deep Study)" },
     { mins: 60, label: "60m (Paper 6)" },

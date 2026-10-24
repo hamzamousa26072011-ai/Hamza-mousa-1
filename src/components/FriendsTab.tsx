@@ -131,7 +131,7 @@ export default function FriendsTab({
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   };
 
-  // Helper to persist friends, requests, groups
+  // Helper to persist friends, requests, groups across Firestore and localStorage
   const persistAllFriendsData = (
     newFriends: FriendItem[],
     newRequests: FriendRequestItem[],
@@ -144,9 +144,33 @@ export default function FriendsTab({
     setFriendGroups(newGroups);
     const un = newUsername !== undefined ? newUsername : friendUsername;
     const cd = newCode !== undefined ? newCode : my5DigitCode;
-    if (currentUser?.uid) {
-      saveUserFriendsData(currentUser.uid, newFriends, un, cd, newRequests, newGroups, totalFocusMinutes);
-    }
+
+    // Always persist to global localStorage cache
+    try {
+      localStorage.setItem("ENGEZ_STUDY_FRIENDS_V1", JSON.stringify({
+        friends: newFriends,
+        friendUsername: un,
+        inviteCode: cd,
+        friendRequests: newRequests,
+        friendGroups: newGroups,
+        totalFocusMinutes
+      }));
+    } catch (e) {}
+
+    // Persist to user-scoped cache and cloud Firestore
+    const activeUid = currentUser?.uid || "guest-workspace-user";
+    try {
+      localStorage.setItem(`ENGEZ_USER_FRIENDS_${activeUid}`, JSON.stringify({
+        friends: newFriends,
+        friendUsername: un,
+        inviteCode: cd,
+        friendRequests: newRequests,
+        friendGroups: newGroups,
+        totalFocusMinutes
+      }));
+    } catch (e) {}
+
+    saveUserFriendsData(activeUid, newFriends, un, cd, newRequests, newGroups, totalFocusMinutes);
   };
 
   // Proactively purge any test subjects from friends and requests on mount
@@ -263,10 +287,23 @@ export default function FriendsTab({
       );
 
       if (res.success) {
-        if (res.request) {
-          const updatedRequests = [res.request, ...friendRequests.filter(r => r.id !== res.request!.id)];
-          persistAllFriendsData(friends, updatedRequests, friendGroups);
+        let updatedFriends = friends;
+        if (res.friend) {
+          const friendAlreadyExists = friends.some(
+            (f) =>
+              f.id === res.friend!.id ||
+              f.username.toLowerCase() === res.friend!.username.toLowerCase() ||
+              (f.fiveDigitCode && f.fiveDigitCode === res.friend!.fiveDigitCode)
+          );
+          if (!friendAlreadyExists) {
+            updatedFriends = [res.friend, ...friends];
+          }
         }
+        const updatedRequests = res.request 
+          ? [res.request, ...friendRequests.filter(r => r.id !== res.request!.id)]
+          : friendRequests;
+
+        persistAllFriendsData(updatedFriends, updatedRequests, friendGroups);
         setFriendFeedback(res.message);
         setAddFriendInput("");
       } else {
@@ -278,6 +315,15 @@ export default function FriendsTab({
       setIsSendingRequest(false);
       setTimeout(() => setFriendFeedback(null), 6000);
     }
+  };
+
+  // REMOVE FRIEND
+  const handleRemoveFriend = (friendId: string) => {
+    const friendToRemove = friends.find(f => f.id === friendId);
+    const updatedFriends = friends.filter(f => f.id !== friendId);
+    persistAllFriendsData(updatedFriends, friendRequests, friendGroups);
+    setFriendFeedback(`Removed ${friendToRemove?.displayName || "friend"} from your study circle.`);
+    setTimeout(() => setFriendFeedback(null), 3500);
   };
 
   // COPY USER'S 5-DIGIT CODE
@@ -1382,6 +1428,19 @@ export default function FriendsTab({
                       title="Send study nudge"
                     >
                       <Bell size={13} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFriend(f.id)}
+                      className={`p-2 rounded-xl border text-xs transition cursor-pointer ${
+                        isLight 
+                          ? "bg-white border-[#E8D7C9] text-[#77736B] hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50" 
+                          : "bg-[#1E1736] border-white/10 text-[#C4B5FD]/70 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10"
+                      }`}
+                      title="Remove from friends"
+                    >
+                      <X size={13} />
                     </button>
                   </div>
                 </div>

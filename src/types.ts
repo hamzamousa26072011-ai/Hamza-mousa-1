@@ -283,4 +283,23 @@ export interface UserFeedbackItem {
   submittedAt: string;
 }
 
+export interface PlannerTask {
+  id: string;
+  title: string;
+  priority: "high" | "medium" | "low";
+  estimatedMinutes: number;
+  timeSlot: "Morning" | "Afternoon" | "Evening";
+  completed: boolean;
+  notes?: string;
+  actionSteps?: string[];
+  createdAt: string;
+}
+
+export interface PlannerChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
 

@@ -37,9 +37,8 @@ interface DashboardTabProps {
   onStopFocus: () => void;
   onNavigateTab: (tab: string) => void;
   streak: number;
-  pomodoroMode?: "work" | "break" | "long";
   isPaused?: boolean;
-  pomodoroCount?: number;
+  focusSessionsCount?: number;
   themeMode?: "light" | "dark";
 }
 
@@ -54,9 +53,8 @@ export default function DashboardTab({
   onStopFocus,
   onNavigateTab,
   streak,
-  pomodoroMode = "work",
   isPaused = false,
-  pomodoroCount = 0,
+  focusSessionsCount = 0,
   themeMode = "dark"
 }: DashboardTabProps) {
 
@@ -163,7 +161,7 @@ export default function DashboardTab({
             </div>
             <div>
               <p className={`text-[9px] font-mono ${isLight ? "text-[#82776E]" : "text-[#C4B5FD]/75"} uppercase tracking-tight font-bold`}>Focus Blocks</p>
-              <h3 className={`text-lg font-black ${isLight ? "text-[#1A1614]" : "text-white"}`}>{pomodoroCount} Done</h3>
+              <h3 className={`text-lg font-black ${isLight ? "text-[#1A1614]" : "text-white"}`}>{focusSessionsCount} Done</h3>
             </div>
           </div>
         </div>
@@ -373,11 +371,11 @@ export default function DashboardTab({
                   <Timer size={10} />
                   <span>{focusModeActive ? "Timer Active" : "Timer Ready"}</span>
                 </span>
-                {pomodoroCount > 0 && (
+                {focusSessionsCount > 0 && (
                   <span className={`text-[8px] font-mono ${
                     isLight ? "bg-[#F0EEE8] text-[#1D1D1B] border border-[#E8D7C9]" : "text-white bg-white/10 border border-white/15"
                   } px-1.5 py-0.5 rounded font-bold`}>
-                    🍅 {pomodoroCount}
+                    🎯 {focusSessionsCount}
                   </span>
                 )}
               </div>
@@ -417,7 +415,7 @@ export default function DashboardTab({
             </div>
             <p className={`text-[9.5px] font-mono ${isLight ? "text-[#77736B]" : "text-[#C4B5FD]/75"} uppercase tracking-widest font-bold mt-2`}>
               {focusModeActive 
-                ? (pomodoroMode === "work" ? "Deep focus interval active" : "Recovery interval active") 
+                ? "Deep study session active" 
                 : isPaused 
                 ? "Paused — click Resume when ready" 
                 : `Block duration: ${focusMinutesSelected}m`}

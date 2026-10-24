@@ -27,7 +27,7 @@ import {
   pauseSoundscape
 } from "../lib/ambientSoundscapes";
 
-export type TimerPresetId = "p2" | "p4" | "p6" | "math" | "custom" | "pomodoro" | "shortBreak";
+export type TimerPresetId = "p2" | "p4" | "p6" | "math" | "custom";
 
 export interface StopwatchLap {
   id: string;
@@ -47,12 +47,20 @@ interface FocusTabProps {
   onDurationChange: (mins: number) => void;
   focusTimeRemaining: string;
   isPaused?: boolean;
-  pomodoroMode?: "work" | "break";
-  onModeChange?: (mode: "work" | "break") => void;
-  pomodoroCount?: number;
   themeMode?: "light" | "dark";
   onFullScreenChange?: (isFullScreen: boolean) => void;
   onMinutePassed?: () => void;
+  focusToolMode: "timer" | "stopwatch";
+  onFocusToolModeChange: (mode: "timer" | "stopwatch") => void;
+  stopwatchSeconds: number;
+  stopwatchActive: boolean;
+  stopwatchPaused: boolean;
+  stopwatchLaps: StopwatchLap[];
+  onStartStopwatch: () => void;
+  onPauseStopwatch: () => void;
+  onResetStopwatch: () => void;
+  onLapStopwatch: () => void;
+  onClearStopwatchLaps: () => void;
 }
 
 interface FlipCardProps {
@@ -224,34 +232,30 @@ export default function FocusTab({
   onDurationChange,
   focusTimeRemaining,
   isPaused = false,
-  pomodoroMode = "work",
-  onModeChange,
-  pomodoroCount = 0,
   themeMode = "dark",
   onFullScreenChange,
-  onMinutePassed
+  focusToolMode,
+  onFocusToolModeChange,
+  stopwatchSeconds,
+  stopwatchActive,
+  stopwatchPaused,
+  stopwatchLaps,
+  onStartStopwatch,
+  onPauseStopwatch,
+  onResetStopwatch,
+  onLapStopwatch,
+  onClearStopwatchLaps
 }: FocusTabProps) {
   const isLight = themeMode === "light";
 
-  // Tool mode: "timer" or "stopwatch"
-  const [focusToolMode, setFocusToolMode] = useState<"timer" | "stopwatch">("timer");
-
-  // STOPWATCH STATE (Accurate count-up with split-flap clock and laps)
-  const [stopwatchSeconds, setStopwatchSeconds] = useState(0);
-  const [stopwatchActive, setStopwatchActive] = useState(false);
-  const [stopwatchPaused, setStopwatchPaused] = useState(false);
-  const [stopwatchLaps, setStopwatchLaps] = useState<StopwatchLap[]>([]);
-
-  // Active preset determination (Long break removed)
+  // Active preset determination (P2, P4, P6, Math, Custom)
   const activePreset = useMemo<TimerPresetId>(() => {
     if (focusMinutesSelected === 45) return "p2";
     if (focusMinutesSelected === 75) return "p4";
     if (focusMinutesSelected === 60) return "p6";
     if (focusMinutesSelected === 120) return "math";
-    if (pomodoroMode === "break" && focusMinutesSelected === 5) return "shortBreak";
-    if (pomodoroMode === "work" && focusMinutesSelected === 25) return "pomodoro";
     return "custom";
-  }, [focusMinutesSelected, pomodoroMode]);
+  }, [focusMinutesSelected]);
 
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [customHours, setCustomHours] = useState<number>(() => Math.floor(focusMinutesSelected / 60));
@@ -262,39 +266,6 @@ export default function FocusTab({
     setCustomMinutes(focusMinutesSelected % 60);
   }, [focusMinutesSelected]);
 
-  // Stopwatch ticking interval: accurately counts every 60s as a real study focus minute
-  const swLastTickRef = React.useRef<number>(Date.now());
-  const swElapsedRef = React.useRef<number>(0);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (stopwatchActive) {
-      swLastTickRef.current = Date.now();
-      interval = setInterval(() => {
-        const now = Date.now();
-        const deltaMs = now - swLastTickRef.current;
-        swLastTickRef.current = now;
-        const deltaSecs = Math.max(1, Math.round(deltaMs / 1000));
-
-        setStopwatchSeconds((prev) => {
-          const next = prev + deltaSecs;
-          swElapsedRef.current += deltaSecs;
-          if (swElapsedRef.current >= 60) {
-            const minutesToAdd = Math.floor(swElapsedRef.current / 60);
-            swElapsedRef.current = swElapsedRef.current % 60;
-            for (let i = 0; i < minutesToAdd; i++) {
-              onMinutePassed?.();
-            }
-          }
-          return next;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [stopwatchActive, onMinutePassed]);
-
   // Stopwatch time strings for FlipCards
   const swHours = Math.floor(stopwatchSeconds / 3600);
   const swMins = Math.floor((stopwatchSeconds % 3600) / 60);
@@ -304,39 +275,24 @@ export default function FocusTab({
   const swSecsStr = swSecs.toString().padStart(2, "0");
 
   const handleStopwatchStart = () => {
-    setStopwatchActive(true);
-    setStopwatchPaused(false);
+    onStartStopwatch();
     if (selectedSoundscape !== "silent") {
       setSoundscape(selectedSoundscape, soundVolume);
     }
   };
 
   const handleStopwatchPause = () => {
-    setStopwatchActive(false);
-    setStopwatchPaused(true);
+    onPauseStopwatch();
     pauseSoundscape();
   };
 
   const handleStopwatchReset = () => {
-    setStopwatchActive(false);
-    setStopwatchPaused(false);
-    setStopwatchSeconds(0);
-    setStopwatchLaps([]);
+    onResetStopwatch();
     pauseSoundscape();
   };
 
   const handleStopwatchLap = () => {
-    if (stopwatchSeconds === 0) return;
-    const previousTotal = stopwatchLaps.length > 0 ? stopwatchLaps[0].splitSeconds : 0;
-    const lapTime = stopwatchSeconds - previousTotal;
-    const newLap: StopwatchLap = {
-      id: "lap_" + Date.now(),
-      lapNumber: stopwatchLaps.length + 1,
-      splitSeconds: stopwatchSeconds,
-      lapSeconds: Math.max(0, lapTime),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    };
-    setStopwatchLaps([newLap, ...stopwatchLaps]);
+    onLapStopwatch();
   };
 
   // Compute fastest & slowest lap IDs for highlight pills
@@ -420,12 +376,17 @@ export default function FocusTab({
       stopAllSoundscapes();
       return;
     }
-    if (isPaused) {
+    const isAnyActive = focusToolMode === "stopwatch" ? stopwatchActive : focusModeActive;
+    const isAnyPaused = focusToolMode === "stopwatch" ? stopwatchPaused : isPaused;
+
+    if (isAnyPaused) {
       pauseSoundscape();
-    } else if (focusModeActive) {
+    } else if (isAnyActive) {
       setSoundscape(selectedSoundscape, soundVolume);
+    } else {
+      pauseSoundscape();
     }
-  }, [focusModeActive, isPaused, selectedSoundscape, soundVolume]);
+  }, [focusModeActive, isPaused, stopwatchActive, stopwatchPaused, focusToolMode, selectedSoundscape, soundVolume]);
 
   useEffect(() => {
     setSoundscapeVolume(soundVolume);
@@ -557,42 +518,28 @@ export default function FocusTab({
     setPrevFocusActive(focusModeActive);
   }, [focusModeActive, isPaused]);
 
-  // Preset Selection Handlers (Long break removed)
+  // Preset Selection Handlers
   const handleSelectPreset = (preset: TimerPresetId) => {
     if (focusModeActive) {
       onPauseFocus ? onPauseFocus() : onStopFocus();
     }
 
     if (preset === "p2") {
-      onModeChange?.("work");
       onDurationChange(45);
       setCustomHours(0);
       setCustomMinutes(45);
     } else if (preset === "p4") {
-      onModeChange?.("work");
       onDurationChange(75);
       setCustomHours(1);
       setCustomMinutes(15);
     } else if (preset === "p6") {
-      onModeChange?.("work");
       onDurationChange(60);
       setCustomHours(1);
       setCustomMinutes(0);
     } else if (preset === "math") {
-      onModeChange?.("work");
       onDurationChange(120);
       setCustomHours(2);
       setCustomMinutes(0);
-    } else if (preset === "pomodoro") {
-      onModeChange?.("work");
-      onDurationChange(25);
-      setCustomHours(0);
-      setCustomMinutes(25);
-    } else if (preset === "shortBreak") {
-      onModeChange?.("break");
-      onDurationChange(5);
-      setCustomHours(0);
-      setCustomMinutes(5);
     }
   };
 
@@ -608,7 +555,6 @@ export default function FocusTab({
     setCustomHours(Math.floor(finalMins / 60));
     setCustomMinutes(finalMins % 60);
     onDurationChange(finalMins);
-    onModeChange?.("work");
   };
 
   // Break down focusTimeRemaining (HH:MM:SS) safely
@@ -631,8 +577,6 @@ export default function FocusTab({
     if (activePreset === "p4") return "P4 (1 HOUR 15 MIN)";
     if (activePreset === "p6") return "P6 (1 HOUR)";
     if (activePreset === "math") return "MATH (2 HOURS)";
-    if (activePreset === "pomodoro") return "POMODORO (25 MIN)";
-    if (activePreset === "shortBreak") return "SHORT BREAK (5 MIN)";
     return `CUSTOM (${focusMinutesSelected} MIN)`;
   };
 
@@ -974,7 +918,7 @@ export default function FocusTab({
               }`}>
                 <button
                   type="button"
-                  onClick={() => setFocusToolMode("timer")}
+                  onClick={() => onFocusToolModeChange("timer")}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
                     focusToolMode === "timer"
                       ? isLight
@@ -991,7 +935,7 @@ export default function FocusTab({
 
                 <button
                   type="button"
-                  onClick={() => setFocusToolMode("stopwatch")}
+                  onClick={() => onFocusToolModeChange("stopwatch")}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
                     focusToolMode === "stopwatch"
                       ? isLight
@@ -1103,30 +1047,6 @@ export default function FocusTab({
                   </button>
                 );
               })}
-            </div>
-
-            {/* Pomodoro Mode Secondary Row (Only 25m Pomodoro and 5m Short Break - LONG BREAK REMOVED) */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className={`text-[11px] font-mono ${isLight ? "text-[#82776E]" : "text-slate-400"}`}>
-                Pomodoro Mode:
-              </span>
-              {[
-                { id: "pomodoro" as const, label: "🍅 Pomodoro (25m)" },
-                { id: "shortBreak" as const, label: "☕ Short Break (5m)" }
-              ].map((pomo) => (
-                <button
-                  key={pomo.id}
-                  type="button"
-                  onClick={() => handleSelectPreset(pomo.id)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold cursor-pointer border transition ${
-                    activePreset === pomo.id
-                      ? isLight ? "bg-[#C25E42] text-white border-[#C25E42]" : "bg-[#8B5CF6] text-white border-[#8B5CF6]"
-                      : isLight ? "bg-[#FAF8F5] text-[#B25136] border-[#FED7AA]" : "bg-white/5 text-slate-400 border-white/5 hover:text-white"
-                  }`}
-                >
-                  {pomo.label}
-                </button>
-              ))}
             </div>
           </div>
 
@@ -1526,7 +1446,7 @@ export default function FocusTab({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setStopwatchLaps([])}
+                    onClick={onClearStopwatchLaps}
                     className={`text-[11px] underline cursor-pointer ${
                       isLight ? "text-[#736B63] hover:text-[#C25E42]" : "text-slate-400 hover:text-white"
                     }`}
@@ -1708,7 +1628,7 @@ export default function FocusTab({
                 Session Complete! 🎉
               </h2>
               <p className={`text-xs ${isLight ? "text-[#82776E]" : "text-slate-400"} leading-relaxed font-sans`}>
-                Great job! You finished your {getPresetLabel()} study block. Take a well-deserved recovery break.
+                Great job! You finished your {getPresetLabel()} study block. Keep up the high-performance focus!
               </p>
             </div>
 
@@ -1717,7 +1637,6 @@ export default function FocusTab({
                 type="button"
                 onClick={() => {
                   setShowCompletionModal(false);
-                  handleSelectPreset("shortBreak");
                   onStartFocus();
                 }}
                 className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-white cursor-pointer ${
@@ -1726,7 +1645,7 @@ export default function FocusTab({
                     : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-md shadow-[#8B5CF6]/30"
                 }`}
               >
-                Take 5m Break
+                Start New Session
               </button>
 
               <button

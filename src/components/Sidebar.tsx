@@ -14,7 +14,8 @@ import {
   Lock,
   CalendarCheck,
   CalendarClock,
-  Users
+  Users,
+  CheckSquare
 } from "lucide-react";
 import { User } from "firebase/auth";
 import { EngezBrandLogo } from "./EngezBrandLogo";
@@ -66,6 +67,7 @@ export default function Sidebar({
   
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
+    { id: "planner", label: "Daily Planner", icon: CheckSquare },
     { id: "countdown", label: "Exam Countdown", icon: CalendarClock },
     { id: "friends", label: "Friends & Groups", icon: Users, badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined },
     { id: "habits", label: "Habit Tracker", icon: CalendarCheck },

@@ -7,7 +7,8 @@ import {
   Settings, 
   CalendarCheck,
   CalendarClock,
-  Users
+  Users,
+  CheckSquare
 } from "lucide-react";
 
 interface MobileBottomNavProps {
@@ -41,6 +42,7 @@ export default function MobileBottomNav({
 
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Home", icon: LayoutGrid, badge: pendingTasksCount > 0 ? pendingTasksCount : undefined },
+    { id: "planner", label: "Planner", icon: CheckSquare },
     { id: "countdown", label: "Exams", icon: CalendarClock },
     { id: "friends", label: "Friends", icon: Users, badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined },
     { id: "habits", label: "Habits", icon: CalendarCheck },

@@ -37,6 +37,7 @@ export interface SendFriendRequestResult {
   success: boolean;
   message: string;
   request?: FriendRequestItem;
+  friend?: FriendItem;
 }
 
 /**
@@ -385,10 +386,23 @@ export async function sendRealFriendRequest(
     console.warn("Local friend request dispatch notice:", e);
   }
 
+  const newFriend: FriendItem = {
+    id: targetStudent.uid,
+    username: targetStudent.rawUsername || targetStudent.username,
+    displayName: targetStudent.displayName || targetStudent.username.replace("@", ""),
+    fiveDigitCode: targetStudent.fiveDigitCode || cleanTarget,
+    focusMinutesThisWeek: targetStudent.focusMinutesThisWeek || 0,
+    streak: targetStudent.streak || 1,
+    upcomingExamsCount: 0,
+    status: targetStudent.status || "online",
+    addedAt: new Date().toISOString()
+  };
+
   return {
     success: true,
-    message: `Friend request sent to ${targetStudent.displayName || targetStudent.username} (Code: ${targetStudent.fiveDigitCode || cleanTarget})! They can accept it in their Friends tab.`,
-    request: localItem
+    message: `Added ${targetStudent.displayName || targetStudent.username} (Code: ${targetStudent.fiveDigitCode || cleanTarget}) to your friends list!`,
+    request: localItem,
+    friend: newFriend
   };
 }
 

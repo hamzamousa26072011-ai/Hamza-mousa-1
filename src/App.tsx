@@ -21,7 +21,8 @@ import {
   getFirebaseIdToken,
   getCustomDnsInfo,
   saveCustomFirebaseConfig,
-  getSavedCustomFirebaseConfig
+  getSavedCustomFirebaseConfig,
+  saveUserFriendsData
 } from "./lib/classroom";
 import {
   GraduationCap,
@@ -61,10 +62,11 @@ import UserGuideModal from "./components/UserGuideModal";
 import Sidebar from "./components/Sidebar";
 import Celebration from "./components/Celebration";
 import DashboardTab from "./components/DashboardTab";
+import DailyPlannerTab from "./components/DailyPlannerTab";
 import HabitTrackerTab from "./components/HabitTrackerTab";
 import AiScholarTab from "./components/AiScholarTab";
 import StudyAppsTab from "./components/StudyAppsTab";
-import FocusTab from "./components/FocusTab";
+import FocusTab, { StopwatchLap } from "./components/FocusTab";
 import SettingsTab from "./components/SettingsTab";
 import MobileBottomNav from "./components/MobileBottomNav";
 import SecurityLockdownModal from "./components/SecurityLockdownModal";
@@ -481,22 +483,64 @@ export default function App() {
     localStorage.setItem("ENGEZ_STREAK_V4", streak.toString());
   }, [streak]);
 
-  // 3. MAIN STATE: POMODORO FOCUS TIMER (STUDY & BREAK CYCLES)
+  // 3. MAIN STATE: FOCUS TIMER & STOPWATCH
   const [focusMinutesSelected, setFocusMinutesSelected] = useState(50);
   const [focusSecondsRemaining, setFocusSecondsRemaining] = useState(50 * 60);
   const [focusModeActive, setFocusModeActive] = useState(false);
-  // Keep the device screen awake whenever the study timer is active
-  useScreenWakeLock(focusModeActive);
   const [isFocusFullscreen, setIsFocusFullscreen] = useState(false);
-  const [pomodoroMode, setPomodoroMode] = useState<"work" | "break" | "long">("work");
-  const [pomodoroCompletedCount, setPomodoroCompletedCount] = useState<number>(() => {
-    const saved = localStorage.getItem("ENGEZ_POMODOROS_COUNT");
+  const [focusSessionsCount, setFocusSessionsCount] = useState<number>(() => {
+    const saved = localStorage.getItem("ENGEZ_FOCUS_SESSIONS_COUNT") || localStorage.getItem("ENGEZ_POMODOROS_COUNT");
     return saved ? parseInt(saved, 10) : 0;
   });
 
   useEffect(() => {
-    localStorage.setItem("ENGEZ_POMODOROS_COUNT", pomodoroCompletedCount.toString());
-  }, [pomodoroCompletedCount]);
+    localStorage.setItem("ENGEZ_FOCUS_SESSIONS_COUNT", focusSessionsCount.toString());
+  }, [focusSessionsCount]);
+
+  // STOPWATCH STATE (Accurate count-up, persistent across tabs)
+  const [focusToolMode, setFocusToolMode] = useState<"timer" | "stopwatch">(() => {
+    try {
+      const saved = localStorage.getItem("ENGEZ_FOCUS_TOOL_MODE");
+      return (saved === "stopwatch" || saved === "timer") ? saved : "timer";
+    } catch {
+      return "timer";
+    }
+  });
+
+  const [stopwatchSeconds, setStopwatchSeconds] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("ENGEZ_STOPWATCH_SECS");
+      return saved ? parseInt(saved, 10) || 0 : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const [stopwatchActive, setStopwatchActive] = useState(false);
+  const [stopwatchPaused, setStopwatchPaused] = useState(false);
+  const [stopwatchLaps, setStopwatchLaps] = useState<StopwatchLap[]>(() => {
+    try {
+      const saved = localStorage.getItem("ENGEZ_STOPWATCH_LAPS");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ENGEZ_FOCUS_TOOL_MODE", focusToolMode);
+  }, [focusToolMode]);
+
+  useEffect(() => {
+    localStorage.setItem("ENGEZ_STOPWATCH_SECS", stopwatchSeconds.toString());
+  }, [stopwatchSeconds]);
+
+  useEffect(() => {
+    localStorage.setItem("ENGEZ_STOPWATCH_LAPS", JSON.stringify(stopwatchLaps));
+  }, [stopwatchLaps]);
+
+  // Keep the device screen awake whenever either the study countdown timer or stopwatch is active
+  useScreenWakeLock(focusModeActive || stopwatchActive);
 
   // TOTAL & WEEKLY FOCUS MINUTES (Real minutes counted from Timer & Stopwatch, resets every Monday)
   const [focusMinutesThisWeek, setFocusMinutesThisWeek] = useState<number>(() => {
@@ -611,14 +655,89 @@ export default function App() {
       }
       
       setStreak((prev) => prev + 1);
-      setPomodoroCompletedCount((prev) => prev + 1);
+      setFocusSessionsCount((prev) => prev + 1);
       setCelebrationVisible(true);
       setFocusSecondsRemaining(focusMinutesSelected * 60);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [focusModeActive, focusSecondsRemaining, pomodoroMode, focusMinutesSelected]);
+  }, [focusModeActive, focusSecondsRemaining, focusMinutesSelected]);
+
+  // STOPWATCH ENGINE: accurately ticks and records each 60 seconds passed towards real study minutes
+  const swLastTickRef = useRef<number>(Date.now());
+  const swSecondsElapsedRef = useRef<number>(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (stopwatchActive) {
+      swLastTickRef.current = Date.now();
+      interval = setInterval(() => {
+        const now = Date.now();
+        const deltaMs = now - swLastTickRef.current;
+        swLastTickRef.current = now;
+        const deltaSecs = Math.max(1, Math.round(deltaMs / 1000));
+
+        setStopwatchSeconds((prev) => {
+          const next = prev + deltaSecs;
+          swSecondsElapsedRef.current += deltaSecs;
+          if (swSecondsElapsedRef.current >= 60) {
+            const mins = Math.floor(swSecondsElapsedRef.current / 60);
+            swSecondsElapsedRef.current = swSecondsElapsedRef.current % 60;
+            handleRecordFocusMinute(mins);
+          }
+          return next;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [stopwatchActive]);
+
+  const handleStartStopwatch = () => {
+    setStopwatchActive(true);
+    setStopwatchPaused(false);
+  };
+
+  const handlePauseStopwatch = () => {
+    setStopwatchActive(false);
+    setStopwatchPaused(true);
+    pauseSoundscape();
+  };
+
+  const handleResetStopwatch = () => {
+    setStopwatchActive(false);
+    setStopwatchPaused(false);
+    setStopwatchSeconds(0);
+    setStopwatchLaps([]);
+    pauseSoundscape();
+  };
+
+  const handleLapStopwatch = () => {
+    if (stopwatchSeconds === 0) return;
+    const previousTotal = stopwatchLaps.length > 0 ? stopwatchLaps[0].splitSeconds : 0;
+    const lapTime = stopwatchSeconds - previousTotal;
+    const newLap: StopwatchLap = {
+      id: "lap_" + Date.now(),
+      lapNumber: stopwatchLaps.length + 1,
+      splitSeconds: stopwatchSeconds,
+      lapSeconds: Math.max(0, lapTime),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
+    setStopwatchLaps([newLap, ...stopwatchLaps]);
+  };
+
+  const handleClearStopwatchLaps = () => {
+    setStopwatchLaps([]);
+  };
+
+  const formatStopwatchTime = (totalSecs: number) => {
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const handleDurationChange = (mins: number) => {
     setFocusMinutesSelected(mins);
@@ -660,7 +779,16 @@ export default function App() {
     const saved = localStorage.getItem("ENGEZ_TASKS_V3");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const testSubjects = [
+            "cambridge physics",
+            "digital sat math",
+            "college chemistry",
+            "english literature"
+          ];
+          return parsed.filter((t: Task) => !testSubjects.includes((t.subject || "").trim().toLowerCase()));
+        }
       } catch (e) {
         console.error("Failed to parse tasks:", e);
       }
@@ -672,22 +800,26 @@ export default function App() {
     localStorage.setItem("ENGEZ_TASKS_V3", JSON.stringify(tasks));
   }, [tasks]);
 
-  // DYNAMIC CUSTOM SUBJECTS STATE
+  // DYNAMIC CUSTOM SUBJECTS STATE (NO TEST SUBJECTS)
   const [subjects, setSubjects] = useState<string[]>(() => {
     const saved = localStorage.getItem("ENGEZ_SUBJECTS_V3");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const testSubjects = [
+            "cambridge physics",
+            "digital sat math",
+            "college chemistry",
+            "english literature"
+          ];
+          return parsed.filter((s: any) => typeof s === "string" && !testSubjects.includes(s.trim().toLowerCase()));
+        }
       } catch (e) {
         console.error("Failed to parse subjects:", e);
       }
     }
-    return [
-      "Cambridge Physics",
-      "Digital SAT Math",
-      "College Chemistry",
-      "English Literature"
-    ];
+    return [];
   });
 
   useEffect(() => {
@@ -1619,8 +1751,9 @@ export default function App() {
       friendGroups,
       totalFocusMinutes
     }));
-    if (currentUser?.uid) {
-      localStorage.setItem(`ENGEZ_USER_FRIENDS_${currentUser.uid}`, JSON.stringify({
+    const activeUid = currentUser?.uid || "guest-workspace-user";
+    try {
+      localStorage.setItem(`ENGEZ_USER_FRIENDS_${activeUid}`, JSON.stringify({
         friends,
         friendUsername,
         inviteCode,
@@ -1628,7 +1761,18 @@ export default function App() {
         friendGroups,
         totalFocusMinutes
       }));
-    }
+    } catch (e) {}
+
+    // Save to Firestore and server API backup
+    saveUserFriendsData(
+      activeUid,
+      friends,
+      friendUsername,
+      inviteCode,
+      friendRequests,
+      friendGroups,
+      totalFocusMinutes
+    );
   }, [friendGroups, friends, friendUsername, inviteCode, friendRequests, totalFocusMinutes, currentUser]);
 
   // Auth State & Cloud sync on mount
@@ -1684,7 +1828,26 @@ export default function App() {
             if (cloudData.tasks !== undefined) setTasks(cloudData.tasks);
             if (cloudData.papers !== undefined) setPapers(cloudData.papers);
             if (Array.isArray(cloudData.exams)) setExams(cloudData.exams);
-            if (Array.isArray(cloudData.friends)) setFriends(cloudData.friends);
+            // Merge friends from local storage and cloud so no added friends are ever lost
+            let localFriends: FriendItem[] = [];
+            try {
+              const localSaved = JSON.parse(
+                localStorage.getItem(`ENGEZ_USER_FRIENDS_${activeUser.uid}`) ||
+                localStorage.getItem("ENGEZ_STUDY_FRIENDS_V1") ||
+                "{}"
+              );
+              localFriends = Array.isArray(localSaved?.friends) ? localSaved.friends : (Array.isArray(localSaved) ? localSaved : []);
+            } catch (e) {}
+
+            const cloudFriends = Array.isArray(cloudData.friends) ? cloudData.friends : [];
+            const friendMap = new Map<string, FriendItem>();
+            localFriends.filter(f => !isTestSubject(f)).forEach(f => friendMap.set(f.id, f));
+            cloudFriends.filter(f => !isTestSubject(f)).forEach(f => friendMap.set(f.id, f));
+            const mergedFriends = Array.from(friendMap.values());
+            if (mergedFriends.length > 0) {
+              setFriends(mergedFriends);
+            }
+
             if (Array.isArray(cloudData.friendRequests)) setFriendRequests(cloudData.friendRequests);
             if (cloudData.friendUsername) setFriendUsername(cloudData.friendUsername);
             if (cloudData.inviteCode) setInviteCode(cloudData.inviteCode);
@@ -1948,8 +2111,8 @@ export default function App() {
       <Sidebar
         currentTab={currentTab}
         onTabChange={(tab) => setCurrentTab(tab)}
-        focusModeActive={focusModeActive}
-        focusTimeRemaining={formatFocusTime()}
+        focusModeActive={focusModeActive || stopwatchActive}
+        focusTimeRemaining={focusToolMode === "stopwatch" ? formatStopwatchTime(stopwatchSeconds) : formatFocusTime()}
         currentUser={currentUser}
         isAuthLoading={isAuthLoading || isGoogleLoading}
         onLogin={handleOpenAuthModal}
@@ -2000,7 +2163,7 @@ export default function App() {
             <button
               onClick={() => setCurrentTab("focus")}
               className={`px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1 sm:gap-2 transition cursor-pointer min-h-[38px] ${
-                focusModeActive
+                (focusModeActive || stopwatchActive)
                   ? settings.themeMode === "light"
                     ? "bg-[#FFF2ED] border-[#F2D5CA] text-[#C25E42] animate-pulse"
                     : "bg-[#8B5CF6]/25 border-[#8B5CF6]/50 text-[#C084FC] shadow-xs animate-pulse"
@@ -2008,11 +2171,13 @@ export default function App() {
                   ? "bg-[#F5EFE9] border-[#EBE4DC] text-[#1A1614] hover:bg-[#EDE4DC]"
                   : "bg-[#161A2B] border-white/[0.08] text-white hover:bg-[#1E2338]"
               }`}
-              title="Timer"
+              title={focusToolMode === "stopwatch" ? "Stopwatch" : "Timer"}
             >
-              <Clock size={13} className={focusModeActive ? (settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]") : settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} />
-              <span className="text-[10.5px] sm:text-xs">{formatFocusTime()}</span>
-              {focusModeActive && <span className={`w-1.5 h-1.5 ${settings.themeMode === "light" ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} rounded-full animate-ping`} />}
+              <Clock size={13} className={(focusModeActive || stopwatchActive) ? (settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#C084FC]") : settings.themeMode === "light" ? "text-[#82776E]" : "text-slate-400"} />
+              <span className="text-[10.5px] sm:text-xs">
+                {focusToolMode === "stopwatch" ? formatStopwatchTime(stopwatchSeconds) : formatFocusTime()}
+              </span>
+              {(focusModeActive || stopwatchActive) && <span className={`w-1.5 h-1.5 ${settings.themeMode === "light" ? "bg-[#C25E42]" : "bg-[#8B5CF6]"} rounded-full animate-ping`} />}
             </button>
 
             {/* User Guide Button */}
@@ -2110,10 +2275,30 @@ export default function App() {
                   onStopFocus={handleStopFocus}
                   onNavigateTab={(tab) => setCurrentTab(tab)}
                   streak={streak}
-                  pomodoroMode={pomodoroMode}
                   isPaused={isTimerPaused}
-                  pomodoroCount={pomodoroCompletedCount}
+                  focusSessionsCount={focusSessionsCount}
                   themeMode={settings.themeMode}
+                />
+              </motion.div>
+            )}
+
+            {currentTab === "planner" && (
+              <motion.div
+                key="planner"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="w-full flex-1 flex flex-col"
+              >
+                <DailyPlannerTab
+                  themeMode={settings.themeMode}
+                  currentUser={currentUser}
+                  onStartInTimer={(minutes, _taskTitle) => {
+                    handleDurationChange(minutes);
+                    setCurrentTab("focus");
+                    handleStartFocus();
+                  }}
                 />
               </motion.div>
             )}
@@ -2243,12 +2428,20 @@ export default function App() {
                   onDurationChange={handleDurationChange}
                   focusTimeRemaining={formatFocusTime()}
                   isPaused={isTimerPaused}
-                  pomodoroMode={pomodoroMode}
-                  onModeChange={(m) => setPomodoroMode(m)}
-                  pomodoroCount={pomodoroCompletedCount}
                   themeMode={settings.themeMode}
                   onFullScreenChange={setIsFocusFullscreen}
                   onMinutePassed={handleRecordFocusMinute}
+                  focusToolMode={focusToolMode}
+                  onFocusToolModeChange={setFocusToolMode}
+                  stopwatchSeconds={stopwatchSeconds}
+                  stopwatchActive={stopwatchActive}
+                  stopwatchPaused={stopwatchPaused}
+                  stopwatchLaps={stopwatchLaps}
+                  onStartStopwatch={handleStartStopwatch}
+                  onPauseStopwatch={handlePauseStopwatch}
+                  onResetStopwatch={handleResetStopwatch}
+                  onLapStopwatch={handleLapStopwatch}
+                  onClearStopwatchLaps={handleClearStopwatchLaps}
                 />
               </motion.div>
             )}

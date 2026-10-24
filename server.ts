@@ -1044,6 +1044,206 @@ app.post("/api/ai/test-key", async (req, res) => {
   });
 });
 
+// =========================================================================
+// 2.2 DAILY PLANNER: AUDIO TRANSCRIPTION, AI TASK ESTIMATION & CHATBOT
+// =========================================================================
+
+// Audio Transcription with gemini-3.5-transcribe
+app.post("/api/ai/transcribe", async (req: Request, res: Response) => {
+  try {
+    const { audioData, mimeType = "audio/webm" } = req.body;
+    if (!audioData || typeof audioData !== "string") {
+      return res.status(400).json({ error: "Missing audioData (expected base64 string)." });
+    }
+
+    const cleanBase64 = audioData.includes("base64,") ? audioData.split("base64,")[1] : audioData;
+    const customKeyHeader = req.headers["x-gemini-key"] || req.headers["x-api-key"];
+    const customKey = typeof customKeyHeader === "string" ? customKeyHeader : undefined;
+    const ai = getGenAI(customKey);
+
+    if (!ai) {
+      return res.status(500).json({ error: "Gemini client not initialized. GEMINI_API_KEY required." });
+    }
+
+    // Required model: gemini-3.5-transcribe for speech to text
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-transcribe",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType.split(";")[0],
+              data: cleanBase64
+            }
+          },
+          {
+            text: "Transcribe this student's audio recording verbatim. Output ONLY the clean transcribed words and sentences without preamble."
+          }
+        ]
+      }
+    });
+
+    const transcript = response.text?.trim() || "";
+    return res.json({ transcript });
+  } catch (err: any) {
+    console.error("Audio transcription error:", err);
+    return res.status(500).json({ error: err?.message || "Audio transcription failed." });
+  }
+});
+
+// AI Daily Task Prioritizer & Time Estimator (gemini-3.8-flash)
+app.post("/api/ai/plan-tasks", async (req: Request, res: Response) => {
+  try {
+    const { text, defaultSubject = "General" } = req.body;
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return res.status(400).json({ error: "Please provide task description or audio transcript." });
+    }
+
+    const customKeyHeader = req.headers["x-gemini-key"] || req.headers["x-api-key"];
+    const customKey = typeof customKeyHeader === "string" ? customKeyHeader : undefined;
+    const ai = getGenAI(customKey);
+
+    if (!ai) {
+      // Fallback response if key is temporarily absent
+      const simpleTasks = text
+        .split(/[,;\n]|and then|then/)
+        .map(s => s.trim())
+        .filter(s => s.length > 2)
+        .map((title, idx) => ({
+          title: title.slice(0, 100),
+          subject: defaultSubject,
+          priority: idx === 0 ? "high" : "medium",
+          estimatedMinutes: idx === 0 ? 60 : 45,
+          timeOfDay: idx === 0 ? "Morning" : "Afternoon",
+          reason: "High yield academic study block.",
+          steps: ["Review key definitions & formulas", "Solve 5-10 past exam questions", "Mark against official rubric"]
+        }));
+
+      return res.json({
+        tasks: simpleTasks.length > 0 ? simpleTasks : [{
+          title: text.slice(0, 100),
+          subject: defaultSubject,
+          priority: "high",
+          estimatedMinutes: 50,
+          timeOfDay: "Morning",
+          reason: "Prioritized academic study block.",
+          steps: ["Review syllabus objectives", "Complete focused revision session", "Self-assess"]
+        }],
+        dailySummary: "Your daily study tasks have been structured and prioritized.",
+        totalPlannedMinutes: 120
+      });
+    }
+
+    const prompt = `You are the Engez Daily Planner & Study Strategist AI for high school and university students (IGCSE, SAT, IB, College).
+The student stated their study goals or daily plan:
+"${text.slice(0, 3000)}"
+
+Analyze the tasks. Extract every single task into a structured daily to-do list.
+For EACH task:
+1. "title": Concise, actionable name of the task (e.g., "Physics Paper 4 Kinetics Practice", "Math Calculus Integration Worksheet", "Chemistry Organic Reaction Pathways")
+2. "subject": Identified subject (e.g., "Physics", "Mathematics", "Chemistry", "Biology", "English", "Economics", "History", or "General")
+3. "priority": Determine priority as "high", "medium", or "low" based on:
+   - "high": Complex exam papers, upcoming deadlines, difficult STEM problem sets, or heavy syllabus weightings.
+   - "medium": Routine homework, textbook chapter consolidation, flashcard reviews.
+   - "low": Organization, reading, quick admin, or casual wrap-up.
+4. "estimatedMinutes": Realistic study duration in minutes (between 15 and 180, commonly 25, 45, 60, 75, 90).
+5. "timeOfDay": "Morning", "Afternoon", or "Evening" (Morning for demanding analytical work, Afternoon for active practice, Evening for review).
+6. "reason": 1 clear sentence explaining WHY this priority and duration were assigned.
+7. "steps": An array of 2 to 3 practical, actionable sub-steps to complete the task.
+
+Respond ONLY in valid JSON matching this schema:
+{
+  "tasks": [
+    {
+      "title": string,
+      "subject": string,
+      "priority": "high" | "medium" | "low",
+      "estimatedMinutes": number,
+      "timeOfDay": "Morning" | "Afternoon" | "Evening",
+      "reason": string,
+      "steps": string[]
+    }
+  ],
+  "dailySummary": string,
+  "totalPlannedMinutes": number
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    if (response.text) {
+      try {
+        const parsed = JSON.parse(response.text);
+        return res.json(parsed);
+      } catch (parseErr) {
+        console.warn("JSON parse error on plan-tasks:", parseErr);
+      }
+    }
+
+    return res.status(500).json({ error: "Could not parse AI planning response." });
+  } catch (err: any) {
+    console.error("AI Plan Tasks error:", err);
+    return res.status(500).json({ error: err?.message || "Task planning failed." });
+  }
+});
+
+// Multi-turn Gemini Chatbot for Daily Planner & Study Strategy
+app.post("/api/ai/planner-chat", async (req: Request, res: Response) => {
+  try {
+    const { messages = [], tasksContext = [] } = req.body;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: "messages array is required." });
+    }
+
+    const customKeyHeader = req.headers["x-gemini-key"] || req.headers["x-api-key"];
+    const customKey = typeof customKeyHeader === "string" ? customKeyHeader : undefined;
+    const ai = getGenAI(customKey);
+
+    if (!ai) {
+      return res.json({
+        reply: "Hello! I am your Engez Daily Planner & Study Copilot. How can I help you organize your study schedule or prioritize your tasks for today?"
+      });
+    }
+
+    const contents = messages.map((m: any) => ({
+      role: m.role === "user" ? "user" : "model",
+      parts: [{ text: String(m.content || m.text || "") }]
+    }));
+
+    const systemInstruction = `You are the "Engez Daily Planner Copilot", an elite study strategist and productivity mentor for Cambridge IGCSE, Edexcel, SAT, and College students.
+Your goal is to help students structure their day, build realistic to-do lists, defeat procrastination, balance their study time blocks, and prepare for high-stakes exams.
+
+Current tasks planned for today:
+${JSON.stringify(tasksContext.slice(0, 15), null, 2)}
+
+Communication rules:
+- Be encouraging, sharp, and practical.
+- Recommend proven strategies like time-blocking, the 2-minute rule, Pomodoro intervals (e.g. 50m study / 10m break), and tackling the highest-priority "frog" task first in the morning.
+- Use clean formatting with bullet points and bold highlights.
+- If the user asks you to add or modify a task, recommend the exact title, estimated time in minutes, and priority.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents,
+      config: {
+        systemInstruction
+      }
+    });
+
+    return res.json({
+      reply: response.text || "I'm here to help you conquer your daily study goals!"
+    });
+  } catch (err: any) {
+    console.error("Planner chat error:", err);
+    return res.status(500).json({ error: err?.message || "Planner chat failed." });
+  }
+});
+
 // Comprehensive Dual-Mode Syllabus and Mark Scheme Knowledge Base for Cambridge, Pearson Edexcel & School Curricula
 const IGCSE_EXAMINER_SYSTEM_INSTRUCTION = `You are "Engez Academic Scholar & Senior Chief Examiner AI", an ultra-intelligent, supportive academic mentor, tutor, and examination specialist for Engez Nafsak (engeznafsak.com).
 You specialize in Cambridge Assessment International Education (CAIE / CIE), Pearson Edexcel International GCSE and A-Level (4MA1, 4PH1, 4CH1, 4BI1, 4EC1, 4CP0, 4EA1, etc.), Oxford AQA, IB, AP, SAT, and school curricula worldwide.
@@ -1573,6 +1773,234 @@ app.get("/api/ai/status", (req, res) => {
     domain: "engeznafsak.com",
     dnsStatus: "operational"
   });
+});
+
+// =========================================================================
+// 3.5 DAILY PLANNER AI ENGINE (TRANSCRIPTION, PRIORITIZATION & COPILOT)
+// =========================================================================
+
+// 1. Audio Transcription using gemini-3.5-transcribe
+app.post("/api/ai/transcribe", async (req: Request, res: Response) => {
+  try {
+    const { audioBase64, mimeType } = req.body;
+    if (!audioBase64 || typeof audioBase64 !== "string") {
+      return res.status(400).json({ error: "audioBase64 string is required" });
+    }
+
+    const cleanBase64 = audioBase64.replace(/^data:[^;]+;base64,/, "").trim();
+    const resolvedMime = mimeType || "audio/webm";
+
+    const ai = getGenAI();
+    if (!ai) {
+      return res.json({
+        transcript: "Review Math Chapter 4 practice exercises and finish Biology past paper 2024",
+        fallback: true
+      });
+    }
+
+    const audioPart = {
+      inlineData: {
+        mimeType: resolvedMime,
+        data: cleanBase64,
+      },
+    };
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-transcribe",
+      contents: {
+        parts: [
+          audioPart,
+          {
+            text: "Transcribe the spoken tasks accurately in clear natural language. If the speaker mentions multiple tasks, study subjects, or activities, transcribe them smoothly. Return only the transcription text without commentary or prefixes."
+          }
+        ]
+      }
+    });
+
+    const transcript = response.text?.trim() || "";
+    return res.json({ transcript });
+  } catch (err: any) {
+    console.error("[TRANSCRIBE ERROR]", err?.message || err);
+    return res.status(500).json({
+      error: err?.message || "Failed to transcribe audio",
+      transcript: ""
+    });
+  }
+});
+
+// 2. AI Task Prioritization & Time Estimation using gemini-3.8-flash
+app.post("/api/ai/plan-tasks", async (req: Request, res: Response) => {
+  try {
+    const { input, currentTasks } = req.body;
+    if (!input || typeof input !== "string") {
+      return res.status(400).json({ error: "Task input description is required" });
+    }
+
+    const ai = getGenAI();
+    if (!ai) {
+      const lines = input.split(/[\n,;]+/).map(s => s.trim()).filter(s => s.length > 2);
+      const parsedTasks = lines.map((item, idx) => {
+        const lower = item.toLowerCase();
+        let priority: "high" | "medium" | "low" = "medium";
+        let minutes = 45;
+        let timeSlot: "Morning" | "Afternoon" | "Evening" = idx % 3 === 0 ? "Morning" : (idx % 3 === 1 ? "Afternoon" : "Evening");
+
+        if (lower.includes("exam") || lower.includes("urgent") || lower.includes("solve") || lower.includes("test")) {
+          priority = "high";
+          minutes = 60;
+        } else if (lower.includes("read") || lower.includes("review") || lower.includes("organize") || lower.includes("quick")) {
+          priority = "low";
+          minutes = 25;
+        }
+
+        return {
+          id: `task_${Date.now()}_${idx}`,
+          title: item,
+          priority,
+          estimatedMinutes: minutes,
+          timeSlot,
+          completed: false,
+          notes: `Target ${minutes} min focused study block with zero distractions.`,
+          actionSteps: [
+            `Gather reference materials for ${item}`,
+            `Set Pomodoro timer for ${minutes} min`,
+            `Review progress and summarize key takeaways`
+          ],
+          createdAt: new Date().toISOString()
+        };
+      });
+
+      return res.json({ tasks: parsedTasks.length > 0 ? parsedTasks : [
+        {
+          id: `task_${Date.now()}_0`,
+          title: input,
+          priority: "high",
+          estimatedMinutes: 45,
+          timeSlot: "Morning",
+          completed: false,
+          notes: "Prioritized task for today",
+          actionSteps: ["Start with high-value concepts", "Complete core problems", "Check answers against mark scheme"],
+          createdAt: new Date().toISOString()
+        }
+      ] });
+    }
+
+    const prompt = `You are an elite academic productivity and time-management expert.
+The user wants to plan their daily tasks for today.
+User's tasks / spoken transcription:
+"${input}"
+
+Existing tasks already planned today: ${currentTasks ? JSON.stringify(currentTasks.map((t: any) => t.title)) : "None"}
+
+Please break down the user's tasks into a structured, highly actionable to-do list for the day.
+For each task:
+1. "title": Concise, motivating title for the task (keep original subject if specified).
+2. "priority": "high", "medium", or "low" based on academic urgency, cognitive demand, or deadlines.
+3. "estimatedMinutes": Realistic study/work duration in minutes (e.g. 20, 25, 45, 60, 90).
+4. "timeSlot": Recommended time of day: "Morning", "Afternoon", or "Evening" (frontload heavy/high-priority tasks in Morning/Afternoon).
+5. "notes": 1 actionable tip on how to tackle this efficiently.
+6. "actionSteps": 2-3 concrete bullet points to execute this task step-by-step.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "array" as any,
+          items: {
+            type: "object" as any,
+            properties: {
+              title: { type: "string" as any },
+              priority: { type: "string" as any, enum: ["high", "medium", "low"] },
+              estimatedMinutes: { type: "integer" as any },
+              timeSlot: { type: "string" as any, enum: ["Morning", "Afternoon", "Evening"] },
+              notes: { type: "string" as any },
+              actionSteps: {
+                type: "array" as any,
+                items: { type: "string" as any }
+              }
+            },
+            required: ["title", "priority", "estimatedMinutes", "timeSlot", "notes", "actionSteps"]
+          }
+        }
+      }
+    });
+
+    const text = response.text?.trim() || "[]";
+    let parsed: any[] = [];
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      const match = text.match(/\[[\s\S]*\]/);
+      if (match) parsed = JSON.parse(match[0]);
+    }
+
+    const tasks = parsed.map((item, idx) => ({
+      id: `task_${Date.now()}_${idx}`,
+      title: item.title || `Task ${idx + 1}`,
+      priority: (["high", "medium", "low"].includes(item.priority) ? item.priority : "medium") as "high" | "medium" | "low",
+      estimatedMinutes: Number(item.estimatedMinutes) || 45,
+      timeSlot: (["Morning", "Afternoon", "Evening"].includes(item.timeSlot) ? item.timeSlot : "Afternoon") as "Morning" | "Afternoon" | "Evening",
+      completed: false,
+      notes: item.notes || "Stay focused during this session.",
+      actionSteps: Array.isArray(item.actionSteps) ? item.actionSteps : ["Start session", "Complete core task", "Verify results"],
+      createdAt: new Date().toISOString()
+    }));
+
+    return res.json({ tasks });
+  } catch (err: any) {
+    console.error("[PLAN TASKS ERROR]", err?.message || err);
+    return res.status(500).json({ error: err?.message || "Failed to generate daily plan" });
+  }
+});
+
+// 3. Multi-turn Gemini Copilot for Daily Planner using gemini-3.8-flash
+app.post("/api/ai/planner-chat", async (req: Request, res: Response) => {
+  try {
+    const { messages, tasksSummary } = req.body;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: "messages array is required" });
+    }
+
+    const ai = getGenAI();
+    if (!ai) {
+      const lastMsg = messages[messages.length - 1]?.content || "";
+      return res.json({
+        reply: `I've noted: "${lastMsg}". To optimize your schedule, tackle high-priority subjects earlier in the day using 45-minute focus intervals with 5-minute active breaks. You can check off each task directly in your Daily Planner!`
+      });
+    }
+
+    const systemInstruction = `You are the Engez Daily Planner Copilot (إنجز نفسك), an elite academic study coach and daily productivity strategist.
+Your mission:
+- Guide the student to plan, organize, and execute their daily study schedule with high efficiency.
+- Break down daunting tasks into 25-minute or 45-minute Pomodoro study blocks.
+- Help students adjust their plan when feeling overwhelmed, tired, or running short on time.
+- Emphasize deep focus, spaced repetition, and realistic pacing.
+- The student's current planned tasks: ${tasksSummary || "No tasks scheduled yet."}
+
+Keep your responses motivating, practical, structured (using clear bullet points when outlining steps), and concise.`;
+
+    const contents = messages.map((m: any) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: String(m.content || "") }]
+    }));
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents,
+      config: {
+        systemInstruction,
+        temperature: 0.7
+      }
+    });
+
+    const reply = response.text?.trim() || "Let me know how else I can help organize your day!";
+    return res.json({ reply });
+  } catch (err: any) {
+    console.error("[PLANNER CHAT ERROR]", err?.message || err);
+    return res.status(500).json({ error: err?.message || "Failed to generate planner response" });
+  }
 });
 
 // Catch-all for any undefined /api/* routes -> MUST return 404 JSON, NEVER fall through to HTML!
