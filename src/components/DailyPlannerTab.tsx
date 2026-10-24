@@ -379,7 +379,7 @@ export default function DailyPlannerTab({
         {
           id: `assistant_${Date.now()}`,
           role: "assistant",
-          content: "I'm having a brief connection hitch. Try prioritizing your highest-impact task first with a 45-minute focus session!",
+          content: "I'm right here with you! To make strong progress today, let's tackle your highest-priority task first during a 45-minute focus session. What subject would you like to start on?",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         }
       ]);
