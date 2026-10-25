@@ -126,7 +126,7 @@ app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  res.setHeader("Permissions-Policy", "camera=*, microphone=*, geolocation=(), payment=()");
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
   res.setHeader(
     "Content-Security-Policy",
@@ -1237,7 +1237,7 @@ For EACH task:
   }
 });
 
-// Multi-turn Gemini Copilot for Daily Planner using gemini-3.8-flash
+// Multi-turn Gemini for Daily Planner using gemini-3.8-flash
 app.post("/api/ai/planner-chat", async (req: Request, res: Response) => {
   try {
     const { messages = [], tasksSummary = "", tasksContext = [] } = req.body;
@@ -1256,7 +1256,7 @@ app.post("/api/ai/planner-chat", async (req: Request, res: Response) => {
           ? JSON.stringify(tasksContext.slice(0, 15), null, 2)
           : "No tasks scheduled yet.");
 
-    const systemInstruction = `You are the Engez Daily Planner Copilot (إنجز نفسك), an elite academic study coach, exam strategist, and daily productivity mentor.
+    const systemInstruction = `You are the Engez Daily Planner Gemini (إنجز نفسك), an elite academic study coach, exam strategist, and daily productivity mentor.
 Your mission:
 - Guide the student to plan, organize, and execute their daily study schedule with high efficiency.
 - Break down daunting tasks into focused 45-minute or 60-minute study sessions with deep work intervals.
@@ -1322,7 +1322,8 @@ Communication rules:
 
     if (ai && sanitizedContents.length > 0) {
       try {
-        const response = await ai.models.generateContent({
+        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 7000));
+        const geminiPromise = ai.models.generateContent({
           model: "gemini-3.8-flash",
           contents: sanitizedContents,
           config: {
@@ -1331,9 +1332,12 @@ Communication rules:
           }
         });
 
-        const reply = response.text?.trim();
-        if (reply) {
-          return res.json({ reply });
+        const response: any = await Promise.race([geminiPromise, timeoutPromise]);
+        if (response && response.text) {
+          const reply = response.text.trim();
+          if (reply) {
+            return res.json({ reply });
+          }
         }
       } catch (geminiErr: any) {
         console.warn("[PLANNER CHAT] Gemini call failed, providing intelligent academic fallback:", geminiErr?.message || geminiErr);
@@ -1343,7 +1347,7 @@ Communication rules:
     // High quality intelligent response fallback so the user NEVER encounters a connection hitch
     const lastUserMsg = [...sanitizedContents].reverse().find(c => c.role === "user")?.parts[0]?.text?.toLowerCase() || "";
     
-    let smartReply = "Hello! I am your Engez Daily Planner Copilot. How can I assist you with scheduling your tasks, prioritizing subjects, or locking in your focus today?";
+    let smartReply = "Hello! I am your Engez Daily Planner Gemini. How can I assist you with scheduling your tasks, prioritizing subjects, or locking in your focus today?";
 
     if (lastUserMsg === "hi" || lastUserMsg === "hello" || lastUserMsg.includes("hey") || lastUserMsg.includes("salam")) {
       smartReply = "Salam! Great to see you. What tasks or subjects are you tackling today? You can type them out in the planner or click the microphone to speak, and I'll schedule them into clear, prioritized study blocks.";
@@ -1359,7 +1363,7 @@ Communication rules:
   } catch (err: any) {
     console.error("[PLANNER CHAT ERROR]", err?.message || err);
     return res.json({
-      reply: "Hello! I am your Daily Planner Copilot. Let's conquer your study goals today. What subject would you like to start with?"
+      reply: "Hello! I am your Daily Planner Gemini. Let's conquer your study goals today. What subject would you like to start with?"
     });
   }
 });

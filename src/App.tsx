@@ -20,8 +20,6 @@ import {
   guestSignIn,
   getFirebaseIdToken,
   getCustomDnsInfo,
-  saveCustomFirebaseConfig,
-  getSavedCustomFirebaseConfig,
   saveUserFriendsData
 } from "./lib/classroom";
 import {
@@ -225,49 +223,7 @@ export default function App() {
   const [isAuthSubmitLoading, setIsAuthSubmitLoading] = useState(false);
   const [authFormError, setAuthFormError] = useState<string | null>(null);
 
-  // Quick project connect modal state on sign-in screen
-  const [showProjectModal, setShowProjectModal] = useState(false);
   const [showDnsModal, setShowDnsModal] = useState(false);
-  const [modalProjectId, setModalProjectId] = useState("");
-  const [modalApiKey, setModalApiKey] = useState("");
-  const [modalSnippet, setModalSnippet] = useState("");
-  const [modalError, setModalError] = useState<string | null>(null);
-  const [modalSuccess, setModalSuccess] = useState<string | null>(null);
-
-  const handleModalSaveProject = () => {
-    setModalError(null);
-    let pId = modalProjectId.trim();
-    let aKey = modalApiKey.trim();
-
-    if (modalSnippet.trim()) {
-      const apiKeyMatch = modalSnippet.match(/apiKey\s*[:=]\s*["']([^"']+)["']/);
-      const projectIdMatch = modalSnippet.match(/projectId\s*[:=]\s*["']([^"']+)["']/);
-      if (projectIdMatch) pId = projectIdMatch[1];
-      if (apiKeyMatch) aKey = apiKeyMatch[1];
-    }
-
-    if (!pId) {
-      setModalError("Please enter your Firebase Project ID (e.g. engez-nafsak).");
-      return;
-    }
-    if (!aKey) {
-      setModalError("Please enter your Firebase Web API Key (starts with AIzaSy...).");
-      return;
-    }
-
-    saveCustomFirebaseConfig({
-      projectId: pId,
-      apiKey: aKey,
-      authDomain: `${pId}.firebaseapp.com`,
-      storageBucket: `${pId}.appspot.com`,
-      appId: ""
-    });
-
-    setModalSuccess("Engez Nafsak project connected! Reloading workspace...");
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  };
 
   const handleInstantHamzaLogin = () => {
     const hamzaUser = {
@@ -2677,14 +2633,6 @@ export default function App() {
                         <Globe size={12} />
                         <span>DNS & Domain Hub</span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowProjectModal(true)}
-                        className="text-[11px] font-mono font-bold text-[#77736B] dark:text-[#ADA59B] hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <Key size={12} />
-                        <span>Firebase Keys</span>
-                      </button>
                     </div>
                     <button
                       type="button"
@@ -2699,116 +2647,6 @@ export default function App() {
                     </button>
                   </div>
                 </motion.div>
-              )}
-
-              {/* PROJECT CONNECTION MODAL OVERLAY ON SIGN-IN */}
-              {showProjectModal && (
-                <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={`w-full max-w-sm ${settings.themeMode === "light" ? "bg-white border-[#E8D7C9]" : "bg-[#0f1528] border-white/15"} border rounded-3xl p-5 space-y-4 text-left shadow-2xl`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Key size={16} className={settings.themeMode === "light" ? "text-[#C25E42]" : "text-[#8B5CF6]"} />
-                        <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-[#1D1D1B] dark:text-white">
-                          Connect Engez Nafsak Project
-                        </h4>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowProjectModal(false)}
-                        className="text-[#77736B] hover:text-[#1D1D1B] dark:hover:text-white cursor-pointer p-1"
-                      >
-                        <X size={15} />
-                      </button>
-                    </div>
-
-                    <p className="text-[11px] text-[#77736B] dark:text-slate-300 font-sans leading-relaxed">
-                      Connect your Firebase project from Firebase Console (*Project settings &gt; General &gt; Your apps*).
-                    </p>
-
-                    {modalError && (
-                      <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-mono">
-                        {modalError}
-                      </div>
-                    )}
-                    {modalSuccess && (
-                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl font-mono">
-                        {modalSuccess}
-                      </div>
-                    )}
-
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-[10px] font-mono uppercase tracking-wider text-[#77736B] block font-bold mb-1">
-                          Firebase Project ID *
-                        </label>
-                        <input
-                          type="text"
-                          value={modalProjectId}
-                          onChange={(e) => setModalProjectId(e.target.value)}
-                          placeholder="e.g. engez-nafsak"
-                          className={`w-full px-3 py-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none ${settings.themeMode === "light" ? "focus:border-[#C25E42]" : "focus:border-[#8B5CF6]"}`}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-mono uppercase tracking-wider text-[#77736B] block font-bold mb-1">
-                          Web API Key *
-                        </label>
-                        <input
-                          type="text"
-                          value={modalApiKey}
-                          onChange={(e) => setModalApiKey(e.target.value)}
-                          placeholder="e.g. AIzaSy..."
-                          className={`w-full px-3 py-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none ${settings.themeMode === "light" ? "focus:border-[#C25E42]" : "focus:border-[#8B5CF6]"}`}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-mono uppercase tracking-wider text-[#77736B] block font-bold mb-1">
-                          Or Paste Config Snippet
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={modalSnippet}
-                          onChange={(e) => setModalSnippet(e.target.value)}
-                          placeholder="const firebaseConfig = { ... };"
-                          className={`w-full p-2 font-mono text-xs rounded-xl border ${
-                            settings.themeMode === "light" ? "bg-[#FAF9F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-black/40 border-white/10 text-white"
-                          } outline-none ${settings.themeMode === "light" ? "focus:border-[#C25E42]" : "focus:border-[#8B5CF6]"} resize-none`}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowProjectModal(false)}
-                        className="px-3 py-1.5 text-xs font-mono text-[#77736B] hover:text-[#1D1D1B] cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleModalSaveProject}
-                        className={`px-4 py-2 ${
-                          settings.themeMode === "light"
-                            ? "bg-[#C25E42] hover:bg-[#B25136] shadow-[#C25E42]/25"
-                            : "bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-[#8B5CF6]/25"
-                        } text-white font-mono text-xs font-bold rounded-xl cursor-pointer shadow-md`}
-                      >
-                        Connect &amp; Reload
-                      </button>
-                    </div>
-                  </motion.div>
-                </div>
               )}
 
               {/* AUTH OPTIONS */}

@@ -25,7 +25,8 @@ import {
   Sunset, 
   Moon, 
   Loader2,
-  Volume2
+  Volume2,
+  X
 } from "lucide-react";
 import { PlannerTask, PlannerChatMessage } from "../types";
 
@@ -79,7 +80,7 @@ export default function DailyPlannerTab({
   const audioChunksRef = useRef<Blob[]>([]);
   const recordTimerRef = useRef<any>(null);
 
-  // Multi-turn Copilot Chat State
+  // Multi-turn Gemini Planner Chat State
   const [chatMessages, setChatMessages] = useState<PlannerChatMessage[]>(() => {
     try {
       const saved = localStorage.getItem("ENGEZ_DAILY_PLANNER_CHAT_V1");
@@ -89,9 +90,9 @@ export default function DailyPlannerTab({
     }
     return [
       {
-        id: "init_copilot_1",
+        id: "init_gemini_1",
         role: "assistant",
-        content: "Salam! I'm your Engez Daily Planner Copilot. You can speak your tasks into the mic, and I'll transcribe them, prioritize them, and schedule realistic time blocks. How can I help you conquer today?",
+        content: "Salam! I'm your Engez Daily Planner Gemini. You can speak your tasks into the mic, and I'll transcribe them, prioritize them, and schedule realistic time blocks. How can I help you conquer today?",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       }
     ];
@@ -125,14 +126,28 @@ export default function DailyPlannerTab({
     }
   }, [chatMessages, isChatLoading]);
 
-  // Audio Recording Functions
+  // Audio Recording & Permission Functions
   const startRecording = async () => {
     setErrorNotice(null);
     audioChunksRef.current = [];
     setRecordingSeconds(0);
 
+    // 1. Ensure audio devices API is available
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setErrorNotice("Microphone recording is not supported in this browser. Please type your tasks directly.");
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Trigger native browser permission prompt on click
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
       const mimeType = MediaRecorder.isTypeSupported("audio/webm")
         ? "audio/webm"
         : MediaRecorder.isTypeSupported("audio/mp4")
@@ -156,10 +171,16 @@ export default function DailyPlannerTab({
         setRecordingSeconds((prev) => prev + 1);
       }, 1000);
     } catch (err: any) {
-      console.error("Mic access error:", err);
-      setErrorNotice(
-        "Microphone access blocked or unavailable. Please enable microphone permissions in your browser or type your tasks directly."
-      );
+      console.warn("Microphone permission/access error:", err);
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setErrorNotice(
+          "Microphone permission needed: Please click the lock or camera icon in your browser address bar and set Microphone to 'Allow', then click the mic button again."
+        );
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        setErrorNotice("No microphone found on this device. Please connect a microphone or type your tasks directly.");
+      } else {
+        setErrorNotice(`Microphone access notice: ${err?.message || "Please grant microphone permission to record audio."}`);
+      }
     }
   };
 
@@ -251,7 +272,7 @@ export default function DailyPlannerTab({
         setTasks((prev) => [...prev, ...data.tasks]);
         setTaskInput("");
 
-        // Also add assistant message to copilot
+        // Also add assistant message to Gemini chat
         const totalMins = data.tasks.reduce((acc: number, t: any) => acc + (t.estimatedMinutes || 0), 0);
         setChatMessages((prev) => [
           ...prev,
@@ -329,7 +350,7 @@ export default function DailyPlannerTab({
     }
   };
 
-  // Send message to Copilot Chatbot
+  // Send message to Gemini Planner
   const handleSendChat = async (presetText?: string) => {
     const textToSend = presetText || chatInput;
     if (!textToSend.trim() || isChatLoading) return;
@@ -360,7 +381,7 @@ export default function DailyPlannerTab({
         })
       });
 
-      if (!response.ok) throw new Error("Failed to chat with planner copilot");
+      if (!response.ok) throw new Error("Failed to chat with planner Gemini");
 
       const data = await response.json();
       setChatMessages((prev) => [
@@ -514,7 +535,7 @@ export default function DailyPlannerTab({
         )}
       </div>
 
-      {/* Main Grid: Left is Input & Tasks, Right is Copilot Chat */}
+      {/* Main Grid: Left is Input & Tasks, Right is Gemini Planner Chat */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: Input + Tasks (7 Cols on desktop) */}
@@ -588,9 +609,29 @@ export default function DailyPlannerTab({
 
             {/* Error / Status notices */}
             {errorNotice && (
-              <div className="mt-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-sans flex items-start gap-2">
-                <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                <span>{errorNotice}</span>
+              <div className="mt-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-sans flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                  <span>{errorNotice}</span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={startRecording}
+                    className="px-2.5 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer transition shadow-xs flex items-center gap-1"
+                  >
+                    <Mic size={11} />
+                    <span>Allow Mic</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setErrorNotice(null)}
+                    className="p-1 rounded-md hover:bg-rose-500/20 text-rose-500 cursor-pointer"
+                    title="Dismiss"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
               </div>
             )}
 
@@ -920,14 +961,14 @@ export default function DailyPlannerTab({
           </div>
         </div>
 
-        {/* Right Column: Multi-turn Gemini Copilot (5 Cols on desktop) */}
+        {/* Right Column: Multi-turn Gemini Planner (5 Cols on desktop) */}
         <div className="lg:col-span-5 flex flex-col h-full min-h-[500px]">
           <div className={`p-5 rounded-3xl border flex-1 flex flex-col transition-all ${
             isLight
               ? "bg-white border-[#EBE4DC] shadow-sm text-[#1A1614]"
               : "bg-[#101322] border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)] text-white"
           }`}>
-            {/* Copilot Header */}
+            {/* Gemini Header */}
             <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/5">
               <div className="flex items-center gap-2.5">
                 <div className={`p-2 rounded-xl ${
@@ -937,7 +978,7 @@ export default function DailyPlannerTab({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold font-sans">
-                    Planner Copilot
+                    Planner Gemini
                   </h3>
                   <span className={`text-[10px] font-mono ${isLight ? "text-[#736B63]" : "text-slate-400"}`}>
                     Powered by Gemini 3.8 Flash
@@ -952,7 +993,7 @@ export default function DailyPlannerTab({
                     {
                       id: `reset_${Date.now()}`,
                       role: "assistant",
-                      content: "Chat cleared! How should we plan your next study block?",
+                      content: "Chat cleared! What study goals would you like Gemini to plan next?",
                       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                     }
                   ]);
@@ -1021,17 +1062,17 @@ export default function DailyPlannerTab({
               {isChatLoading && (
                 <div className="flex items-center gap-2 text-xs font-mono text-slate-400 pl-2">
                   <Loader2 size={13} className="animate-spin" />
-                  <span>Copilot is formulating advice...</span>
+                  <span>Gemini is formulating advice...</span>
                 </div>
               )}
             </div>
 
-            {/* Quick Copilot Prompt Suggestions */}
+            {/* Quick Gemini Prompt Suggestions */}
             <div className="flex flex-wrap items-center gap-1.5 pb-2.5 border-t border-black/5 dark:border-white/5 pt-2">
               {[
                 "How should I structure today?",
-                "Feeling tired, what's next?",
-                "Give me a 5m break routine"
+                "Prioritize my hardest subject",
+                "Create an exam revision schedule"
               ].map((suggestion) => (
                 <button
                   key={suggestion}
@@ -1061,7 +1102,7 @@ export default function DailyPlannerTab({
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask your planner copilot..."
+                placeholder="Ask Gemini..."
                 className={`flex-1 px-3.5 py-2.5 rounded-xl border text-xs font-sans focus:outline-none transition ${
                   isLight
                     ? "bg-[#FAF8F5] border-[#EBE4DC] text-[#1A1614] focus:border-[#C25E42] placeholder:text-[#9B9890]"

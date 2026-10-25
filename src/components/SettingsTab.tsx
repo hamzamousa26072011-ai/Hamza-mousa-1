@@ -3,31 +3,13 @@ import {
   Settings, 
   Sun, 
   Moon, 
-  User as UserIcon, 
-  LogOut, 
-  LogIn, 
-  Trash2, 
-  HelpCircle, 
-  ShieldCheck, 
-  Database, 
   Clock, 
   CheckCircle2, 
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  HardDrive,
-  Cloud,
-  BookOpen,
-  Plus,
-  X,
-  Sparkles,
-  Sliders
+  BookOpen, 
+  Plus, 
+  X, 
+  Sliders 
 } from "lucide-react";
-import { User } from "firebase/auth";
-import { 
-  saveCustomFirebaseConfig, 
-  getSavedCustomFirebaseConfig 
-} from "../lib/classroom";
 
 interface SettingsTabProps {
   settings?: {
@@ -38,19 +20,19 @@ interface SettingsTabProps {
   subjects?: string[];
   onAddSubject?: (subj: string) => void;
   onDeleteSubject?: (subj: string) => void;
-  currentUser?: User | null;
+  focusMinutesSelected?: number;
+  onDurationChange?: (mins: number) => void;
+  themeMode?: "light" | "dark";
+  onThemeChange?: (mode: "light" | "dark") => void;
+  currentUser?: any;
   onLogin?: () => void;
   onLogout?: () => void;
   onGoogleLogin?: () => void;
   isGoogleLoading?: boolean;
   offlineMode?: boolean;
-  focusMinutesSelected?: number;
-  onDurationChange?: (mins: number) => void;
   subjectsCount?: number;
   tasksCount?: number;
   onClearWorkspace?: () => void;
-  themeMode?: "light" | "dark";
-  onThemeChange?: (mode: "light" | "dark") => void;
   onOpenPrivacyPolicy?: () => void;
   onOpenPrivacy?: () => void;
   onOpenDnsModal?: () => void;
@@ -64,49 +46,15 @@ export default function SettingsTab({
   subjects = [],
   onAddSubject,
   onDeleteSubject,
-  currentUser,
-  onLogin,
-  onLogout,
-  offlineMode = false,
   focusMinutesSelected = 50,
   onDurationChange,
-  subjectsCount,
-  tasksCount = 0,
-  onClearWorkspace,
   themeMode: propThemeMode,
   onThemeChange,
-  onOpenPrivacyPolicy,
-  onOpenPrivacy,
-  onOpenUserGuide,
-  onOpenGuide
 }: SettingsTabProps) {
   const activeTheme = settings?.themeMode || propThemeMode || "dark";
   const isLight = activeTheme === "light";
 
-  // Dual-theme accents matching website & Study Apps tab:
-  // Dark mode -> Purple palette (#8B5CF6 / #7C3AED / #C084FC)
-  // Light mode -> Less-saturated darker terracotta bronze (#C25E42 / #B25136 / #FFF2ED / #F0D5CC)
-  const primaryColor = isLight ? "#C25E42" : "#8B5CF6";
-  const primaryHoverColor = isLight ? "#B25136" : "#7C3AED";
-  const accentText = isLight ? "text-[#C25E42]" : "text-[#C084FC]";
-  const softBg = isLight ? "bg-[#FFF2ED]" : "bg-[#8B5CF6]/15";
-  const softBorder = isLight ? "border-[#F0D5CC]" : "border-[#8B5CF6]/30";
-
   const [newSubjectInput, setNewSubjectInput] = useState("");
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const [showAdvancedFirebase, setShowAdvancedFirebase] = useState(false);
-
-  const savedConfig = getSavedCustomFirebaseConfig();
-  const [customProjectId, setCustomProjectId] = useState(savedConfig?.projectId || "");
-  const [customApiKey, setCustomApiKey] = useState(savedConfig?.apiKey || "");
-  const [configMessage, setConfigMessage] = useState<string | null>(null);
-
-  const isGuestOrLocal =
-    !currentUser ||
-    currentUser.isAnonymous ||
-    offlineMode ||
-    currentUser.uid?.startsWith("local-") ||
-    currentUser.uid === "guest-workspace-user";
 
   const handleSetTheme = (mode: "light" | "dark") => {
     if (onUpdateSettings) {
@@ -130,20 +78,6 @@ export default function SettingsTab({
     setNewSubjectInput("");
   };
 
-  const handleSaveCustomFirebase = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customProjectId.trim() || !customApiKey.trim()) return;
-    saveCustomFirebaseConfig({
-      projectId: customProjectId.trim(),
-      apiKey: customApiKey.trim(),
-      authDomain: `${customProjectId.trim()}.firebaseapp.com`,
-      storageBucket: `${customProjectId.trim()}.appspot.com`,
-      appId: ""
-    });
-    setConfigMessage("Custom Firebase project saved. Reloading workspace...");
-    setTimeout(() => window.location.reload(), 1000);
-  };
-
   const DURATION_OPTIONS = [
     { mins: 25, label: "25m (Quick Focus)" },
     { mins: 45, label: "45m (Paper 2)" },
@@ -152,10 +86,6 @@ export default function SettingsTab({
     { mins: 75, label: "75m (Paper 4)" },
     { mins: 120, label: "120m (Full Math)" }
   ];
-
-  const handlePrivacyClick = onOpenPrivacyPolicy || onOpenPrivacy;
-  const handleGuideClick = onOpenUserGuide || onOpenGuide;
-  const displaySubjectsCount = subjectsCount ?? subjects.length;
 
   return (
     <div className={`space-y-6 pb-16 max-w-4xl ${isLight ? "text-[#1A1614]" : "text-[#F1F3F8]"}`}>
@@ -178,7 +108,7 @@ export default function SettingsTab({
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Workspace Settings</h1>
             <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? "text-[#82776E]" : "text-[#94A3B8]"}`}>
-              Customize your visual theme, time format, active subjects, and account storage.
+              Customize your visual theme, time format, active subjects, and study preferences.
             </p>
           </div>
         </div>
@@ -257,7 +187,7 @@ export default function SettingsTab({
                   Dark Theme
                 </div>
                 <p className={`text-xs mt-0.5 ${!isLight ? "text-slate-300" : "text-[#82776E]"}`}>
-                  Deep midnight slate (#0C0D17) with radiant purple accents for low-glare study.
+                  Deep midnight slate with radiant purple accents for low-glare study.
                 </p>
               </div>
             </div>
@@ -434,335 +364,6 @@ export default function SettingsTab({
             </div>
           )}
         </section>
-      )}
-
-      {/* Section 3: Account & Data Sync */}
-      <section
-        aria-labelledby="account-heading"
-        className={`rounded-2xl border p-5 sm:p-6 space-y-5 ${
-          isLight ? "bg-[#FFFFFF] border-[#EBE4DC] shadow-xs" : "bg-[#191E28] border-[#283040]"
-        }`}
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-base shrink-0 shadow-xs ${
-                isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
-              }`}
-            >
-              {currentUser?.displayName ? currentUser.displayName[0].toUpperCase() : <UserIcon size={20} />}
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 id="account-heading" className="text-base font-bold">
-                  {currentUser?.displayName || "Guest Student"}
-                </h2>
-                <span
-                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border inline-flex items-center gap-1 ${
-                    isGuestOrLocal
-                      ? isLight
-                        ? "bg-[#FFF2ED] border-[#F0D5CC] text-[#B25136]"
-                        : "bg-[#8B5CF6]/15 border-[#8B5CF6]/30 text-[#DDD6FE]"
-                      : isLight
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                      : "bg-emerald-950/40 border-emerald-500/30 text-emerald-300"
-                  }`}
-                >
-                  {isGuestOrLocal ? <HardDrive size={12} /> : <Cloud size={12} />}
-                  <span>{isGuestOrLocal ? "Saved Locally" : "Cloud Account Active"}</span>
-                </span>
-              </div>
-              <p className={`text-xs mt-1 ${isLight ? "text-[#82776E]" : "text-[#94A3B8]"}`}>
-                {currentUser?.email || "Using local browser workspace on this device"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            {currentUser ? (
-              <button
-                type="button"
-                onClick={onLogout}
-                className={`min-h-[40px] px-4 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                  isLight
-                    ? "bg-white border-[#EBE4DC] text-rose-600 hover:bg-rose-50"
-                    : "bg-[#12161F] border-[#283040] text-rose-400 hover:bg-rose-500/15"
-                }`}
-              >
-                <LogOut size={14} />
-                <span>Sign Out</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onLogin}
-                className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold text-white transition flex items-center gap-2 cursor-pointer shadow-xs active:scale-95 ${
-                  isLight
-                    ? "bg-[#C25E42] hover:bg-[#B25136]"
-                    : "bg-[#8B5CF6] hover:bg-[#7C3AED]"
-                }`}
-              >
-                <LogIn size={14} />
-                <span>Sign In</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Truthful storage explanation */}
-        <div
-          className={`p-4 rounded-xl border text-xs leading-relaxed ${
-            isLight
-              ? "bg-[#FAF8F5] border-[#EBE4DC] text-[#4A433E]"
-              : "bg-[#12161F] border-[#283040] text-[#B7C0CF]"
-          }`}
-        >
-          {isGuestOrLocal ? (
-            <p>
-              <strong>Local Workspace Mode:</strong> Your tasks, exam countdowns, study apps, and habit logs are currently saved directly to this browser&apos;s offline database. Sign in with Google to enable permanent multi-device cloud synchronization.
-            </p>
-          ) : (
-            <p>
-              <strong>Cloud Sync Active:</strong> Your workspace is linked to your Google account and backed up to Firebase Firestore for instant access across all your study devices.
-            </p>
-          )}
-        </div>
-
-        {/* Collapsible Advanced Firebase Configuration */}
-        <div className={`pt-2 border-t ${isLight ? "border-[#EBE4DC]" : "border-[#283040]"}`}>
-          <button
-            type="button"
-            onClick={() => setShowAdvancedFirebase(!showAdvancedFirebase)}
-            aria-expanded={showAdvancedFirebase}
-            className={`w-full py-2 flex items-center justify-between text-xs font-bold cursor-pointer transition ${
-              isLight ? "text-[#82776E] hover:text-[#1A1614]" : "text-[#94A3B8] hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Database size={14} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
-              <span>Advanced: Custom Firebase Project Connection</span>
-            </span>
-            {showAdvancedFirebase ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-          </button>
-
-          {showAdvancedFirebase && (
-            <form onSubmit={handleSaveCustomFirebase} className="mt-3 space-y-3 pt-3 border-t border-inherit">
-              {configMessage && (
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs font-medium">
-                  {configMessage}
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1">Firebase Project ID</label>
-                  <input
-                    type="text"
-                    value={customProjectId}
-                    onChange={(e) => setCustomProjectId(e.target.value)}
-                    placeholder="e.g., engez-nafsak"
-                    className={`w-full min-h-[38px] px-3 py-1.5 rounded-xl border text-xs font-mono outline-none ${
-                      isLight
-                        ? "bg-[#FAF8F5] border-[#EBE4DC] text-[#1A1614] focus:border-[#C25E42]"
-                        : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
-                    }`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1">Firebase Web API Key</label>
-                  <input
-                    type="text"
-                    value={customApiKey}
-                    onChange={(e) => setCustomApiKey(e.target.value)}
-                    placeholder="AIzaSy..."
-                    className={`w-full min-h-[38px] px-3 py-1.5 rounded-xl border text-xs font-mono outline-none ${
-                      isLight
-                        ? "bg-[#FAF8F5] border-[#EBE4DC] text-[#1A1614] focus:border-[#C25E42]"
-                        : "bg-[#12161F] border-[#283040] text-[#F1F3F8] focus:border-[#8B5CF6]"
-                    }`}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="submit"
-                  className={`min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs font-bold text-white cursor-pointer shadow-xs ${
-                    isLight ? "bg-[#C25E42] hover:bg-[#B25136]" : "bg-[#8B5CF6] hover:bg-[#7C3AED]"
-                  }`}
-                >
-                  Save Project Config
-                </button>
-                {savedConfig && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      localStorage.removeItem("ENGEZ_CUSTOM_FIREBASE_CONFIG");
-                      window.location.reload();
-                    }}
-                    className={`min-h-[36px] px-3.5 py-1.5 rounded-xl text-xs font-bold border cursor-pointer ${
-                      isLight ? "border-[#EBE4DC] text-[#82776E] hover:bg-[#FAF8F5]" : "border-[#283040] text-[#94A3B8] hover:bg-[#12161F]"
-                    }`}
-                  >
-                    Reset to Default
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
-        </div>
-      </section>
-
-      {/* Section 4: Guide, Privacy & Workspace Tools */}
-      <section
-        aria-labelledby="help-privacy-heading"
-        className={`rounded-2xl border p-5 sm:p-6 space-y-4 ${
-          isLight ? "bg-[#FFFFFF] border-[#EBE4DC] shadow-xs" : "bg-[#191E28] border-[#283040]"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <Sparkles size={16} className={isLight ? "text-[#C25E42]" : "text-[#C084FC]"} />
-          <h2 id="help-privacy-heading" className="text-base sm:text-lg font-bold">
-            Guide, Privacy & Workspace Data
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {handleGuideClick && (
-            <button
-              type="button"
-              onClick={handleGuideClick}
-              className={`p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between cursor-pointer ${
-                isLight
-                  ? "bg-[#FAF8F5] border-[#EBE4DC] hover:border-[#C25E42]/60 hover:bg-white"
-                  : "bg-[#12161F] border-[#283040] hover:border-[#8B5CF6]/60 hover:bg-[#191E28]"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                    isLight ? "bg-[#FFF2ED] text-[#C25E42]" : "bg-[#8B5CF6]/20 text-[#C084FC]"
-                  }`}
-                >
-                  <HelpCircle size={18} />
-                </div>
-                <div>
-                  <div className="text-sm font-bold">Workspace Guide</div>
-                  <div className={`text-xs ${isLight ? "text-[#82776E]" : "text-[#94A3B8]"}`}>
-                    Review exam planner features and revision workflows
-                  </div>
-                </div>
-              </div>
-            </button>
-          )}
-
-          {handlePrivacyClick && (
-            <button
-              type="button"
-              onClick={handlePrivacyClick}
-              className={`p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between cursor-pointer ${
-                isLight
-                  ? "bg-[#FAF8F5] border-[#EBE4DC] hover:border-[#C25E42]/60 hover:bg-white"
-                  : "bg-[#12161F] border-[#283040] hover:border-[#8B5CF6]/60 hover:bg-[#191E28]"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                    isLight ? "bg-emerald-50 text-emerald-700" : "bg-emerald-500/20 text-emerald-400"
-                  }`}
-                >
-                  <ShieldCheck size={18} />
-                </div>
-                <div>
-                  <div className="text-sm font-bold">Privacy & Data Tools</div>
-                  <div className={`text-xs ${isLight ? "text-[#82776E]" : "text-[#94A3B8]"}`}>
-                    Export personal JSON data or clear cached past papers
-                  </div>
-                </div>
-              </div>
-            </button>
-          )}
-        </div>
-
-        {/* Workspace Reset Row */}
-        {onClearWorkspace && (
-          <div
-            className={`mt-4 pt-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-              isLight ? "border-[#EBE4DC]" : "border-[#283040]"
-            }`}
-          >
-            <div>
-              <div className="text-sm font-bold">Reset Tasks & Study Progress</div>
-              <p className={`text-xs ${isLight ? "text-[#82776E]" : "text-[#94A3B8]"}`}>
-                Currently storing {tasksCount} {tasksCount === 1 ? "task" : "tasks"} and {displaySubjectsCount} configured {displaySubjectsCount === 1 ? "subject" : "subjects"}.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setConfirmResetOpen(true)}
-              className={`min-h-[40px] px-4 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
-                isLight
-                  ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
-                  : "bg-rose-500/15 border-rose-500/30 text-rose-400 hover:bg-rose-500/25"
-              }`}
-            >
-              <Trash2 size={14} />
-              <span>Reset Tasks & Streak</span>
-            </button>
-          </div>
-        )}
-      </section>
-
-      {/* Confirm Reset Dialog */}
-      {confirmResetOpen && onClearWorkspace && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="reset-workspace-title"
-          onClick={() => setConfirmResetOpen(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className={`w-full max-w-md rounded-2xl border p-6 shadow-xl ${
-              isLight
-                ? "bg-[#FFFFFF] border-[#EBE4DC] text-[#1A1614]"
-                : "bg-[#191E28] border-[#283040] text-[#F1F3F8]"
-            }`}
-          >
-            <div className="flex items-center gap-3 text-rose-500">
-              <AlertTriangle size={20} />
-              <h3 id="reset-workspace-title" className="text-base font-bold">
-                Reset Tasks & Study Streak?
-              </h3>
-            </div>
-            <p className={`text-sm mt-2 leading-relaxed ${isLight ? "text-[#82776E]" : "text-[#94A3B8]"}`}>
-              This will clear your current task list and reset your study streak counter to zero. Your exam countdowns and account credentials remain completely intact.
-            </p>
-            <div className="mt-6 flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setConfirmResetOpen(false)}
-                className={`min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold border cursor-pointer ${
-                  isLight
-                    ? "bg-white border-[#EBE4DC] text-[#82776E] hover:bg-[#FAF8F5]"
-                    : "bg-[#12161F] border-[#283040] text-[#94A3B8] hover:bg-[#191E28]"
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onClearWorkspace();
-                  setConfirmResetOpen(false);
-                }}
-                className="min-h-[40px] px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white cursor-pointer shadow-xs"
-              >
-                Confirm Reset
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

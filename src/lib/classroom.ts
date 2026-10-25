@@ -43,14 +43,9 @@ function getActiveFirebaseConfig() {
   // 2. Check user-configured project in localStorage (Engez Nafsak custom Firebase project)
   if (typeof window !== "undefined") {
     try {
-      const customConfig = localStorage.getItem("ENGEZ_FIREBASE_CONFIG");
-      if (customConfig) {
-        const parsed = JSON.parse(customConfig);
-        if (parsed && (parsed.apiKey || parsed.projectId)) {
-          baseConfig = { ...baseConfig, ...parsed };
-        }
-      }
-      // Purge any legacy stale custom DNS auth flags that broke Google OAuth redirect_uri
+      // Purge any old custom API keys and stale credentials from localStorage
+      localStorage.removeItem("ENGEZ_FIREBASE_CONFIG");
+      localStorage.removeItem("ENGEZ_CUSTOM_FIREBASE_CONFIG");
       localStorage.removeItem("ENGEZ_USE_CUSTOM_DNS_AUTH");
 
       // Ensure authDomain is always a valid Firebase authorized domain (*.firebaseapp.com or *.web.app)
