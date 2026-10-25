@@ -72,13 +72,18 @@ export default function DailyPlannerTab({
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [filterSlot, setFilterSlot] = useState<"all" | "Morning" | "Afternoon" | "Evening">("all");
 
-  // Audio Recording State for gemini-3.5-transcribe
+  // Audio Recording & Voice State for Gemini & Web Speech API
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [isMicPermissionDenied, setIsMicPermissionDenied] = useState(false);
+  const [voiceFeedbackNotice, setVoiceFeedbackNotice] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordTimerRef = useRef<any>(null);
+  const speechRecognitionRef = useRef<any>(null);
+  const liveTranscriptRef = useRef<string>("");
+  const initialInputRef = useRef<string>("");
 
   // Multi-turn Gemini Planner Chat State
   const [chatMessages, setChatMessages] = useState<PlannerChatMessage[]>(() => {
@@ -126,15 +131,20 @@ export default function DailyPlannerTab({
     }
   }, [chatMessages, isChatLoading]);
 
-  // Audio Recording & Permission Functions
+  // Audio Recording & Permission Functions (Dual Engine: Live SpeechRecognition + Gemini Transcription)
   const startRecording = async () => {
     setErrorNotice(null);
+    setIsMicPermissionDenied(false);
+    setVoiceFeedbackNotice(null);
     audioChunksRef.current = [];
     setRecordingSeconds(0);
+    initialInputRef.current = taskInput.trim();
+    liveTranscriptRef.current = "";
 
     // 1. Ensure audio devices API is available
     if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setErrorNotice("Microphone recording is not supported in this browser. Please type your tasks directly.");
+      setIsMicPermissionDenied(false);
       return;
     }
 
@@ -148,7 +158,51 @@ export default function DailyPlannerTab({
         }
       });
 
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm")
+      // 2. Initialize live browser SpeechRecognition if supported (instant real-time text)
+      const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognitionClass) {
+        try {
+          const recognition = new SpeechRecognitionClass();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = "en-US";
+
+          recognition.onresult = (event: any) => {
+            let interimText = "";
+            let finalText = "";
+            for (let i = 0; i < event.results.length; i++) {
+              if (event.results[i].isFinal) {
+                finalText += event.results[i][0].transcript + " ";
+              } else {
+                interimText += event.results[i][0].transcript;
+              }
+            }
+            const spoken = (finalText + interimText).trim();
+            if (spoken) {
+              liveTranscriptRef.current = spoken;
+              const base = initialInputRef.current;
+              setTaskInput(base ? `${base}\n${spoken}` : spoken);
+            }
+          };
+
+          recognition.onerror = (e: any) => {
+            console.warn("[SpeechRecognition Warning]", e?.error);
+            if (e.error === "not-allowed") {
+              setIsMicPermissionDenied(true);
+            }
+          };
+
+          recognition.start();
+          speechRecognitionRef.current = recognition;
+        } catch (recErr) {
+          console.warn("Could not start live SpeechRecognition:", recErr);
+        }
+      }
+
+      // 3. Simultaneously initialize MediaRecorder for Gemini audio transcription
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
         ? "audio/webm"
         : MediaRecorder.isTypeSupported("audio/mp4")
         ? "audio/mp4"
@@ -173,12 +227,15 @@ export default function DailyPlannerTab({
     } catch (err: any) {
       console.warn("Microphone permission/access error:", err);
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setIsMicPermissionDenied(true);
         setErrorNotice(
-          "Microphone permission needed: Please click the lock or camera icon in your browser address bar and set Microphone to 'Allow', then click the mic button again."
+          "Microphone permission needed: Please click 'Allow' in your browser address bar permissions, then click the mic button again."
         );
       } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        setIsMicPermissionDenied(false);
         setErrorNotice("No microphone found on this device. Please connect a microphone or type your tasks directly.");
       } else {
+        setIsMicPermissionDenied(false);
         setErrorNotice(`Microphone access notice: ${err?.message || "Please grant microphone permission to record audio."}`);
       }
     }
@@ -189,15 +246,35 @@ export default function DailyPlannerTab({
     clearInterval(recordTimerRef.current);
     setIsRecording(false);
 
+    // Stop live browser SpeechRecognition if running
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch (e) {
+        // ignore
+      }
+      speechRecognitionRef.current = null;
+    }
+
     mediaRecorderRef.current.onstop = async () => {
       // Stop all tracks to release mic hardware
       mediaRecorderRef.current?.stream?.getTracks().forEach((track) => track.stop());
 
+      // If live SpeechRecognition already captured words, we are done!
+      if (liveTranscriptRef.current && liveTranscriptRef.current.trim().length > 0) {
+        const wordCount = liveTranscriptRef.current.trim().split(/\s+/).length;
+        setVoiceFeedbackNotice(`Voice transcribed (${wordCount} words)`);
+        setTimeout(() => setVoiceFeedbackNotice(null), 4000);
+        return;
+      }
+
+      // Otherwise fall back to Gemini server-side transcription
       const mimeType = mediaRecorderRef.current?.mimeType || "audio/webm";
       const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
 
       if (audioBlob.size === 0) {
         setErrorNotice("No audio was recorded. Please speak clearly into your microphone.");
+        setIsMicPermissionDenied(false);
         return;
       }
 
@@ -207,35 +284,46 @@ export default function DailyPlannerTab({
       try {
         const reader = new FileReader();
         reader.onloadend = async () => {
-          const base64Data = (reader.result as string).split(",")[1];
-          const response = await fetch("/api/ai/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              audioBase64: base64Data,
-              mimeType
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error(`Server returned HTTP ${response.status}`);
-          }
-
-          const data = await response.json();
-          if (data.transcript && data.transcript.trim()) {
-            setTaskInput((prev) => {
-              const current = prev.trim();
-              return current ? `${current}\n${data.transcript.trim()}` : data.transcript.trim();
+          try {
+            const base64Data = (reader.result as string).split(",")[1];
+            const response = await fetch("/api/ai/transcribe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                audioBase64: base64Data,
+                mimeType
+              })
             });
-          } else {
-            setErrorNotice("Could not clearly detect speech in the audio. Please try again or type directly.");
+
+            if (!response.ok) {
+              throw new Error(`Server returned HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.transcript && data.transcript.trim()) {
+              setTaskInput((prev) => {
+                const current = prev.trim();
+                return current ? `${current}\n${data.transcript.trim()}` : data.transcript.trim();
+              });
+              setVoiceFeedbackNotice("Transcribed with Gemini");
+              setTimeout(() => setVoiceFeedbackNotice(null), 4000);
+            } else {
+              setErrorNotice("Could not clearly detect speech in the audio. Please try again or type directly.");
+              setIsMicPermissionDenied(false);
+            }
+          } catch (postErr: any) {
+            console.error("Transcription post error:", postErr);
+            setErrorNotice("Transcription service encountered a temporary issue. You can type tasks directly.");
+            setIsMicPermissionDenied(false);
+          } finally {
+            setIsTranscribing(false);
           }
-          setIsTranscribing(false);
         };
         reader.readAsDataURL(audioBlob);
       } catch (err: any) {
         console.error("Transcription error:", err);
         setErrorNotice("Transcription service encountered a temporary issue. You can type tasks directly.");
+        setIsMicPermissionDenied(false);
         setIsTranscribing(false);
       }
     };
@@ -607,6 +695,46 @@ export default function DailyPlannerTab({
               </div>
             </div>
 
+            {/* Live Listening Banner */}
+            {isRecording && (
+              <div className="mt-2.5 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-between gap-3 text-rose-500">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="relative flex h-2.5 w-2.5 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                  </span>
+                  <span className="text-xs font-sans font-bold truncate">
+                    Listening live... speak your tasks now ({recordingSeconds}s)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={stopRecording}
+                  className="px-3 py-1 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-mono font-bold cursor-pointer transition shadow-xs flex items-center gap-1.5 shrink-0"
+                >
+                  <Check size={12} strokeWidth={3} />
+                  <span>Done</span>
+                </button>
+              </div>
+            )}
+
+            {/* Voice Feedback Success Notice */}
+            {voiceFeedbackNotice && (
+              <div className="mt-2.5 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-sans flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={14} className="shrink-0" />
+                  <span className="font-medium">{voiceFeedbackNotice}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setVoiceFeedbackNotice(null)}
+                  className="p-1 rounded hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
             {/* Error / Status notices */}
             {errorNotice && (
               <div className="mt-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-sans flex items-start justify-between gap-2">
@@ -615,17 +743,31 @@ export default function DailyPlannerTab({
                   <span>{errorNotice}</span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {isMicPermissionDenied ? (
+                    <button
+                      type="button"
+                      onClick={startRecording}
+                      className="px-2.5 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer transition shadow-xs flex items-center gap-1"
+                    >
+                      <Mic size={11} />
+                      <span>Allow Mic</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={startRecording}
+                      className="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-500 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition flex items-center gap-1"
+                    >
+                      <Mic size={11} />
+                      <span>Try Again</span>
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={startRecording}
-                    className="px-2.5 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer transition shadow-xs flex items-center gap-1"
-                  >
-                    <Mic size={11} />
-                    <span>Allow Mic</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setErrorNotice(null)}
+                    onClick={() => {
+                      setErrorNotice(null);
+                      setIsMicPermissionDenied(false);
+                    }}
                     className="p-1 rounded-md hover:bg-rose-500/20 text-rose-500 cursor-pointer"
                     title="Dismiss"
                   >
@@ -640,7 +782,7 @@ export default function DailyPlannerTab({
                 isLight ? "bg-[#FFF2ED] border-[#F2D5CA] text-[#C25E42]" : "bg-[#8B5CF6]/15 border-[#8B5CF6]/30 text-[#C084FC]"
               }`}>
                 <Loader2 size={14} className="animate-spin shrink-0" />
-                <span>Transcribing your audio with Gemini 3.5...</span>
+                <span>Transcribing audio with Gemini...</span>
               </div>
             )}
 

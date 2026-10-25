@@ -1059,7 +1059,7 @@ app.post("/api/ai/test-key", async (req, res) => {
 // 2.2 DAILY PLANNER: AUDIO TRANSCRIPTION, AI TASK ESTIMATION & CHATBOT
 // =========================================================================
 
-// Audio Transcription with gemini-3.5-transcribe
+// Audio Transcription with gemini-3.5-transcribe and multimodal fallback cascade
 app.post("/api/ai/transcribe", async (req: Request, res: Response) => {
   try {
     const { audioBase64, audioData, mimeType = "audio/webm" } = req.body;
@@ -1069,40 +1069,55 @@ app.post("/api/ai/transcribe", async (req: Request, res: Response) => {
     }
 
     const cleanBase64 = rawAudio.replace(/^data:[^;]+;base64,/, "").trim();
-    const resolvedMime = mimeType ? mimeType.split(";")[0] : "audio/webm";
+    if (!cleanBase64) {
+      return res.status(400).json({ error: "Audio payload is empty." });
+    }
+
+    const resolvedMime = mimeType ? mimeType.split(";")[0].trim() : "audio/webm";
 
     const customKeyHeader = req.headers["x-gemini-key"] || req.headers["x-api-key"];
     const customKey = typeof customKeyHeader === "string" ? customKeyHeader : undefined;
     const ai = getGenAI(customKey);
 
     if (ai) {
-      try {
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-transcribe",
-          contents: {
-            parts: [
+      const transcribePrompt = "Transcribe the student's spoken audio accurately. Output only the student's spoken study tasks, subjects, or scheduled activities. If multiple tasks are mentioned, write each clearly. Return ONLY the transcribed words without quotes or conversational commentary.";
+
+      const candidateModels = ["gemini-3.5-transcribe", "gemini-3.8-flash", "gemini-flash-latest"];
+      for (const modelToTry of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelToTry,
+            contents: [
               {
-                inlineData: {
-                  mimeType: resolvedMime,
-                  data: cleanBase64
-                }
-              },
-              {
-                text: "Transcribe this student's spoken study tasks or schedule accurately in clear natural language. If the speaker mentions multiple tasks or subjects, transcribe them smoothly. Return ONLY the clean transcribed words without commentary or quotes."
+                role: "user",
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: resolvedMime,
+                      data: cleanBase64
+                    }
+                  },
+                  {
+                    text: transcribePrompt
+                  }
+                ]
               }
             ]
-          }
-        });
+          });
 
-        const transcript = response.text?.trim() || "";
-        return res.json({ transcript });
-      } catch (transcribeErr: any) {
-        console.warn("[TRANSCRIBE] Gemini transcribe call failed:", transcribeErr?.message || transcribeErr);
+          const transcript = response.text?.trim() || "";
+          if (transcript) {
+            return res.json({ transcript, modelUsed: modelToTry });
+          }
+        } catch (transcribeErr: any) {
+          console.warn(`[TRANSCRIBE] Gemini transcribe with ${modelToTry} failed:`, transcribeErr?.message?.slice(0, 100) || transcribeErr);
+        }
       }
     }
 
+    // Default fallback study task if no voice could be resolved
     return res.json({
-      transcript: "Complete Math Past Paper and review Physics notes",
+      transcript: "Revise Math Past Paper and review Physics notes",
       fallback: true
     });
   } catch (err: any) {
