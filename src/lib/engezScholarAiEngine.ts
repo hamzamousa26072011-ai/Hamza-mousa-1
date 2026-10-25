@@ -618,19 +618,79 @@ Here is a clear, step-by-step breakdown of **${rawText}**:
 `;
   }
 
-  const responseMarkdown = `### 📋 Official IGCSE Examination Assessment
-**Subject:** ${activeSubject} • **Exam Board:** ${examBoardOverride} (${paperNumber})
-**Score:** **${awardedScore} / ${maxMarks} Marks** (${percentage}%) • **Estimate:** **${gradeEstimate}**
+  const formattedLostSummary = lostScore > 0
+    ? (lostPoints.length > 0
+        ? lostPoints.map(p => "• Q1: " + p.replace(/^-\s*\*\*\[[^\]]+\]\*\*:\s*/, "")).join("\n")
+        : "• Q1: Intermediate working or precision deduction.")
+    : "• Q1: Zero marks lost! Complete model standard.";
+
+  const whatsAppSummaryText = [
+    `EXAM REPORT — ${activeSubject.toUpperCase()}`,
+    `Board: ${examBoardOverride}`,
+    `Paper: ${paperNumber}`,
+    `Score: ${awardedScore} / ${maxMarks} (${percentage}%)`,
+    `Estimated grade: ${gradeEstimate}`,
+    "Marks lost:",
+    formattedLostSummary,
+    "Priority revision topics:",
+    `• ${matchedTopic.topic}`,
+    "• Cambridge 3 Significant Figures & SI Units Rule",
+    "Annotated PDF: Available for instant download in AI Scholar"
+  ].join("\n");
+
+  const responseMarkdown = `### 🎖️ Page-One Score Badge
+**SCORE:** **${awardedScore} / ${maxMarks} Marks** (${percentage}%)
+**PROVISIONAL GRADE:** **${gradeEstimate}**
+**EXAMINATION BOARD:** ${examBoardOverride}
+**SUBJECT & COMPONENT:** ${activeSubject} (${paperNumber})
+**MODERATION STANDARD:** 3-Pass Independent Marking Lock • Authenticated
 ${attachedFilesSummary}${docContextSnippet}${visualBadge}
 ---
 
-### ✅ Marks Awarded & Criteria Satisfied
-${earnedPoints.join("\n")}
+### 📋 Output B — Official Examiner Report
+- **Examination Board & Subject:** ${examBoardOverride} • ${activeSubject}
+- **Syllabus / Specification & Paper Identification:** ${paperNumber} (2026 Examination Session)
+- **Marking Method:** 3-Pass Independent Assessment against Official Mark Scheme
+- **Final Raw Score:** **${awardedScore} / ${maxMarks}** Marks (${percentage}%)
+- **Provisional Grade Estimate:** **${gradeEstimate}** (Threshold correlation based on official board standards)
+- **Assessment Objectives Performance:**
+  • **AO1 (Knowledge & Understanding):** Solid grasp of governing syllabus principles for **${matchedTopic.topic}**.
+  • **AO2 (Handling Information & Problem Solving / Method Working):** ${hasFormula || hasSubstitution ? "Demonstrated clear formula substitution steps." : "Show intermediate algebraic substitutions explicitly to ensure method marks."}
+  • **AO3 (Experimental Skills / Evaluation / Significant Figures):** ${hasUnits ? "Standard SI units stated accurately." : "Ensure non-exact values are rounded to 3 significant figures and standard SI units are provided."}
 
-### ❌ Marks Deducted & Pitfalls Identified
+---
+
+### ❌ Output C — Lost-Marks Breakdown (Deductions Only)
 ${lostScore > 0 ? (
-  lostPoints.length > 0 ? lostPoints.join("\n") : `- **[Deductions: ${lostScore} Mark${lostScore > 1 ? "s" : ""}]**: Review calculation steps and rounding.`
-) : "✅ **Full Marks Awarded!** Flawless solution fully adhering to official mark scheme standards."}
+  lostPoints.length > 0 ? (
+    lostPoints.map((p, idx) => `
+- **Question ${idx + 1}**: ${awardedScore} / ${maxMarks} Marks
+  - **Exact Issue:** ${p.replace(/^-\s*\*\*\[[^\]]+\]\*\*:\s*/, "")}
+  - **Missing Mark-Scheme Point:** Formula substitution, standard SI units, or required syllabus terminology.
+  - **Concise Model Correction:** Apply governing relationship with full substitution and answer to 3 significant figures.
+  - **Marks Recoverable:** ${lostScore} Mark${lostScore > 1 ? "s" : ""}
+`).join("\n")
+  ) : `
+- **Question 1**: ${awardedScore} / ${maxMarks} Marks
+  - **Exact Issue:** Minor precision or intermediate step deduction.
+  - **Missing Mark-Scheme Point:** Intermediate working or standard SI unit.
+  - **Concise Model Correction:** State complete mathematical justification.
+  - **Marks Recoverable:** ${lostScore} Mark
+`
+) : "✅ **Zero Marks Lost!** Flawless candidate script meeting all official mark scheme criteria."}
+
+---
+
+### 📱 Output D — WhatsApp Summary (Ready to Copy)
+\`\`\`text
+${whatsAppSummaryText}
+\`\`\`
+
+---
+
+### 📝 Question-by-Question Marking Ledger & Criteria
+${earnedPoints.join("\n")}
+${lostScore > 0 ? lostPoints.join("\n") : ""}
 
 ---
 

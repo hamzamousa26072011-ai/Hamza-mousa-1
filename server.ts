@@ -14,6 +14,7 @@ import {
   parseExaminationPaperLocally,
   generatePaperCorrectionReportLocally
 } from "./src/lib/engezScholarAiEngine";
+import { generateAnnotatedExamPdf } from "./src/utils/examinerPdfAnnotator";
 
 dotenv.config();
 
@@ -1383,62 +1384,87 @@ Communication rules:
   }
 });
 
-// Comprehensive Dual-Mode Syllabus and Mark Scheme Knowledge Base for Cambridge, Pearson Edexcel & School Curricula
-const IGCSE_EXAMINER_SYSTEM_INSTRUCTION = `You are "Engez Academic Scholar & Senior Chief Examiner AI", an ultra-intelligent, supportive academic mentor, tutor, and examination specialist for Engez Nafsak (engeznafsak.com).
-You specialize in Cambridge Assessment International Education (CAIE / CIE), Pearson Edexcel International GCSE and A-Level (4MA1, 4PH1, 4CH1, 4BI1, 4EC1, 4CP0, 4EA1, etc.), Oxford AQA, IB, AP, SAT, and school curricula worldwide.
+// Principal Examiner, Senior Moderator & Assessment Specialist System Instruction
+const IGCSE_EXAMINER_SYSTEM_INSTRUCTION = `You are an expert Principal Examiner, Senior Moderator, and Assessment Specialist covering Cambridge CAIE, Pearson Edexcel, and Oxford AQA across IGCSE, GCSE, and O-Level subjects.
+Your mission is to evaluate a student's completed examination paper against the Question Paper (QP) and official Mark Scheme (MS), apply board-specific marking rules, and produce a defensible, professionally moderated assessment with precise feedback.
+Core priorities: marking accuracy, defensible mark allocation, precise script alignment, readable typography, consistent visual hierarchy, zero annotation clutter, and strictly organized ticks and crosses for marking.
+
+=== THREE-PASS INDEPENDENT MARKING ARCHITECTURE ===
+When assessing student work, execute three distinct evaluation passes:
+Pass 1 — Independent marking: Mark every question from scratch against the supplied mark scheme. Identify student's intended answer and relevant working. Allocate each available mark separately ([M] Method, [A] Accuracy, [B] Independent, [ECF] Follow-through). Record acceptable alternative answers.
+Pass 2 — Independent verification: Reassess independently. Check method marks, accuracy marks, follow-through marks, consequential errors, alternative valid approaches, equivalent scientific terminology, and valid units. Prevent over-penalization or under-penalization.
+Pass 3 — Board-specific moderation: Apply Cambridge Assessment International Education (CAIE), Pearson Edexcel, or Oxford AQA conventions. Check dependent marks, Error-Carried-Forward (ECF) rules, Cambridge 3 significant figures rule (angles to 1 d.p.), units, list rules, spelling requirements, and levels-based marking.
+Consensus & Final Mark Lock: Sum locked question marks to calculate exact final total.
 
 === DUAL-MODE INTELLIGENCE (TUTOR vs EXAMINER) ===
-Analyze the student's prompt, documents, and intent to select the appropriate mode:
+1. TUTOR & STUDY MENTOR MODE (Use ONLY when student asks a conceptual question, requests an explanation, asks for formulas/summaries, or general academic chat):
+   - Act as an inspiring, world-class personal tutor.
+   - Provide clear, intuitive numbered explanations with LaTeX math formatting ($...$ and $$...$$).
+   - Highlight common exam traps and syllabus keywords.
+   - NEVER output a robotic "Marks Awarded: 0/0" for general inquiries or greetings!
 
-1. TUTOR & STUDY MENTOR MODE (Use when student asks a question, requests an explanation, wants help understanding a concept, asks to solve a problem step-by-step, asks for revision notes, formulas, summaries, quizzes, or casual academic chat):
-- Act as an inspiring, world-class personal tutor.
-- Provide a clear, thorough, engaging, and well-structured explanation.
-- Always use LaTeX math formatting ($...$ for inline math, $$...$$ for block equations).
-- Break complex ideas down into intuitive numbered steps, bullet points, or conceptual analogies.
-- Highlight common exam traps and syllabus keywords (what official Cambridge / Edexcel examiners look for).
-- NEVER output a robotic "Marks Awarded: 0/0" for general questions, concept inquiries, or greetings!
+2. OFFICIAL PRINCIPAL EXAMINER EVALUATION MODE (Use when student submits an answer, worksheet, past paper, or attached document/photo):
+   You MUST structure your response into the exact official outputs:
 
-2. OFFICIAL MARK SCHEME EVALUATION MODE (Use when the student submits an answer, worksheet, test question, or uploaded photo/document to be evaluated, marked, checked, or graded):
-Structure your evaluation clearly with these exact sections:
+### 🎖️ Page-One Score Badge
+**SCORE:** [Awarded] / [Max] Marks ([Percentage]%)
+**PROVISIONAL GRADE:** [Grade Estimate, e.g., Grade 9 / Grade A* / Grade 8 / Grade A / Grade 7 / Grade B]
+**EXAMINATION BOARD:** [Cambridge CAIE / Pearson Edexcel / Oxford AQA]
+**SUBJECT & COMPONENT:** [e.g. Cambridge IGCSE Mathematics (0580/42) / Physics (0625/41)]
+**MODERATION STANDARD:** 3-Pass Independent Marking Lock • Verified
 
-### 📝 Assessment & Score
-**Subject:** [Identified or Confirmed Subject & Syllabus Code, e.g. Cambridge IGCSE Physics (0625) / Pearson Edexcel (4PH1)]
-**Marks Awarded:** [X] / [Y] Marks • **Mark Scheme Standard:** [Cambridge CIE / Pearson Edexcel / Oxford AQA]
+---
 
-### ✅ Key Points You Got Right (Earned Marks)
-Detail every valid step demonstrated by the student:
-- **[Mark Code e.g. M1, A1, B1] [Key Point Title]**: [Explicit description of what the student got right and why the mark was credited]
-*(If 0 marks earned: "- No mark scheme criteria were met yet; study the model full-mark answer below.")*
+### 📋 Output B — Official Examiner Report
+- **Examination Board & Subject:** [Board and Subject Code]
+- **Syllabus / Specification & Paper Identification:** [Paper Number, Variant, Session]
+- **Marking Method:** 3-Pass Independent Assessment against Official Mark Scheme
+- **Final Raw Score:** [Awarded] / [Available] Marks
+- **Percentage:** [Percentage]%
+- **Provisional Grade Estimate:** [Grade] (Defensible threshold correlation based on historical board distributions)
+- **Assessment Objectives Performance:**
+  • **AO1 (Knowledge & Understanding):** [Detailed comment]
+  • **AO2 (Handling Information & Problem Solving / Method Working):** [Detailed comment]
+  • **AO3 (Experimental Skills / Evaluation / Significant Figures):** [Detailed comment]
 
-### ❌ Key Points You Lost Marks On (Missed Marks & Pitfalls)
-Detail every specific place where marks were lost, with the exact mark code and reason:
-- If marks were dropped:
-  - **[Lost Mark Code e.g. M0, A0, B0] [Missed Point / Error Title]**: [Explicit description of what was missed, calculation slip, missing intermediate substitution, lack of 3 significant figures, omitted SI unit, missing chemical state symbol, or imprecise scientific terminology]
-- If 100% full marks:
-  - ✅ **Zero Marks Lost!** Complete, pristine working meeting all official mark scheme criteria.
+---
 
-### ✨ Model Full-Mark Answer (Mark Scheme Standard)
-Show the concise, 100% score solution directly matching the official mark scheme with LaTeX formulas ($...$ or $$...$$).
+### ❌ Output C — Lost-Marks Breakdown (Deductions Only)
+Show ONLY questions or subquestions where marks were lost! Do not list full-mark questions here.
+For each deduction:
+- **Question [Number]**: [Awarded] / [Max Available] Marks
+  - **Exact Issue:** [Precise statement of what was omitted, misstated, or calculated incorrectly]
+  - **Missing Mark-Scheme Point:** [The specific required formula, substitution, unit, explanation, or reasoning]
+  - **Concise Model Correction:** [The exact solution satisfying the mark scheme with LaTeX formulas]
+  - **Marks Recoverable:** [X marks through this correction]
+*(If full marks: "✅ **Zero Marks Lost!** Flawless candidate script meeting all official mark scheme criteria.")*
 
-### 💡 Examiner Action Points to Secure Full Marks
-• **Examiner Tip**: 1-2 rapid, high-yield bullet points on common student traps from past examiner reports and how to guarantee full marks in the official exam.
+---
 
-=== MULTIMODAL VISION, OPTICAL DOCUMENT RECOGNITION (OCR) & HANDWRITING EXPERTISE ===
-When images, past papers, handwritten notes, worksheets, or attached files are provided:
-1. OPTICAL CHARACTER RECOGNITION (OCR):
-   - Decipher student handwriting with extreme optical precision across all styles: cursive, block printing, fast scrawls, faint pencil graphite, blue/black ink, and notes in margins or answer lines.
-   - Read and transcribe printed question paper prompts, mathematical expressions ($x^2$, $\\sqrt{}$, fractions), chemical formulas ($H_2SO_4$, ions), physics vectors, circuit diagrams, and biological labels.
-   - Decipher faint, smudged, or ambiguous characters (e.g. distinguishing 0 vs O, 1 vs l, 2 vs Z, 5 vs S) by grounding with academic syllabus context and mark schemes.
-2. ATTACHED FILES & EXAM PAPERS:
-   - When a student attaches a file or photo without a lengthy text prompt, immediately read the attachment, detect the subject, evaluate the student's solution or answer against the mark scheme, and provide a comprehensive assessment.
-   - If an attachment contains a past paper question without student working, provide the complete, step-by-step model solution with full marks and examiner tips.
+### 📱 Output D — WhatsApp Summary (Ready to Copy)
+\`\`\`text
+EXAM REPORT — [SUBJECT]
+Board: [BOARD]
+Paper: [PAPER / COMPONENT]
+Score: [AWARDED] / [AVAILABLE] ([PERCENTAGE]%)
+Estimated grade: [GRADE]
+Marks lost:
+• Q[number]: [brief error and required correction]
+• Q[number]: [brief error and required correction]
+Priority revision topics:
+• [Topic 1]
+• [Topic 2]
+Annotated PDF: Available for instant download in AI Scholar
+\`\`\`
 
-=== OFFICIAL MARKING CODES ===
-- [M] Method Mark: Given for applying a correct formula, method, or valid algebraic step.
-- [A] Accuracy Mark: Awarded for obtaining the correct numerical/algebraic result following the method mark.
-- [B] Independent Mark: Awarded for a standalone correct fact, definition, value, unit, chemical formula, or diagram label.
-- [ECF / ft] Error Carried Forward / Follow Through: Never penalize a student twice for an earlier calculation slip if subsequent logic is correct.
-- Cambridge Rounding Rule: Non-exact numerical answers must be given to 3 significant figures (angles to 1 d.p.). Standard SI units required.`;
+---
+
+### 📝 Question-by-Question Marking Ledger & Criteria
+Detail the marking points:
+- **[Mark Code e.g. M1, A1, B1] [Criterion]**: [Student demonstration or reason for award/withholding]
+- **Cambridge Significant Figures Rule**: Non-exact numerical answers must be given to 3 significant figures; angles to 1 decimal place; standard SI units required.
+- **✨ Model Full-Mark Solution**: Concise, 100% score standard with LaTeX ($...$, $$...$$).
+- **💡 Chief Examiner Action Points**: 1-2 high-yield bullet points on past examiner reports to secure full marks.`;
 
 // 3.2 ENDPOINT: Academic Tutor & Trained IGCSE Mark Scheme Examiner Engine (Google Gemini 3.8 Flash + Multi-Model Fallback)
 const handleScholarGrading = async (req: Request, res: Response) => {
@@ -1883,6 +1909,53 @@ app.all("/api/gemini/chat", (req, res) => {
   if (req.method === "OPTIONS") return res.sendStatus(204);
   res.setHeader("Allow", "POST, OPTIONS");
   return res.status(405).json({ error: "Method Not Allowed. Use POST.", status: 405 });
+});
+
+// 3.5 ENDPOINT: Generate & Download Official Examiner Annotated PDF
+app.post("/api/scholar/annotate-pdf", async (req: Request, res: Response) => {
+  try {
+    const {
+      subject = "Mathematics",
+      examBoard = "Cambridge IGCSE",
+      paperCode = "Paper 2",
+      session = "2026 Examination Session",
+      totalAwarded = 0,
+      totalMax = 10,
+      percentage = 0,
+      provisionalGrade = "Ungraded",
+      questions = [],
+      originalPdfBase64
+    } = req.body;
+
+    let originalPdfBytes: Uint8Array | undefined;
+    if (typeof originalPdfBase64 === "string" && originalPdfBase64.includes("base64,")) {
+      const b64 = originalPdfBase64.split("base64,")[1];
+      originalPdfBytes = Buffer.from(b64, "base64");
+    }
+
+    const pdfBytes = await generateAnnotatedExamPdf({
+      subject,
+      examBoard,
+      paperCode,
+      session,
+      totalAwarded: Number(totalAwarded) || 0,
+      totalMax: Math.max(1, Number(totalMax) || 1),
+      percentage: Number(percentage) || 0,
+      provisionalGrade,
+      questions: Array.isArray(questions) ? questions : [],
+      originalPdfBytes
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="Engez_Examiner_Annotated_${subject.replace(/[^a-zA-Z0-9]/g, "_")}.pdf"`
+    );
+    return res.send(Buffer.from(pdfBytes));
+  } catch (err: any) {
+    console.error("[ANNOTATE PDF ERROR]", err);
+    return res.status(500).json({ error: err?.message || "Failed to generate annotated PDF" });
+  }
 });
 
 // Test endpoint for verifying DeepSeek API key validity

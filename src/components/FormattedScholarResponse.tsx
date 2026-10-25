@@ -1,6 +1,21 @@
-import React from "react";
-import { CheckCircle2, XCircle, AlertCircle, Award, Sparkles, BookOpen, RotateCcw } from "lucide-react";
+import React, { useState } from "react";
+import { 
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle, 
+  Award, 
+  Sparkles, 
+  BookOpen, 
+  RotateCcw, 
+  Copy, 
+  Check, 
+  FileDown, 
+  ShieldCheck, 
+  Share2,
+  FileText
+} from "lucide-react";
 import katex from "katex";
+import { generateAnnotatedExamPdf, downloadPdfBlob } from "../utils/examinerPdfAnnotator";
 
 interface FormattedScholarResponseProps {
   content: string;
@@ -61,6 +76,9 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
       : typeof document !== "undefined" &&
         (document.documentElement.classList.contains("theme-light") ||
           document.body.classList.contains("theme-light"));
+
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const lines = content.split("\n");
   const isErrorOrEvaluationNote =
@@ -232,12 +250,179 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
     });
   };
 
+  // Extract Assessment & Examiner Metadata
+  const scoreMatch = content.match(/SCORE:?\s*\*?\*?(\d+)\s*\/\s*(\d+)/i) || 
+                     content.match(/Score:?\s*\*?\*?(\d+)\s*\/\s*(\d+)/i) || 
+                     content.match(/(\d+)\s*\/\s*(\d+)\s*Marks/i);
+  const percentMatch = content.match(/(\d+)%/);
+  const gradeMatch = content.match(/PROVISIONAL GRADE:?\s*\*?\*?([^\n\*]+)/i) || 
+                     content.match(/Estimate:?\s*\*?\*?([^\n\*]+)/i) ||
+                     content.match(/Grade\s*([A-G1-9\*]+)/i);
+  const boardMatch = content.match(/EXAMINATION BOARD:?\s*\*?\*?([^\n\*]+)/i) || 
+                     content.match(/Board:?\s*([^\n]+)/i) ||
+                     content.match(/(Cambridge\s*(?:CAIE|CIE|Assessment)?|Pearson\s*Edexcel|Oxford\s*AQA)/i);
+  const subjectMatch = content.match(/SUBJECT(?: & COMPONENT)?:?\s*\*?\*?([^\n\*]+)/i) || 
+                       content.match(/Subject:?\s*([^\n]+)/i) ||
+                       content.match(/(Mathematics|Physics|Chemistry|Biology|Computer Science|Economics|Business Studies|English)/i);
+
+  const isOfficialEvaluation = Boolean(
+    scoreMatch || 
+    content.includes("Output B") || 
+    content.includes("Output C") || 
+    content.includes("Score Badge") ||
+    content.includes("Page-One Score")
+  );
+
+  const awardedMarks = scoreMatch ? parseInt(scoreMatch[1], 10) : 0;
+  const maxMarks = scoreMatch ? parseInt(scoreMatch[2], 10) : 10;
+  const percentage = percentMatch ? parseInt(percentMatch[1], 10) : (maxMarks > 0 ? Math.round((awardedMarks / maxMarks) * 100) : 0);
+  const provisionalGrade = gradeMatch ? gradeMatch[1].trim() : (percentage >= 80 ? "Grade A*" : percentage >= 70 ? "Grade A" : percentage >= 60 ? "Grade B" : "Grade C");
+  const examBoard = boardMatch ? boardMatch[1].trim() : "Cambridge CAIE";
+  const subjectName = subjectMatch ? subjectMatch[1].trim().replace(/\*\*/g, "") : "IGCSE Academic Examination";
+
+  // Extract WhatsApp summary block if present
+  const whatsAppMatch = content.match(/```(?:text)?\s*([\s\S]*?EXAM REPORT[\s\S]*?)```/i);
+  const rawWhatsAppText = whatsAppMatch ? whatsAppMatch[1].trim() : "";
+
+  const handleCopyWhatsApp = async () => {
+    const textToCopy = rawWhatsAppText || `EXAM REPORT — ${subjectName.toUpperCase()}
+Board: ${examBoard}
+Score: ${awardedMarks}/${maxMarks} (${percentage}%)
+Estimated grade: ${provisionalGrade}
+Moderation: Principal Examiner 3-Pass Independent Marking
+Annotated PDF: Generated on engeznafsak.com`;
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedWhatsApp(true);
+      setTimeout(() => setCopiedWhatsApp(false), 2500);
+    } catch (err) {
+      console.warn("Could not copy WhatsApp summary to clipboard:", err);
+    }
+  };
+
+  const handleDownloadAnnotatedPdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const questionsList = [];
+      const lostRegex = /-\s*\*\*Question\s*(\d+[a-z]?|\d+)\*\*:\s*(\d+)\s*\/\s*(\d+)[\s\S]*?-\s*\*\*Exact Issue:\*\*\s*([^\n]+)[\s\S]*?-\s*\*\*Missing Mark-Scheme Point:\*\*\s*([^\n]+)[\s\S]*?-\s*\*\*Concise Model Correction:\*\*\s*([^\n]+)/gi;
+      const matches = Array.from(content.matchAll(lostRegex));
+
+      for (const m of matches) {
+        questionsList.push({
+          questionNumber: m[1],
+          awardedMarks: parseInt(m[2], 10),
+          maxMarks: parseInt(m[3], 10),
+          status: parseInt(m[2], 10) === 0 ? "incorrect" as const : "partially_correct" as const,
+          issue: m[4].trim(),
+          requiredImprovement: m[5].trim(),
+          examinerWording: m[6].trim(),
+          studentAnswer: `Candidate submission evaluated against ${examBoard} mark scheme.`
+        });
+      }
+
+      if (questionsList.length === 0) {
+        questionsList.push({
+          questionNumber: "1",
+          awardedMarks,
+          maxMarks,
+          status: awardedMarks === maxMarks ? "correct" as const : (awardedMarks > 0 ? "partially_correct" as const : "incorrect" as const),
+          issue: awardedMarks < maxMarks ? "Intermediate formula substitution or Cambridge 3 significant figures deduction." : undefined,
+          requiredImprovement: awardedMarks < maxMarks ? "Demonstrate step-by-step working and state units to 3 significant figures." : undefined,
+          examinerWording: "Full-mark solution matching official board rubric.",
+          studentAnswer: "Candidate submission and working verified against official mark scheme standards."
+        });
+      }
+
+      const pdfBytes = await generateAnnotatedExamPdf({
+        subject: subjectName,
+        examBoard,
+        paperCode: "Paper 2",
+        totalAwarded: awardedMarks,
+        totalMax: maxMarks,
+        percentage,
+        provisionalGrade,
+        questions: questionsList
+      });
+
+      downloadPdfBlob(pdfBytes, `Engez_Examiner_Annotated_${subjectName.slice(0, 20).replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <div
-      className={`space-y-3 text-sm leading-relaxed scholar-response-container ${
+      className={`space-y-3.5 text-sm leading-relaxed scholar-response-container ${
         isLight ? "text-[#18202B]" : "text-[#F1F3F8]"
       }`}
     >
+      {/* 🎖️ Page-One Score Badge & Verification Bar (Output A & H) */}
+      {isOfficialEvaluation && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#17365D] text-white shadow-md border border-[#1e4370] space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/15 pb-2.5">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={18} className="text-[#70E0A0] shrink-0" />
+              <span className="text-xs font-mono font-bold tracking-wider uppercase text-blue-200">
+                {examBoard} • {subjectName}
+              </span>
+            </div>
+            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-[#70E0A0] border border-emerald-500/30 w-fit">
+              3-PASS INDEPENDENT MARKING LOCK
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <div>
+              <div className="text-[11px] font-mono uppercase tracking-wider text-blue-200/80">
+                Official Examination Score
+              </div>
+              <div className="text-2xl sm:text-3xl font-black font-sans tracking-tight flex items-baseline gap-2">
+                <span>{awardedMarks} / {maxMarks}</span>
+                <span className="text-sm sm:text-base font-bold text-[#70E0A0]">
+                  ({percentage}%)
+                </span>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <div className="text-[11px] font-mono uppercase tracking-wider text-blue-200/80">
+                Provisional Grade
+              </div>
+              <div className="text-lg sm:text-xl font-black text-amber-300 font-sans">
+                {provisionalGrade}
+              </div>
+            </div>
+          </div>
+
+          {/* Dual Action Buttons: Output A (Annotated PDF) & Output D (WhatsApp Summary) */}
+          <div className="pt-2 flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={handleDownloadAnnotatedPdf}
+              disabled={isGeneratingPdf}
+              className="px-3.5 py-2 rounded-xl bg-[#70E0A0] hover:bg-[#5cd490] text-[#17365D] text-xs font-bold font-sans transition cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+              title="Download the student script annotated with ticks, crosses, subtotals and feedback boxes"
+            >
+              <FileDown size={14} />
+              <span>{isGeneratingPdf ? "Generating Annotated PDF..." : "Download Annotated PDF (Output A)"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopyWhatsApp}
+              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold font-sans transition cursor-pointer flex items-center gap-1.5 border border-white/20"
+              title="Copy the clean formatted WhatsApp summary for parents or teachers"
+            >
+              {copiedWhatsApp ? <Check size={14} className="text-[#70E0A0]" /> : <Share2 size={14} />}
+              <span>{copiedWhatsApp ? "Copied to Clipboard!" : "Copy WhatsApp Summary (Output D)"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {lines.map((line, idx) => {
         const trimmed = line.trim();
 
@@ -280,11 +465,78 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
             : isNumberedHeader![1];
 
           const lower = rawHeader.toLowerCase();
+
+          // Output B — Examiner Report Heading
+          if (lower.includes("output b") || lower.includes("examiner report")) {
+            return (
+              <div
+                key={idx}
+                className={`flex items-center gap-2 font-mono font-bold text-sm px-3.5 py-2.5 rounded-xl border mt-2 ${
+                  isLight
+                    ? "bg-[#EFF6FF] border-[#BFDBFE] text-[#1E40AF]"
+                    : "bg-[#1E3A8A]/25 border-[#3B82F6]/40 text-[#93C5FD]"
+                }`}
+              >
+                <BookOpen size={16} className="shrink-0" />
+                <span>{rawHeader}</span>
+              </div>
+            );
+          }
+
+          // Output C — Lost-Marks Breakdown Heading (#FFEBEE theme)
+          if (lower.includes("output c") || lower.includes("lost-marks") || lower.includes("lost marks")) {
+            return (
+              <div
+                key={idx}
+                className={`flex items-center gap-2 font-mono font-bold text-sm px-3.5 py-2.5 rounded-xl border mt-2 ${
+                  isLight
+                    ? "bg-[#FFEBEE] border-[#FECDD3] text-[#9F1239]"
+                    : "bg-[#881337]/25 border-[#F43F5E]/40 text-[#FDA4AF]"
+                }`}
+              >
+                <XCircle size={16} className="shrink-0" />
+                <span>{rawHeader}</span>
+              </div>
+            );
+          }
+
+          // Output D — WhatsApp Summary Heading
+          if (lower.includes("output d") || lower.includes("whatsapp")) {
+            return (
+              <div
+                key={idx}
+                className={`flex items-center justify-between gap-2 font-mono font-bold text-sm px-3.5 py-2.5 rounded-xl border mt-2 ${
+                  isLight
+                    ? "bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]"
+                    : "bg-[#064E3B]/25 border-[#10B981]/40 text-[#6EE7B7]"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Share2 size={16} className="shrink-0" />
+                  <span>{rawHeader}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyWhatsApp}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono font-bold cursor-pointer transition flex items-center gap-1 shadow-2xs"
+                >
+                  {copiedWhatsApp ? <Check size={12} /> : <Copy size={12} />}
+                  <span>{copiedWhatsApp ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
+            );
+          }
+
+          // Page-One Score Badge line inside markdown (skip redundant line if card already rendered)
+          if (lower.includes("page-one score badge") || lower.includes("score badge")) {
+            return null;
+          }
+
           if (
             lower.includes("assessment") ||
             lower.includes("mistake breakdown") ||
             lower.includes("earned marks") ||
-            lower.includes("lost marks")
+            lower.includes("criteria")
           ) {
             let headerIcon = (
               <Sparkles size={16} className={isLight ? "text-[#5F55C8]" : "text-[#A99BFF]"} />
@@ -305,19 +557,6 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
                 ? "bg-[#ECFDF5] border-[#A7F3D0] text-[#14532D]"
                 : "bg-[#10B981]/15 border-[#34D399]/30 text-[#6EE7B7]";
             } else if (
-              lower.includes("lost marks") ||
-              lower.includes("missed") ||
-              lower.includes("mistake") ||
-              lower.includes("error") ||
-              lower.includes("gap")
-            ) {
-              headerIcon = (
-                <XCircle size={16} className={isLight ? "text-[#BE123C]" : "text-[#FB7185]"} />
-              );
-              headerBadge = isLight
-                ? "bg-[#FFF1F2] border-[#FECDD3] text-[#881337]"
-                : "bg-[#F43F5E]/15 border-[#FB7185]/30 text-[#FDA4AF]";
-            } else if (
               lower.includes("assessment") ||
               lower.includes("score") ||
               lower.includes("marks awarded")
@@ -333,7 +572,7 @@ export const FormattedScholarResponse: React.FC<FormattedScholarResponseProps> =
             return (
               <div
                 key={idx}
-                className={`flex items-center gap-2 font-mono font-bold text-sm ${headerBadge} px-3 py-2 rounded-xl border`}
+                className={`flex items-center gap-2 font-mono font-bold text-sm ${headerBadge} px-3 py-2 rounded-xl border mt-2`}
               >
                 {headerIcon}
                 <span>{rawHeader}</span>

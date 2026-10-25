@@ -1057,6 +1057,7 @@ export default function AiScholarTab({
   }
 
   const promptSuggestions = [
+    { label: "🏅 Principal Examiner 3-Pass Marking & Output Report", prompt: "Act as an expert Principal Examiner and Senior Moderator (Cambridge CAIE, Pearson Edexcel, Oxford AQA). Run a 3-Pass Independent Marking on my submission against the official mark scheme, lock final marks, and produce Output B (Examiner Report), Output C (Lost-marks breakdown), and Output D (WhatsApp summary) with full marking ledger." },
     { label: "✅ Key Points Got Right & ❌ Points Lost Marks On", prompt: "Please identify the subject, grade my answer against official IGCSE mark schemes, and explicitly list: 1) Key Points You Got Right (Earned Marks), and 2) Key Points You Lost Marks On (Missed Marks & Traps)." },
     { label: "🎯 Check my answer against official IGCSE Mark Scheme", prompt: "Please check my answer against the IGCSE mark scheme: evaluate all steps, calculate marks awarded (e.g. 3/4), pinpoint mistakes, and provide a 100% full-mark model answer." },
     { label: "⚡ Identify mistakes, missed keywords & lost marks", prompt: "Analyze my uploaded work or solution: identify every mistake, missed syllabus keyword, or unit error, and explain how to earn full marks." },
@@ -1606,7 +1607,7 @@ export default function AiScholarTab({
                 </div>
 
                 <div className="w-full max-w-md space-y-2 pt-2 text-left">
-                  {promptSuggestions.slice(0, 3).map((sug, i) => (
+                  {promptSuggestions.slice(0, 4).map((sug, i) => (
                     <button
                       key={i}
                       type="button"

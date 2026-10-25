@@ -31,12 +31,16 @@ import {
   Layers,
   FileSpreadsheet,
   Lock,
-  LogIn
+  LogIn,
+  Share2,
+  Copy,
+  FileDown
 } from "lucide-react";
 import { CorrectionReport, GradedQuestion, MarkPoint } from "../types";
 import { optimizeImageForOcr, OcrFilterMode } from "../utils/imageOcrOptimizer";
 import { FilePreviewModal, PreviewableFile } from "./FilePreviewModal";
 import { PdfCanvasViewer } from "./PdfCanvasViewer";
+import { generateAnnotatedExamPdf, downloadPdfBlob } from "../utils/examinerPdfAnnotator";
 
 const MATH_SCIENCE_SYMBOLS = [
   { label: "x²", insert: "²" },
@@ -158,6 +162,8 @@ export default function AiCheckerWorksheet({
   const [report, setReport] = useState<CorrectionReport | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "correct" | "partially_correct" | "incorrect" | "needs_review">("all");
   const [expandedQuestionMap, setExpandedQuestionMap] = useState<{ [qNum: string]: boolean }>({});
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
 
   // Manual direct input mode toggle
   const [showManualInput, setShowManualInput] = useState(false);
@@ -791,6 +797,91 @@ export default function AiCheckerWorksheet({
       ...prev,
       [qNum]: !prev[qNum]
     }));
+  };
+
+  const handleDownloadAnnotatedPdf = async () => {
+    if (!report) return;
+    setIsGeneratingPdf(true);
+    try {
+      const questionsList = report.questions.map(q => {
+        const missedPoints = q.markPoints.filter(mp => !mp.awarded);
+        const issue = missedPoints.length > 0 
+          ? missedPoints.map(mp => mp.reason || mp.description).join("; ")
+          : (q.awardedMarks < q.maximumMarks ? "Intermediate working or precision deduction." : undefined);
+        
+        return {
+          questionNumber: q.questionNumber,
+          maxMarks: q.maximumMarks,
+          awardedMarks: q.awardedMarks,
+          status: q.status,
+          studentAnswer: q.studentAnswer,
+          issue,
+          requiredImprovement: q.officialMarkSchemeCriterion || "Show clear formula substitutions and express non-exact values to 3 significant figures.",
+          examinerWording: q.modelAnswer || "Pristine model response satisfying official mark scheme criteria.",
+          marksLost: q.maximumMarks - q.awardedMarks
+        };
+      });
+
+      // Pass original PDF bytes if the user uploaded a PDF file
+      let originalPdfBytes: Uint8Array | undefined;
+      const pdfCandidate = answerPages.find(p => p.type === "application/pdf" || p.name.endsWith(".pdf")) || 
+                           (questionPaperFile?.type === "application/pdf" ? questionPaperFile : null);
+      if (pdfCandidate && pdfCandidate.base64 && pdfCandidate.base64.includes("base64,")) {
+        const b64 = pdfCandidate.base64.split("base64,")[1];
+        const binaryStr = atob(b64);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        originalPdfBytes = bytes;
+      }
+
+      const pdfBytes = await generateAnnotatedExamPdf({
+        subject: report.subject,
+        examBoard: report.examBoard,
+        paperCode: report.paperNumber,
+        totalAwarded: report.totalScore,
+        totalMax: report.maximumScore,
+        percentage: report.percentage,
+        provisionalGrade: report.gradeEstimate,
+        questions: questionsList,
+        originalPdfBytes
+      });
+
+      downloadPdfBlob(
+        pdfBytes,
+        `Engez_Examiner_Annotated_${report.subject.replace(/[^a-zA-Z0-9]/g, "_")}_${report.paperNumber.replace(/\s+/g, "_")}.pdf`
+      );
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      setErrorMessage("Could not generate PDF: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleCopyWhatsAppSummary = async () => {
+    if (!report) return;
+    const lostQuestions = report.questions.filter(q => q.awardedMarks < q.maximumMarks);
+    const text = `EXAM REPORT — ${report.subject.toUpperCase()}
+Board: ${report.examBoard}
+Paper: ${report.paperNumber}
+Score: ${report.totalScore} / ${report.maximumScore} (${report.percentage}%)
+Estimated grade: ${report.gradeEstimate}
+Marks lost:
+${lostQuestions.length > 0 ? lostQuestions.map(q => `• Q${q.questionNumber}: Lost ${q.maximumMarks - q.awardedMarks} marks (${q.markPoints.filter(mp => !mp.awarded).map(mp => mp.reason || mp.description).slice(0, 1).join(' ') || 'Intermediate working or unit deduction'})`).join('\n') : "• Zero marks lost! Model full-mark script."}
+Priority revision topics:
+${report.topicGaps.slice(0, 2).map(t => `• ${t}`).join('\n') || '• Cambridge 3 Significant Figures Rule\n• SI Units and Working'}
+Annotated PDF: Generated on engeznafsak.com`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedWhatsApp(true);
+      setTimeout(() => setCopiedWhatsApp(false), 2500);
+    } catch (err) {
+      console.warn("Could not copy WhatsApp summary:", err);
+    }
   };
 
   const handleDownloadReport = () => {
@@ -2068,31 +2159,59 @@ ${report.recommendedActions.map(a => `• ${a}`).join('\n')}
                 <div className="flex flex-col gap-2">
                   <button
                     type="button"
-                    onClick={handleDownloadReport}
+                    onClick={handleDownloadAnnotatedPdf}
+                    disabled={isGeneratingPdf}
+                    className="px-3.5 py-2 rounded-xl bg-[#70E0A0] hover:bg-[#5cd490] text-[#17365D] text-xs font-bold font-sans transition cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                    title="Download candidate script annotated with soft green/red highlights, organized ticks and crosses, margin subtotals, and examiner feedback callout boxes"
+                  >
+                    <FileDown size={14} />
+                    <span>{isGeneratingPdf ? "Generating PDF..." : "Download Annotated PDF (Output A)"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyWhatsAppSummary}
                     className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
                       isLight
                         ? "bg-[#FAF9F5] hover:bg-[#F5F3EC] text-[#1D1D1B] border-[#E8D7C9]"
                         : "bg-white/5 hover:bg-white/10 text-white border-white/10"
                     }`}
+                    title="Copy clean WhatsApp summary for parents and teachers"
                   >
-                    <Download size={13} />
-                    <span>Download Report</span>
+                    {copiedWhatsApp ? <Check size={13} className="text-emerald-600" /> : <Share2 size={13} />}
+                    <span>{copiedWhatsApp ? "Copied to Clipboard!" : "Copy WhatsApp Summary (Output D)"}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onOpenTutorWithContext) {
-                        onOpenTutorWithContext(
-                          `Please help me review my ${report.subject} exam paper where I scored ${report.totalScore}/${report.maximumScore}. Focus on how to get full marks on missed questions.`,
-                          `Subject: ${report.subject}\nPaper: ${report.paperNumber}\nScore: ${report.totalScore}/${report.maximumScore}\nSummary: ${report.summary}`
-                        );
-                      }
-                    }}
-                    className="px-3 py-2 rounded-xl bg-[#C96F55] text-white text-xs font-bold flex items-center gap-1.5 hover:bg-[#b55d44] transition cursor-pointer"
-                  >
-                    <MessageSquare size={13} />
-                    <span>Discuss in AI Tutor</span>
-                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenTutorWithContext) {
+                          onOpenTutorWithContext(
+                            `Please help me review my ${report.subject} exam paper where I scored ${report.totalScore}/${report.maximumScore}. Focus on how to get full marks on missed questions.`,
+                            `Subject: ${report.subject}\nPaper: ${report.paperNumber}\nScore: ${report.totalScore}/${report.maximumScore}\nSummary: ${report.summary}`
+                          );
+                        }
+                      }}
+                      className="flex-1 px-3 py-1.5 rounded-xl bg-[#C96F55] text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-[#b55d44] transition cursor-pointer"
+                    >
+                      <MessageSquare size={12} />
+                      <span>Discuss with Scholar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadReport}
+                      className={`p-2 rounded-xl border text-xs transition cursor-pointer ${
+                        isLight
+                          ? "bg-[#FAF9F5] text-[#77736B] hover:text-[#1D1D1B] border-[#E8D7C9]"
+                          : "bg-white/5 text-slate-400 hover:text-white border-white/10"
+                      }`}
+                      title="Download raw text report"
+                    >
+                      <Download size={13} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
