@@ -20,7 +20,8 @@ import {
   guestSignIn,
   getFirebaseIdToken,
   getCustomDnsInfo,
-  saveUserFriendsData
+  saveUserFriendsData,
+  isGuestUid
 } from "./lib/classroom";
 import {
   GraduationCap,
@@ -1478,7 +1479,7 @@ export default function App() {
 
   // Sync discoverable profile and subscribe to real friend requests & rooms across users via Firestore
   useEffect(() => {
-    if (!currentUser?.uid) return;
+    if (!currentUser?.uid || isGuestUid(currentUser.uid)) return;
 
     const userCode = fiveDigitCode || generateFiveDigitCode(currentUser.uid);
 
@@ -1559,7 +1560,7 @@ export default function App() {
         id: m.id || "user_" + Math.random().toString(36).substring(2, 7),
         username: m.username || "@student",
         displayName: m.displayName || "Scholar",
-        avatarUrl: m.avatarUrl,
+        avatarUrl: m.avatarUrl || null,
         focusMinutesThisWeek: typeof m.focusMinutesThisWeek === "number" && !isNaN(m.focusMinutesThisWeek)
           ? m.focusMinutesThisWeek
           : (typeof m.focusMinutes === "number" && !isNaN(m.focusMinutes) ? m.focusMinutes : 0),
@@ -1707,28 +1708,32 @@ export default function App() {
       friendGroups,
       totalFocusMinutes
     }));
-    const activeUid = currentUser?.uid || "guest-workspace-user";
-    try {
-      localStorage.setItem(`ENGEZ_USER_FRIENDS_${activeUid}`, JSON.stringify({
-        friends,
-        friendUsername,
-        inviteCode,
-        friendRequests,
-        friendGroups,
-        totalFocusMinutes
-      }));
-    } catch (e) {}
+    const activeUid = currentUser?.uid;
+    if (activeUid) {
+      try {
+        localStorage.setItem(`ENGEZ_USER_FRIENDS_${activeUid}`, JSON.stringify({
+          friends,
+          friendUsername,
+          inviteCode,
+          friendRequests,
+          friendGroups,
+          totalFocusMinutes
+        }));
+      } catch (e) {}
 
-    // Save to Firestore and server API backup
-    saveUserFriendsData(
-      activeUid,
-      friends,
-      friendUsername,
-      inviteCode,
-      friendRequests,
-      friendGroups,
-      totalFocusMinutes
-    );
+      // Save to Firestore and server API backup only for authenticated non-guest users
+      if (!isGuestUid(activeUid)) {
+        saveUserFriendsData(
+          activeUid,
+          friends,
+          friendUsername,
+          inviteCode,
+          friendRequests,
+          friendGroups,
+          totalFocusMinutes
+        );
+      }
+    }
   }, [friendGroups, friends, friendUsername, inviteCode, friendRequests, totalFocusMinutes, currentUser]);
 
   // Auth State & Cloud sync on mount

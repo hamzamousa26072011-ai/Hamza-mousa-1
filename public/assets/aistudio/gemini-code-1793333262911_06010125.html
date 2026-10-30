@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Examiner Component</title>
+  <!-- Tailwind CSS for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- PDF.js for converting PDF pages to images for OCR -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Tesseract.js for OCR text extraction -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-6 font-sans text-slate-800">
+
+  <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+    <!-- Main Component Header -->
+    <div class="bg-slate-900 text-white p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">AI Examiner Module</h1>
+        <p class="text-xs text-slate-400">Fast AI Chatbot & High-Accuracy OCR Paper Grading</p>
+      </div>
+      <!-- API Configuration Input (Keep keys out of source code!) -->
+      <div class="flex flex-col sm:flex-row gap-2">
+        <select id="api-provider" class="bg-slate-800 text-xs text-white px-3 py-2 rounded border border-slate-700">
+          <option value="https://api.deepseek.com/v1/chat/completions" data-fast="deepseek-chat" data-accurate="deepseek-reasoner">DeepSeek API</option>
+          <option value="https://api.openai.com/v1/chat/completions" data-fast="gpt-4o-mini" data-accurate="gpt-4o">OpenAI API</option>
+        </select>
+        <input id="api-key" type="password" placeholder="Enter API Key (sk-...)" 
+          class="bg-slate-800 text-xs text-white px-3 py-2 rounded border border-slate-700 w-64 focus:outline-none focus:border-blue-500" />
+      </div>
+    </div>
+
+    <!-- Navigation Sub-Tabs inside AI Examiner -->
+    <div class="flex border-b border-slate-200 bg-slate-50">
+      <button onclick="switchTab('chatbot')" id="tab-chatbot" 
+        class="flex-1 py-3.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 bg-white transition">
+        Chatbot (Fast)
+      </button>
+      <button onclick="switchTab('correction')" id="tab-correction" 
+        class="flex-1 py-3.5 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition">
+        Paper Correction (High-Accuracy OCR)
+      </button>
+    </div>
+
+    <!-- TAB 1: CHATBOT -->
+    <div id="view-chatbot" class="p-6">
+      <div id="chat-history" class="h-96 overflow-y-auto border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3 mb-4">
+        <div class="bg-blue-50 border border-blue-200 text-slate-800 p-3 rounded-lg text-sm max-w-xl">
+          <strong>Chatbot:</strong> Hello! Ask me anything. I am configured for fast responses.
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <input id="chat-input" type="text" placeholder="Type your question here..." 
+          class="flex-1 border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-600"
+          onkeydown="if(event.key === 'Enter') sendChatMessage()" />
+        <button onclick="sendChatMessage()" id="chat-btn"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition">
+          Send
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 2: PAPER CORRECTION -->
+    <div id="view-correction" class="p-6 hidden space-y-6">
+      <!-- Upload Slots: Two for Answers, One for Mark Scheme -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Answer Slot 1 -->
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50">
+          <label class="block text-sm font-bold text-slate-700 mb-1">1. Student Answer (Part 1)</label>
+          <p class="text-xs text-slate-500 mb-3">Upload PDF or Image for OCR</p>
+          <input type="file" id="file-ans1" accept=".pdf,image/*" class="text-xs w-full mb-3" onchange="runOCR(this, 'text-ans1', 'status-ans1')" />
+          <div id="status-ans1" class="text-xs text-blue-600 font-medium mb-2"></div>
+          <textarea id="text-ans1" rows="6" placeholder="Extracted OCR text will appear here (or paste directly)..." 
+            class="w-full text-xs p-2.5 border border-slate-300 rounded-lg bg-white"></textarea>
+        </div>
+
+        <!-- Answer Slot 2 -->
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50">
+          <label class="block text-sm font-bold text-slate-700 mb-1">2. Student Answer (Part 2)</label>
+          <p class="text-xs text-slate-500 mb-3">Upload PDF or Image for OCR</p>
+          <input type="file" id="file-ans2" accept=".pdf,image/*" class="text-xs w-full mb-3" onchange="runOCR(this, 'text-ans2', 'status-ans2')" />
+          <div id="status-ans2" class="text-xs text-blue-600 font-medium mb-2"></div>
+          <textarea id="text-ans2" rows="6" placeholder="Extracted OCR text will appear here (or paste directly)..." 
+            class="w-full text-xs p-2.5 border border-slate-300 rounded-lg bg-white"></textarea>
+        </div>
+
+        <!-- Mark Scheme Slot -->
+        <div class="border border-emerald-200 rounded-xl p-4 bg-emerald-50/40">
+          <label class="block text-sm font-bold text-emerald-900 mb-1">3. Official Mark Scheme</label>
+          <p class="text-xs text-emerald-700 mb-3">Upload PDF or Image for OCR</p>
+          <input type="file" id="file-ms" accept=".pdf,image/*" class="text-xs w-full mb-3" onchange="runOCR(this, 'text-ms', 'status-ms')" />
+          <div id="status-ms" class="text-xs text-emerald-700 font-medium mb-2"></div>
+          <textarea id="text-ms" rows="6" placeholder="Extracted Mark Scheme text will appear here (or paste directly)..." 
+            class="w-full text-xs p-2.5 border border-emerald-300 rounded-lg bg-white"></textarea>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="flex justify-end">
+        <button onclick="gradePaper()" id="grade-btn"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl text-sm shadow transition">
+          Analyze Transcription & Grade Against Mark Scheme
+        </button>
+      </div>
+
+      <!-- Grading Output -->
+      <div class="border border-slate-200 rounded-xl p-5 bg-slate-50">
+        <h3 class="text-sm font-bold text-slate-800 mb-2">Detailed Examiner Report</h3>
+        <div id="grading-result" class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+          Upload your files above, verify the extracted transcriptions, and click "Analyze Transcription & Grade".
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configure PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // Tab Switching Logic
+    function switchTab(tab) {
+      const isChat = tab === 'chatbot';
+      document.getElementById('view-chatbot').classList.toggle('hidden', !isChat);
+      document.getElementById('view-correction').classList.toggle('hidden', isChat);
+
+      document.getElementById('tab-chatbot').className = isChat
+        ? 'flex-1 py-3.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 bg-white transition'
+        : 'flex-1 py-3.5 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition';
+
+      document.getElementById('tab-correction').className = !isChat
+        ? 'flex-1 py-3.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 bg-white transition'
+        : 'flex-1 py-3.5 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition';
+    }
+
+    // Helper to get API Configuration
+    function getApiConfig(mode) {
+      const apiKey = document.getElementById('api-key').value.trim();
+      if (!apiKey) {
+        alert('Please enter your API key in the top bar first.');
+        throw new Error('Missing API Key');
+      }
+      const select = document.getElementById('api-provider');
+      const option = select.options[select.selectedIndex];
+      return {
+        url: select.value,
+        key: apiKey,
+        model: mode === 'fast' ? option.dataset.fast : option.dataset.accurate
+      };
+    }
+
+    // 1. FAST CHATBOT LOGIC
+    const chatMessages = [
+      { role: 'system', content: 'You are a fast, concise, and helpful academic assistant.' }
+    ];
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const config = getApiConfig('fast');
+      const history = document.getElementById('chat-history');
+      const btn = document.getElementById('chat-btn');
+
+      // Append User Message
+      history.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-lg text-sm ml-auto max-w-xl"><strong>You:</strong> ${text}</div>`;
+      input.value = '';
+      btn.disabled = true;
+      btn.innerText = '...';
+
+      chatMessages.push({ role: 'user', content: text });
+
+      try {
+        const res = await fetch(config.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.key}`
+          },
+          body: JSON.stringify({
+            model: config.model,
+            messages: chatMessages,
+            temperature: 0.5
+          })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+
+        const reply = data.choices[0].message.content;
+        chatMessages.push({ role: 'assistant', content: reply });
+        history.innerHTML += `<div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm max-w-xl whitespace-pre-wrap"><strong>Chatbot:</strong> ${reply}</div>`;
+        history.scrollTop = history.scrollHeight;
+      } catch (err) {
+        history.innerHTML += `<div class="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-xs">Error: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Send';
+      }
+    }
+
+    // 2. HIGH-RESOLUTION PDF & IMAGE OCR EXTRACTION
+    async function runOCR(fileInput, targetTextareaId, statusId) {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById(statusId);
+      const outputEl = document.getElementById(targetTextareaId);
+      outputEl.value = '';
+      statusEl.innerText = 'Initializing high-accuracy OCR...';
+
+      try {
+        let fullExtractedText = '';
+
+        if (file.type === 'application/pdf') {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            statusEl.innerText = `Rendering PDF Page ${pageNum}/${pdf.numPages} at 3x resolution...`;
+            const page = await pdf.getPage(pageNum);
+            // Scale 3.0 increases DPI significantly for much higher OCR accuracy
+            const viewport = page.getViewport({ scale: 3.0 });
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+            statusEl.innerText = `Running OCR on Page ${pageNum}/${pdf.numPages}...`;
+            const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+            fullExtractedText += `--- Page ${pageNum} ---\n${text.trim()}\n\n`;
+          }
+        } else {
+          statusEl.innerText = 'Running OCR on image...';
+          const { data: { text } } = await Tesseract.recognize(file, 'eng');
+          fullExtractedText = text.trim();
+        }
+
+        outputEl.value = fullExtractedText;
+        statusEl.innerText = 'OCR Complete! You can review or edit the text below.';
+      } catch (err) {
+        statusEl.innerText = `OCR Error: ${err.message}`;
+      }
+    }
+
+    // 3. THOROUGH PAPER GRADING AGAINST MARK SCHEME
+    async function gradePaper() {
+      const ans1 = document.getElementById('text-ans1').value.trim();
+      const ans2 = document.getElementById('text-ans2').value.trim();
+      const ms = document.getElementById('text-ms').value.trim();
+      const resultEl = document.getElementById('grading-result');
+      const btn = document.getElementById('grade-btn');
+
+      if ((!ans1 && !ans2) || !ms) {
+        alert('Please provide at least one Student Answer and the Mark Scheme.');
+        return;
+      }
+
+      const config = getApiConfig('accurate');
+      btn.disabled = true;
+      btn.innerText = 'Analyzing & Grading (Prioritizing Accuracy)...';
+      resultEl.innerText = 'Performing deep comparison against the mark scheme. Please wait...';
+
+      const prompt = `You are a strict, meticulous Senior Exam Grader.
+First, review the OCR-extracted Student Answers and mentally correct obvious OCR character recognition artifacts without changing the student's actual meaning.
+Second, evaluate the student's answers line-by-line and point-by-point strictly against the provided Official Mark Scheme.
+
+=== STUDENT ANSWER PART 1 ===
+${ans1 || '(No Part 1 Provided)'}
+
+=== STUDENT ANSWER PART 2 ===
+${ans2 || '(No Part 2 Provided)'}
+
+=== OFFICIAL MARK SCHEME ===
+${ms}
+
+Provide your response in this exact structure:
+1. **Cleaned Transcription Summary**: Briefly show the interpreted student response per question.
+2. **Question-by-Question Breakdown**: Compare the student's points directly against the mark scheme criteria, stating exact marks awarded vs. maximum marks available.
+3. **Missed Points & Corrections**: Detail specifically what the mark scheme required that the student missed or stated inaccurately.
+4. **Final Total Score**: Calculate the exact final numerical grade and percentage.`;
+
+      try {
+        const res = await fetch(config.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.key}`
+          },
+          body: JSON.stringify({
+            model: config.model,
+            messages: [
+              { role: 'system', content: 'You are an ultra-accurate academic examiner. Take your time to verify every mark against the mark scheme.' },
+              { role: 'user', content: prompt }
+            ],
+            temperature: 0.1
+          })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+
+        resultEl.innerText = data.choices[0].message.content;
+      } catch (err) {
+        resultEl.innerText = `Grading Error: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Analyze Transcription & Grade Against Mark Scheme';
+      }
+    }
+  </script>
+</body>
+</html>

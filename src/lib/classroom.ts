@@ -75,12 +75,59 @@ let firestoreInstance: ReturnType<typeof getFirestore>;
 try {
   firestoreInstance = initializeFirestore(app, {
     experimentalForceLongPolling: true,
+    ignoreUndefinedProperties: true,
   }, targetDbId);
 } catch {
   firestoreInstance = targetDbId ? getFirestore(app, targetDbId) : getFirestore(app);
 }
 
 export const db = firestoreInstance;
+
+/**
+ * Determine whether a UID belongs to a guest/unauthenticated user.
+ */
+export const isGuestUid = (uid?: string | null): boolean => {
+  if (!uid) return true;
+  return (
+    uid === "guest-workspace-user" || 
+    uid === "guest" || 
+    uid.startsWith("guest-") || 
+    uid.startsWith("guest_") ||
+    uid === "simulated-student-user"
+  );
+};
+
+/**
+ * Recursively cleans payloads for Firestore to strip undefined values,
+ * converting undefined fields to null or omitting them, while preserving
+ * Firestore Sentinels (serverTimestamp, FieldValue, etc.).
+ */
+export function cleanForFirestore<T>(data: T): T {
+  if (data === undefined) return null as any;
+  if (data === null || typeof data !== "object") return data;
+
+  // Preserve Firestore Sentinel and Date objects
+  if (
+    (data as any)?._methodName || 
+    (data as any)?.constructor?.name === "FieldValueImpl" || 
+    typeof (data as any)?.toMillis === "function" ||
+    data instanceof Date
+  ) {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map((item) => (item === undefined ? null : cleanForFirestore(item))) as any;
+  }
+
+  const result: Record<string, any> = {};
+  for (const [key, val] of Object.entries(data as Record<string, any>)) {
+    if (val !== undefined) {
+      result[key] = cleanForFirestore(val);
+    }
+  }
+  return result as T;
+}
 
 // Validate connection to Firestore on initial boot as mandated by Firebase integration rules
 if (typeof window !== "undefined") {
@@ -514,13 +561,17 @@ export const saveUserWorkspace = async (uid: string, data: Omit<UserWorkspace, "
     }).catch(() => {});
   } catch (e) {}
 
-  // 3. Save to Firestore
+  // 3. Save to Firestore (only for authenticated users)
+  if (isGuestUid(uid)) {
+    return;
+  }
+
   try {
     const docRef = doc(db, "users", uid);
-    await setDoc(docRef, {
+    await setDoc(docRef, cleanForFirestore({
       ...data,
       updatedAt: serverTimestamp(),
-    });
+    }));
     isFirestoreOffline = false;
   } catch (error) {
     const errStr = error instanceof Error ? error.message : String(error);
@@ -557,10 +608,14 @@ export const saveUserApps = async (uid: string, apps: any[]) => {
     }).catch(() => {});
   } catch (e) {}
 
+  if (isGuestUid(uid)) {
+    return;
+  }
+
   // Attempt Firestore merge write
   try {
     const docRef = doc(db, "users", uid);
-    await setDoc(docRef, { apps, updatedAt: serverTimestamp() }, { merge: true });
+    await setDoc(docRef, cleanForFirestore({ apps: apps || [], updatedAt: serverTimestamp() }), { merge: true });
     isFirestoreOffline = false;
   } catch (error) {
     console.warn("Firestore save apps error (preserved in local & server backups):", error);
@@ -614,15 +669,19 @@ export const saveUserHabits = async (
     }).catch(() => {});
   } catch (e) {}
 
+  if (isGuestUid(uid)) {
+    return;
+  }
+
   // Attempt Firestore merge write
   try {
     const docRef = doc(db, "users", uid);
-    await setDoc(docRef, { 
-      habits, 
-      habitLogs, 
-      habitStartDate, 
+    await setDoc(docRef, cleanForFirestore({ 
+      habits: habits || [], 
+      habitLogs: habitLogs || {}, 
+      habitStartDate: habitStartDate || null, 
       updatedAt: serverTimestamp() 
-    }, { merge: true });
+    }), { merge: true });
     isFirestoreOffline = false;
   } catch (error) {
     console.warn("Firestore save habits error (preserved in local & server backups):", error);
@@ -675,10 +734,14 @@ export const saveUserExams = async (uid: string, exams: any[]) => {
     }).catch(() => {});
   } catch (e) {}
 
+  if (isGuestUid(uid)) {
+    return;
+  }
+
   // Attempt Firestore merge write
   try {
     const docRef = doc(db, "users", uid);
-    await setDoc(docRef, { exams, updatedAt: serverTimestamp() }, { merge: true });
+    await setDoc(docRef, cleanForFirestore({ exams: exams || [], updatedAt: serverTimestamp() }), { merge: true });
     isFirestoreOffline = false;
   } catch (error) {
     const errStr = error instanceof Error ? error.message : String(error);
@@ -743,16 +806,20 @@ export const saveUserFriendsData = async (
     }).catch(() => {});
   } catch (e) {}
 
+  if (isGuestUid(uid)) {
+    return;
+  }
+
   // Attempt Firestore merge write
   try {
     const docRef = doc(db, "users", uid);
-    const updatePayload: Record<string, any> = { friends, updatedAt: serverTimestamp() };
+    const updatePayload: Record<string, any> = { friends: friends || [], updatedAt: serverTimestamp() };
     if (friendUsername) updatePayload.friendUsername = friendUsername;
     if (inviteCode) updatePayload.inviteCode = inviteCode;
     if (friendRequests !== undefined) updatePayload.friendRequests = friendRequests;
     if (friendGroups !== undefined) updatePayload.friendGroups = friendGroups;
     if (totalFocusMinutes !== undefined) updatePayload.totalFocusMinutes = totalFocusMinutes;
-    await setDoc(docRef, updatePayload, { merge: true });
+    await setDoc(docRef, cleanForFirestore(updatePayload), { merge: true });
     isFirestoreOffline = false;
   } catch (error) {
     const errStr = error instanceof Error ? error.message : String(error);

@@ -13,7 +13,7 @@ import {
   serverTimestamp,
   Unsubscribe 
 } from "firebase/firestore";
-import { db } from "./classroom";
+import { db, cleanForFirestore, isGuestUid } from "./classroom";
 import { FriendItem, FriendRequestItem, FriendGroup, FriendGroupMember } from "../types";
 
 export interface UserPublicProfile {
@@ -85,7 +85,7 @@ export async function syncUserProfileToFirestore(
   upcomingExamsCount = 0,
   status: "online" | "studying" | "offline" = "online"
 ): Promise<void> {
-  if (!user || !user.uid) return;
+  if (!user || !user.uid || isGuestUid(user.uid)) return;
 
   const cleanHandle = username.startsWith("@") ? username : `@${username}`;
   const valid5DigitCode = (/^\d{5}$/.test(fiveDigitCode)) ? fiveDigitCode : generateFiveDigitCode(user.uid);
@@ -110,7 +110,7 @@ export async function syncUserProfileToFirestore(
 
   try {
     const profileRef = doc(db, "user_profiles", user.uid);
-    await setDoc(profileRef, profileData, { merge: true });
+    await setDoc(profileRef, cleanForFirestore(profileData), { merge: true });
   } catch (err) {
     console.warn("Could not sync user profile to Firestore (using local storage cache):", err);
   }
@@ -349,13 +349,15 @@ export async function sendRealFriendRequest(
     direction: "outgoing"
   };
 
-  // Attempt writing to Firestore
+  // Attempt writing to Firestore (only for authenticated users)
   let cloudWriteSuccess = false;
-  try {
-    await setDoc(reqDocRef, newRequestPayload, { merge: true });
-    cloudWriteSuccess = true;
-  } catch (err: any) {
-    console.warn("Firestore friend request write notice (syncing via local & cross-tab channel):", err);
+  if (!isGuestUid(currentUid)) {
+    try {
+      await setDoc(reqDocRef, cleanForFirestore(newRequestPayload), { merge: true });
+      cloudWriteSuccess = true;
+    } catch (err: any) {
+      console.warn("Firestore friend request write notice (syncing via local & cross-tab channel):", err);
+    }
   }
 
   // Always persist to local storage & cross-tab broadcast for resilience
@@ -836,14 +838,14 @@ export async function createStudyRoomInFirestore(
     isCustom: true
   };
 
-  if (currentUser?.uid) {
+  if (currentUser?.uid && !isGuestUid(currentUser.uid)) {
     try {
       const roomRef = doc(db, "study_rooms", roomId);
-      await setDoc(roomRef, {
+      await setDoc(roomRef, cleanForFirestore({
         ...newRoom,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      });
+      }));
     } catch (err) {
       console.warn("Could not save study room to Firestore:", err);
     }
