@@ -105,31 +105,8 @@ export default function AiScholarTab({
 
   const isLight = themeMode === "light";
 
-  // Navigation Sub-tab: "chatbot" | "correction"
+  // Sub-tab state
   const [activeSubTab, setActiveSubTab] = useState<"chatbot" | "correction">("chatbot");
-
-  // Global Provider & API Key Configuration (Stored in LocalStorage)
-  const [apiProvider, setApiProvider] = useState<string>(() => {
-    return localStorage.getItem("ENGEZ_EXAMINER_PROVIDER") || "gemini";
-  });
-  const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem("ENGEZ_EXAMINER_API_KEY") || "";
-  });
-
-  const handleProviderChange = (newProvider: string) => {
-    setApiProvider(newProvider);
-    localStorage.setItem("ENGEZ_EXAMINER_PROVIDER", newProvider);
-  };
-
-  const handleApiKeyChange = (key: string) => {
-    setApiKey(key);
-    localStorage.setItem("ENGEZ_EXAMINER_API_KEY", key);
-    if (key.startsWith("AIzaSy")) {
-      localStorage.setItem("ENGEZ_GEMINI_KEY", key);
-    } else if (key.startsWith("sk-")) {
-      localStorage.setItem("ENGEZ_DEEPSEEK_KEY", key);
-    }
-  };
 
   // Chat Threads Manager
   const [threads, setThreads] = useState<ChatThread[]>(() => {
@@ -411,11 +388,6 @@ export default function AiScholarTab({
       const idToken = await getFirebaseIdToken();
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
-      if (apiKey) {
-        if (apiKey.startsWith("sk-")) headers["x-deepseek-key"] = apiKey;
-        else if (apiKey.startsWith("AIzaSy")) headers["x-gemini-key"] = apiKey;
-        headers["x-api-key"] = apiKey;
-      }
 
       const combinedAnswerText = `--- STUDENT ANSWER SCRIPT (PART 1) ---\n${slot1Text}\n\n--- STUDENT ANSWER SCRIPT (PART 2) ---\n${slot2Text}`.trim();
       
@@ -678,11 +650,6 @@ export default function AiScholarTab({
       const idToken = await getFirebaseIdToken();
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
-      if (apiKey) {
-        if (apiKey.startsWith("sk-")) headers["x-deepseek-key"] = apiKey;
-        else if (apiKey.startsWith("AIzaSy")) headers["x-gemini-key"] = apiKey;
-        headers["x-api-key"] = apiKey;
-      }
 
       const response = await fetch("/api/scholar/grade", {
         method: "POST",
@@ -698,7 +665,7 @@ export default function AiScholarTab({
       let assistantContent = "";
       let engineName = "gemini-3.8-flash";
       let modelName = "gemini-3.8-flash";
-      let providerName = apiProvider === "deepseek" ? "DeepSeek API" : (apiProvider === "openai" ? "OpenAI API" : "Google Gemini 3.8 Flash");
+      let providerName = "Google Gemini 3.8 Flash";
 
       if (response.ok) {
         const rawData = await response.json();
@@ -761,29 +728,10 @@ export default function AiScholarTab({
           </p>
         </div>
 
-        {/* API Provider & Key Settings */}
-        <div className="flex flex-wrap items-center gap-2 bg-slate-800/80 p-2 rounded-xl border border-slate-700">
-          <div className="flex items-center gap-1.5 px-2 py-1 text-xs text-slate-300 font-mono">
-            <Key size={13} className="text-indigo-400" />
-            <span className="hidden sm:inline">Provider:</span>
-          </div>
-          <select
-            value={apiProvider}
-            onChange={(e) => handleProviderChange(e.target.value)}
-            className="bg-slate-900 text-xs text-white px-3 py-1.5 rounded-lg border border-slate-700 font-mono focus:outline-none focus:border-indigo-500 cursor-pointer"
-          >
-            <option value="gemini">Engez / Gemini AI Engine</option>
-            <option value="deepseek">DeepSeek API</option>
-            <option value="openai">OpenAI API</option>
-          </select>
-
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => handleApiKeyChange(e.target.value)}
-            placeholder="API Key (optional sk-... / AIza...)"
-            className="bg-slate-900 text-xs text-white px-3 py-1.5 rounded-lg border border-slate-700 w-44 sm:w-56 focus:outline-none focus:border-indigo-500 font-mono"
-          />
+        {/* Secured System Engine Badge */}
+        <div className="flex items-center gap-2 bg-slate-800/90 px-3.5 py-2 rounded-xl border border-slate-700 text-xs font-mono text-indigo-300 shrink-0">
+          <Zap size={14} className="text-indigo-400 animate-pulse" />
+          <span>Engez Gemini Academic Engine • Server Secured</span>
         </div>
       </div>
 

@@ -18,6 +18,59 @@ import { generateAnnotatedExamPdf } from "./src/utils/examinerPdfAnnotator";
 
 dotenv.config();
 
+// Helper function to resolve explicit Gemini API key secret value
+const resolveGeminiApiKey = (): string | null => {
+  // 1. Direct process.env variable checks
+  const envKeys = [
+    process.env.GEMINI_API_KEY,
+    process.env.GOOGLE_API_KEY,
+    process.env.API_KEY,
+    process.env.VITE_GEMINI_API_KEY
+  ];
+
+  for (const k of envKeys) {
+    if (typeof k === "string" && k.trim().length > 10) {
+      return k.trim();
+    }
+  }
+
+  // 2. Local container dev env config file (/app/.dev.env.json)
+  try {
+    if (fs.existsSync("/app/.dev.env.json")) {
+      const raw = fs.readFileSync("/app/.dev.env.json", "utf-8");
+      const parsed = JSON.parse(raw);
+      const fileKey = parsed?.GEMINI_API_KEY || parsed?.GOOGLE_API_KEY || parsed?.API_KEY;
+      if (typeof fileKey === "string" && fileKey.trim().length > 10) {
+        return fileKey.trim();
+      }
+    }
+  } catch {
+    // Ignore read errors
+  }
+
+  // 3. Local working directory .env or .env.local file
+  const localEnvPaths = [
+    path.join(process.cwd(), ".env"),
+    path.join(process.cwd(), ".env.local")
+  ];
+
+  for (const envPath of localEnvPaths) {
+    try {
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, "utf-8");
+        const match = content.match(/(?:GEMINI_API_KEY|GOOGLE_API_KEY|API_KEY)=["']?([^"'\s\r\n]+)["']?/);
+        if (match && match[1] && match[1].trim().length > 10) {
+          return match[1].trim();
+        }
+      }
+    } catch {
+      // Ignore read errors
+    }
+  }
+
+  return null;
+};
+
 // Initialize server-side Google Gemini API client for Engez AI Scholar & Tutor
 const getGenAI = (customKey?: string): GoogleGenAI | null => {
   // 1. Check if caller supplied explicit key via header
@@ -32,25 +85,12 @@ const getGenAI = (customKey?: string): GoogleGenAI | null => {
     });
   }
 
-  // 2. Read from process.env.GEMINI_API_KEY (or local runtime dev config)
-  let apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey.trim().length < 10) {
-    try {
-      if (fs.existsSync("/app/.dev.env.json")) {
-        const raw = fs.readFileSync("/app/.dev.env.json", "utf-8");
-        const parsed = JSON.parse(raw);
-        if (parsed?.GEMINI_API_KEY && typeof parsed.GEMINI_API_KEY === "string") {
-          apiKey = parsed.GEMINI_API_KEY;
-        }
-      }
-    } catch {
-      // Safe fallback ignore
-    }
-  }
+  // 2. Resolve explicit system Gemini secret key
+  const apiKey = resolveGeminiApiKey();
+  if (!apiKey) return null;
 
-  if (!apiKey || apiKey.trim().length < 10) return null;
   return new GoogleGenAI({
-    apiKey: apiKey.trim(),
+    apiKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
@@ -511,7 +551,7 @@ app.get("/api/health", (req, res) => {
     dns: isCustomDns ? "engeznafsak.com" : (host || "engeznafsak.com"),
     engine: "Google Gemini 3.8 Flash",
     model: "gemini-3.8-flash",
-    hasGeminiKey: !!process.env.GEMINI_API_KEY,
+    hasGeminiKey: !!resolveGeminiApiKey(),
     hasDeepSeekKey: true,
     timestamp: new Date().toISOString()
   });
