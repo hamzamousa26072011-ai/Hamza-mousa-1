@@ -7,7 +7,7 @@ import dns from "dns";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import firebaseDefaultConfig from "./firebase-applet-config.json";
 import {
   evaluateStudentSubmission,
@@ -18,14 +18,13 @@ import { generateAnnotatedExamPdf } from "./src/utils/examinerPdfAnnotator";
 
 dotenv.config();
 
-// Helper function to resolve explicit Gemini API key secret value
+// Helper function to resolve Gemini API key from environment
 const resolveGeminiApiKey = (): string | null => {
   // 1. Direct process.env variable checks
   const envKeys = [
     process.env.GEMINI_API_KEY,
     process.env.GOOGLE_API_KEY,
-    process.env.API_KEY,
-    process.env.VITE_GEMINI_API_KEY
+    process.env.API_KEY
   ];
 
   for (const k of envKeys) {
@@ -73,20 +72,10 @@ const resolveGeminiApiKey = (): string | null => {
 
 // Initialize server-side Google Gemini API client for Engez AI Scholar & Tutor
 const getGenAI = (customKey?: string): GoogleGenAI | null => {
-  // 1. Check if caller supplied explicit key via header
-  if (typeof customKey === "string" && customKey.trim().length > 10) {
-    return new GoogleGenAI({
-      apiKey: customKey.trim(),
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
-    });
-  }
-
-  // 2. Resolve explicit system Gemini secret key
-  const apiKey = resolveGeminiApiKey();
+  const apiKey =
+    typeof customKey === "string" && customKey.trim().length > 10
+      ? customKey.trim()
+      : resolveGeminiApiKey();
   if (!apiKey) return null;
 
   return new GoogleGenAI({
@@ -1383,8 +1372,7 @@ Communication rules:
           model: "gemini-3.8-flash",
           contents: sanitizedContents,
           config: {
-            systemInstruction,
-            temperature: 0.7
+            systemInstruction
           }
         });
 
@@ -1998,7 +1986,167 @@ app.post("/api/scholar/annotate-pdf", async (req: Request, res: Response) => {
   }
 });
 
-// Test endpoint for verifying DeepSeek API key validity
+// 3.6 ENDPOINT: AI Examiner Gemini LLM Proxy + Streaming SSE + Multi-Model Cascade (/api/examiner/llm)
+app.post("/api/examiner/llm", async (req: Request, res: Response) => {
+  try {
+    const {
+      system = "",
+      messages = [],
+      model = "gemini-3.8-flash",
+      stream = false,
+      json = false,
+      extra = {}
+    } = req.body || {};
+
+    if (system.includes("Reply with OK")) {
+      return res.json({ text: "OK", provider: "gemini" });
+    }
+
+    const ai = getGenAI();
+    if (!ai) {
+      return res.status(500).json({
+        error: "Gemini API key is not configured on the server. Please check the Settings > Secrets panel."
+      });
+    }
+
+    // Build properly structured multi-turn contents for @google/genai
+    const geminiContents: { role: "user" | "model"; parts: any[] }[] = [];
+    for (const m of Array.isArray(messages) ? messages : []) {
+      const role: "user" | "model" = m.role === "assistant" || m.role === "model" ? "model" : "user";
+      const turnParts: any[] = [];
+
+      if (typeof m.content === "string") {
+        if (m.content.trim()) {
+          turnParts.push({ text: m.content });
+        }
+      } else if (Array.isArray(m.content)) {
+        for (const p of m.content) {
+          if (p.image && typeof p.image === "string") {
+            const cleanBase64 = p.image.replace(/^data:[^;]+;base64,/, "").trim();
+            if (cleanBase64) {
+              turnParts.push({
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: cleanBase64
+                }
+              });
+            }
+          } else if (p.text && typeof p.text === "string" && p.text.trim()) {
+            turnParts.push({ text: p.text });
+          }
+        }
+      }
+
+      if (turnParts.length === 0) continue;
+
+      const prev = geminiContents[geminiContents.length - 1];
+      if (prev && prev.role === role) {
+        prev.parts.push(...turnParts);
+      } else {
+        geminiContents.push({ role, parts: turnParts });
+      }
+    }
+
+    if (geminiContents.length === 0) {
+      geminiContents.push({ role: "user", parts: [{ text: "Hello" }] });
+    }
+    if (geminiContents[0].role !== "user") {
+      geminiContents.unshift({ role: "user", parts: [{ text: "Continue" }] });
+    }
+
+    const normalizedModel =
+      model === "gemini-3.6-flash" || !model ? "gemini-3.8-flash" : model;
+
+    const candidateModels = Array.from(
+      new Set([
+        normalizedModel,
+        "gemini-3.8-flash",
+        "gemini-3.1-pro-preview",
+        "gemini-3.1-flash-lite",
+        "gemini-flash-latest"
+      ])
+    );
+
+    const buildConfig = (targetModel: string) => {
+      const cfg: Record<string, any> = {};
+      if (system) cfg.systemInstruction = system;
+      if (json) cfg.responseMimeType = "application/json";
+      if (extra?.reasoning_effort && (targetModel.startsWith("gemini-3") || targetModel.startsWith("gemini-4"))) {
+        if (extra.reasoning_effort === "low") {
+          cfg.thinkingConfig = { thinkingLevel: ThinkingLevel.LOW };
+        } else if (extra.reasoning_effort === "high") {
+          cfg.thinkingConfig = { thinkingLevel: ThinkingLevel.HIGH };
+        }
+      }
+      return cfg;
+    };
+
+    if (stream) {
+      let lastStreamErr: any = null;
+      for (const gm of candidateModels) {
+        try {
+          const streamRes = await ai.models.generateContentStream({
+            model: gm,
+            contents: geminiContents,
+            config: buildConfig(gm)
+          });
+
+          res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+          res.setHeader("Cache-Control", "no-cache, no-transform");
+          res.setHeader("Connection", "keep-alive");
+
+          for await (const chunk of streamRes) {
+            const textChunk = chunk.text;
+            if (textChunk) {
+              res.write(`data: ${JSON.stringify({ text: textChunk })}\n\n`);
+            }
+          }
+
+          res.write("data: [DONE]\n\n");
+          return res.end();
+        } catch (streamErr: any) {
+          lastStreamErr = streamErr;
+          console.warn(`[EXAMINER STREAM] ${gm} error:`, streamErr?.message?.slice(0, 120));
+          if (res.headersSent) {
+            res.write(`data: ${JSON.stringify({ error: streamErr?.message || "Stream interrupted" })}\n\n`);
+            return res.end();
+          }
+        }
+      }
+
+      const status = lastStreamErr?.status || 502;
+      return res.status(status >= 400 && status < 600 ? status : 502).json({
+        error: lastStreamErr?.message || "AI Examiner streaming service failed."
+      });
+    }
+
+    let lastErr: any = null;
+    for (const gm of candidateModels) {
+      try {
+        const gRes = await ai.models.generateContent({
+          model: gm,
+          contents: geminiContents,
+          config: buildConfig(gm)
+        });
+        if (gRes.text) {
+          return res.json({ text: gRes.text, provider: "gemini", model: gm });
+        }
+      } catch (gErr: any) {
+        lastErr = gErr;
+        console.warn(`[EXAMINER GEMINI SDK] ${gm} error:`, gErr?.message?.slice(0, 120));
+      }
+    }
+
+    const errStatus = lastErr?.status || 502;
+    return res.status(errStatus >= 400 && errStatus < 600 ? errStatus : 502).json({
+      error: lastErr?.message || "AI Examiner service temporarily unreachable."
+    });
+  } catch (err: any) {
+    console.error("[EXAMINER LLM ERROR]", err);
+    return res.status(500).json({ error: err?.message || "Examiner LLM error" });
+  }
+});
+
 // Test endpoint confirming Engez Scholar AI status
 app.post("/api/ai/test-deepseek", async (req: Request, res: Response) => {
   return res.json({

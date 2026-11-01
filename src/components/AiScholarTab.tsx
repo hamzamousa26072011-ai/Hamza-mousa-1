@@ -1,85 +1,355 @@
 import React, { useState, useRef, useEffect } from "react";
-import { 
-  Sparkles, 
-  Send, 
-  Trash2, 
-  User, 
-  Bot, 
-  MessageSquare, 
-  Plus, 
-  FileText, 
-  FileUp, 
-  X, 
-  History, 
-  Check, 
-  ChevronDown, 
-  FolderOpen, 
-  Search, 
-  RefreshCw, 
-  Image as ImageIcon, 
-  Eye, 
-  Globe, 
-  BookOpen, 
-  GraduationCap, 
-  Zap,
-  Mic,
-  MicOff,
-  Key,
-  Sliders,
-  CheckCircle2,
-  AlertCircle,
-  Copy,
-  Download,
-  Award,
-  Layers,
-  FileCheck2,
-  FileSpreadsheet
-} from "lucide-react";
+import { Mic, MicOff, Sparkles, GraduationCap, Upload, FileText } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
 import Tesseract from "tesseract.js";
-import { PastPaper, ChatMessage, StudyDocument } from "../types";
-import { FormattedScholarResponse } from "./FormattedScholarResponse";
-import { FilePreviewModal, PreviewableFile } from "./FilePreviewModal";
-import { DomainDnsModal } from "./DomainDnsModal";
-import { 
-  getAccessToken, 
-  fetchDriveFiles, 
-  downloadDriveFile, 
-  GoogleDriveFile, 
-  googleSignIn,
-  getFirebaseIdToken
-} from "../lib/classroom";
+import { PastPaper } from "../types";
 
-// Configure PDF.js worker CDN for client-side multi-page rendering
-pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+// Configure PDF.js worker CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-export const IGCSE_SUBJECT_OPTIONS = [
-  { id: "Auto-Detect", label: "🎯 Auto-Detect Subject", code: "Auto" },
-  { id: "Mathematics (0580 / 4MA1)", label: "📐 Mathematics (0580 / 4MA1)", code: "0580 / 4MA1" },
-  { id: "Physics (0625 / 4PH1)", label: "⚡ Physics (0625 / 4PH1)", code: "0625 / 4PH1" },
-  { id: "Chemistry (0620 / 4CH1)", label: "🧪 Chemistry (0620 / 4CH1)", code: "0620 / 4CH1" },
-  { id: "Biology (0610 / 4BI1)", label: "🧬 Biology (0610 / 4BI1)", code: "0610 / 4BI1" },
-  { id: "Computer Science (0478 / 4CP0)", label: "💻 Computer Science (0478 / 4CP0)", code: "0478 / 4CP0" },
-  { id: "Economics (0455 / 4EC1)", label: "📈 Economics (0455 / 4EC1)", code: "0455 / 4EC1" },
-  { id: "Business Studies (0450)", label: "💼 Business Studies (0450)", code: "0450" },
-  { id: "English Language (0500 / 4EA1)", label: "📖 English Language (0500 / 4EA1)", code: "0500 / 4EA1" },
-  { id: "Combined Science (0653 / 0654)", label: "🔬 Combined Science (0653 / 0654)", code: "0653 / 0654" },
-  { id: "Accounting (0452)", label: "📊 Accounting (0452)", code: "0452" },
-  { id: "Environmental Management (0680)", label: "🌍 Environmental Mgmt (0680)", code: "0680" }
-];
+/* ================= CONFIG: Server-Side Gemini Models ================= */
+const CONFIG = {
+  chat: { model: "gemini-3.8-flash", maxTokens: 8192, extra: { reasoning_effort: "low" } }, // fast chatbot replies
+  grade: { model: "gemini-3.1-pro-preview", maxTokens: 32000, extra: { reasoning_effort: "high" } }, // marking (most accurate)
+  gradeFallback: { model: "gemini-3.8-flash", maxTokens: 32000, extra: { reasoning_effort: "high" } }, // used automatically if the line above fails
+  ocr: { mode: "vision", model: "gemini-3.8-flash", maxTokens: 8192, extra: { reasoning_effort: "low" } } // reads handwriting from scans
+};
+/* ===================================================================== */
 
-export interface ChatThread {
-  id: string;
-  title: string;
-  selectedPaperId: string | "custom" | "none";
-  selectedSubject?: string;
-  customFileName?: string;
-  customFileContent?: string;
-  customFileSubject?: string;
-  attachedFiles?: StudyDocument[];
-  activeFileId?: string;
-  messages: ChatMessage[];
+/* ---------- text cleaning: removes $ signs, LaTeX and markdown symbols ---------- */
+const sup: Record<string, string> = { "2": "²", "3": "³" };
+
+function clean(t: any): string {
+  let s = String(t ?? "");
+  s = s
+    .replace(/\\\[([\s\S]*?)\\\]/g, "$1")
+    .replace(/\\\(([\s\S]*?)\\\)/g, "$1")
+    .replace(/\$\$([\s\S]*?)\$\$/g, "$1")
+    .replace(/\$(?!\s)([^$\n]*?\S)\$/g, "$1");
+  const fr = (str: string) => (str.length > 1 && /[^\w.]/.test(str) ? "(" + str + ")" : str);
+  s = s
+    .replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, (_, a, b) => fr(a) + "/" + fr(b))
+    .replace(/\\sqrt\{([^{}]*)\}/g, "√($1)")
+    .replace(/\\(?:text|mathrm|mathbf|textbf)\{([^{}]*)\}/g, "$1")
+    .replace(/\\times/g, "×")
+    .replace(/\\cdot/g, "·")
+    .replace(/\\div/g, "÷")
+    .replace(/\\pm/g, "±")
+    .replace(/\\(?:leq?|leqslant)/g, "≤")
+    .replace(/\\(?:geq?|geqslant)/g, "≥")
+    .replace(/\\neq/g, "≠")
+    .replace(/\\approx/g, "≈")
+    .replace(/\\pi/g, "π")
+    .replace(/\\theta/g, "θ")
+    .replace(/\\degree|\^\{?\\circ\}?/g, "°")
+    .replace(/\\(?:left|right|,|;|!|quad)/g, "")
+    .replace(/\^\{?([23])\}?/g, (_, d) => sup[d] || d)
+    .replace(/\^\{([^{}]*)\}/g, "^$1")
+    .replace(/\\([a-zA-Z]+)/g, "$1");
+  return s
+    .replace(/^\s{0,3}#{1,6}\s*/gm, "")
+    .replace(/^\s*([-*_]){3,}\s*$/gm, "")
+    .replace(/`+/g, "")
+    .replace(/\\\$/g, "$");
 }
+
+const esc = (s: string): string =>
+  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] || c));
+
+function fmt(t: any): string {
+  const out: string[] = [];
+  let list: string[] = [];
+  const flush = () => {
+    if (list.length) {
+      out.push("<ul>" + list.map((x) => "<li>" + x + "</li>").join("") + "</ul>");
+    }
+    list = [];
+  };
+  for (const raw of esc(clean(t)).split("\n")) {
+    const l = raw.trim();
+    const li = l.match(/^(?:[-*•]|\d+[.)])\s+(.*)/);
+    if (li) {
+      list.push(li[1]);
+      continue;
+    }
+    flush();
+    if (l) out.push("<p>" + l + "</p>");
+  }
+  flush();
+  return out
+    .join("")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*+/g, "");
+}
+
+/* ---------- Server-Side LLM call (streaming SSE + JSON supported) ---------- */
+interface LlmOptions {
+  system: string;
+  messages: any[];
+  cfg: {
+    model: string;
+    maxTokens?: number;
+    mode?: string;
+    extra?: Record<string, any>;
+  };
+  stream?: boolean;
+  onToken?: (fullText: string) => void;
+  json?: boolean;
+  signal?: AbortSignal;
+}
+
+async function llm({ system, messages, cfg, stream, onToken, json, signal }: LlmOptions): Promise<string> {
+  let res: Response | undefined;
+  let lastError: any = null;
+
+  for (let i = 0; i < 2; i++) {
+    try {
+      res = await fetch("/api/examiner/llm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system,
+          messages,
+          model: cfg.model,
+          maxTokens: cfg.maxTokens || 8192,
+          stream: !!stream,
+          json: !!json,
+          extra: cfg.extra || {}
+        }),
+        signal
+      });
+    } catch (e: any) {
+      if (e.name === "AbortError") throw e;
+      lastError = e;
+      break;
+    }
+    if (res.ok || ![429, 500, 502, 503, 529].includes(res.status)) break;
+    await new Promise((r) => setTimeout(r, 1200 * (i + 1)));
+  }
+
+  if (!res) {
+    throw new Error(
+      "Could not reach the server. Please check your network connection. " +
+        (lastError?.message || "")
+    );
+  }
+
+  if (!res.ok) {
+    let m = await res.text();
+    try {
+      const parsed = JSON.parse(m);
+      m = parsed?.error?.message || parsed?.error || m;
+    } catch {}
+    const hint: Record<number, string> = {
+      401: "Please check your Gemini API key in Settings > Secrets.",
+      403: "Access denied. Please verify your Gemini API key in Settings > Secrets.",
+      404: "Model not found.",
+      413: "The scan is too large. Try fewer or smaller pages.",
+      429: "Rate limit reached. Please wait a moment and try again."
+    };
+    throw new Error(
+      `API error ${res.status}. ${hint[res.status] || ""} ${m}`
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 400)
+    );
+  }
+
+  const contentType = res.headers.get("content-type") || "";
+  if (!stream || !res.body || contentType.includes("application/json")) {
+    const j = await res.json();
+    const text = j.text || j.choices?.[0]?.message?.content || "";
+    if (stream && onToken && text) {
+      onToken(text);
+    }
+    return text;
+  }
+
+  const rd = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  let full = "";
+
+  for (;;) {
+    const { done, value } = await rd.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const ls = buf.split("\n");
+    buf = ls.pop() || "";
+    for (const l of ls) {
+      if (!l.startsWith("data:")) continue;
+      const d = l.slice(5).trim();
+      if (d === "[DONE]") continue;
+      try {
+        const j = JSON.parse(d);
+        if (j.error) {
+          throw new Error(j.error);
+        }
+        const t =
+          j.text ||
+          j.choices?.[0]?.delta?.content ||
+          (j.type === "content_block_delta" ? j.delta?.text : "") ||
+          "";
+        if (t) {
+          full += t;
+          if (onToken) onToken(full);
+        }
+      } catch (parseErr: any) {
+        if (parseErr?.message && !parseErr.message.includes("JSON")) {
+          throw parseErr;
+        }
+      }
+    }
+  }
+  return full;
+}
+
+/* ---------- Prompts & Helpers ---------- */
+const CHAT_SYS =
+  "You are a friendly, sharp AI tutor and examiner. Answer quickly, clearly and accurately. Write plain text only: never use LaTeX, dollar signs, markdown headings, tables or code fences unless the user asks for code. Write maths in plain text (x^2, 3/4, sqrt(9)). Keep paragraphs short and use simple '- ' lists only when they help. The user may attach pictures (photos of questions, diagrams, handwritten work): read them carefully and answer from what you see.";
+
+const OCR_SYS =
+  "You are a meticulous OCR engine for exam papers, both handwritten and printed. Transcribe EVERY word, number, symbol, label and table on the page exactly as written, in reading order, keeping question numbers and line breaks. Do not fix spelling, grammar or maths, and do not answer or comment. Write crossed-out text as [crossed out: ...], unreadable text as [illegible], diagrams as [diagram: short description], and tables as rows separated by ' | '. Write maths in plain text (x^2, 3/4), never LaTeX. Output only the transcription.";
+
+const GRADE_SYS = `You are a strict, meticulous, impartial examiner. You receive a MARK SCHEME and the transcription of a student's answers (OCR, so minor transcription noise is possible). Mark every question.
+Rules:
+- Use ONLY the mark scheme. Award marks point by point exactly as it specifies, respecting "accept", "do not accept", alternative answers and error-carried-forward rules. Never award a mark the student's words do not earn, and never invent text the student did not write.
+- If the mark scheme gives no marks for a question, infer them from brackets or the structure. Mark sub-parts separately (1a, 1b...). Include every question in the mark scheme, even unanswered ones (awarded 0).
+- If the transcription is [illegible] where an answer should be, mark what is readable and say so in the issue.
+- student_answer must quote the student's transcribed answer faithfully (or "No answer found").
+- correct_answer is the full correct answer according to the mark scheme.
+- points lists each mark scheme point with earned true/false.
+- mistakes lists only real errors: issue = what went wrong, fix = how to get the mark. Empty array if full marks.
+- Write plain text only: no LaTeX, no dollar signs, no markdown symbols. Maths as plain text (x^2, 3/4).
+Return JSON only in exactly this shape:
+{"overall_feedback":"2-3 sentence summary","questions":[{"id":"1a","question":"short question text","max_marks":2,"awarded":1,"student_answer":"","correct_answer":"","points":[{"text":"","earned":true}],"mistakes":[{"issue":"","fix":""}]}]}`;
+
+const layerText = (tc: any): string => {
+  let y: number | null = null;
+  let t = "";
+  for (const it of tc.items) {
+    const yy = it.transform[5];
+    if (y !== null && Math.abs(yy - y) > 3) t += "\n";
+    else if (t && !t.endsWith(" ")) t += " ";
+    t += it.str;
+    y = yy;
+  }
+  return t.trim();
+};
+
+const jpg = (c: HTMLCanvasElement): string => c.toDataURL("image/jpeg", 0.8).split(",")[1];
+
+const shrink = async (f: File): Promise<string> => {
+  const b = await createImageBitmap(f);
+  const k = Math.min(1, 1600 / Math.max(b.width, b.height));
+  const c = document.createElement("canvas");
+  c.width = b.width * k;
+  c.height = b.height * k;
+  const x = c.getContext("2d");
+  if (x) {
+    x.fillStyle = "#fff";
+    x.fillRect(0, 0, c.width, c.height);
+    x.drawImage(b, 0, 0, c.width, c.height);
+  }
+  return jpg(c);
+};
+
+async function toPages(f: File): Promise<{ img: string; hint: string }[]> {
+  if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) {
+    const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+    const out: { img: string; hint: string }[] = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
+      const pg = await pdf.getPage(i);
+      const v0 = pg.getViewport({ scale: 1 });
+      const vp = pg.getViewport({ scale: 1800 / Math.max(v0.width, v0.height) });
+      const c = document.createElement("canvas");
+      c.width = vp.width;
+      c.height = vp.height;
+      const ctx = c.getContext("2d");
+      if (ctx) {
+        await pg.render({ canvasContext: ctx, viewport: vp } as any).promise;
+      }
+      const tc = await pg.getTextContent();
+      out.push({ img: jpg(c), hint: layerText(tc) });
+    }
+    return out;
+  }
+  const bmp = await createImageBitmap(f);
+  const k = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas");
+  c.width = bmp.width * k;
+  c.height = bmp.height * k;
+  const x = c.getContext("2d");
+  if (x) {
+    x.fillStyle = "#fff";
+    x.fillRect(0, 0, c.width, c.height);
+    x.drawImage(bmp, 0, 0, c.width, c.height);
+  }
+  return [{ img: jpg(c), hint: "" }];
+}
+
+let tesseractWorker: any = null;
+async function ocr(p: { img: string; hint: string }, label: string): Promise<string> {
+  if (CONFIG.ocr.mode === "vision") {
+    return llm({
+      system: OCR_SYS,
+      cfg: CONFIG.ocr,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { image: p.img },
+            {
+              text:
+                `Transcribe this page (${label}).` +
+                (p.hint.length > 30
+                  ? `\nOptional reference, the embedded text layer (may be incomplete or out of order):\n${p.hint.slice(
+                      0,
+                      6000
+                    )}`
+                  : "")
+            }
+          ]
+        }
+      ]
+    });
+  }
+  if (p.hint.length > 30) return p.hint;
+  tesseractWorker = tesseractWorker || (await Tesseract.createWorker("eng"));
+  return (await tesseractWorker.recognize("data:image/jpeg;base64," + p.img)).data.text;
+}
+
+async function pool<T, R>(items: T[], n: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const r: R[] = [];
+  let i = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(n, items.length) }, async () => {
+      while (i < items.length) {
+        const k = i++;
+        r[k] = await fn(items[k]);
+      }
+    })
+  );
+  return r;
+}
+
+const gradeLLM = async (o: Omit<LlmOptions, "cfg">): Promise<string> => {
+  try {
+    return await llm({ ...o, cfg: CONFIG.grade });
+  } catch (e: any) {
+    try {
+      if (CONFIG.gradeFallback && /API error (400|404|5\d\d)/.test(e.message)) {
+        return await llm({ ...o, cfg: CONFIG.gradeFallback });
+      }
+    } catch (e2: any) {
+      e = e2;
+    }
+    throw new Error("Marking failed. " + e.message);
+  }
+};
+
+const parseJsonResult = (s: string) => JSON.parse(s.slice(s.indexOf("{"), s.lastIndexOf("}") + 1));
 
 interface AiScholarTabProps {
   papers: PastPaper[];
@@ -92,121 +362,118 @@ interface AiScholarTabProps {
   themeMode?: "light" | "dark";
 }
 
-export default function AiScholarTab({
-  papers,
-  selectedPaper,
-  onSelectPaper,
-  currentUser,
-  onLogin,
-  onOpenAuthModal,
-  onOpenPrivacyPolicy,
-  themeMode = "dark"
-}: AiScholarTabProps) {
+interface ChatItem {
+  id: string;
+  role: "user" | "assistant";
+  content: any;
+  displayText?: string;
+  images?: string[];
+  isError?: boolean;
+  isLoading?: boolean;
+}
 
+export default function AiScholarTab({ themeMode = "dark" }: AiScholarTabProps) {
   const isLight = themeMode === "light";
 
-  // Sub-tab state
-  const [activeSubTab, setActiveSubTab] = useState<"chatbot" | "correction">("chatbot");
+  // Active sub-tab: "chat" | "paper"
+  const [activeTab, setActiveTab] = useState<"chat" | "paper">("chat");
 
-  // Chat Threads Manager
-  const [threads, setThreads] = useState<ChatThread[]>(() => {
-    try {
-      const saved = localStorage.getItem("engez_chat_threads_v3");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((t: any) => ({
-            ...t,
-            attachedFiles: Array.isArray(t.attachedFiles)
-              ? t.attachedFiles.map((f: any) => ({
-                  ...f,
-                  dataUrl: undefined,
-                  previewUrl: undefined
-                }))
-              : []
-          }));
-        }
-      }
-    } catch (e) {
-      console.warn("[SCHOLAR] Could not read chat threads from localStorage:", e);
-    }
-    return [
-      {
-        id: "thread-1",
-        title: "Starting Chat Session",
-        selectedPaperId: "none",
-        messages: []
-      }
-    ];
-  });
-
-  const [activeThreadId, setActiveThreadId] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem("engez_active_thread_id_v3");
-      return saved || "thread-1";
-    } catch {
-      return "thread-1";
-    }
-  });
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [inputVal, setInputVal] = useState("");
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [mobileView, setMobileView] = useState<"chat" | "document" | "history">("chat");
-  
-  // Microphone Speech Recognition State
+  // Chatbot states
+  const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [pics, setPics] = useState<string[]>([]); // base64 JPEG pictures waiting to be sent
+  const [isChatDrag, setIsChatDrag] = useState(false);
+  const [isChatBusy, setIsChatBusy] = useState(false);
   const [isListening, setIsListening] = useState(false);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const genRef = useRef(0);
+  const msgsContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const picInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Attached Images & Files State
-  const [attachedImages, setAttachedImages] = useState<string[]>([]);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Paper Correction states
+  const [answerFiles, setAnswerFiles] = useState<File[]>([]);
+  const [markSchemeFiles, setMarkSchemeFiles] = useState<File[]>([]);
+  const [msText, setMsText] = useState("");
+  const [dragZone, setDragZone] = useState<"a" | "m" | null>(null);
+  const [isCheckingPaper, setIsCheckingPaper] = useState(false);
+  const [progressInfo, setProgressInfo] = useState<{ text: string; pct: number } | null>(null);
+  const [paperError, setPaperError] = useState<string | null>(null);
+  const [gradingResult, setGradingResult] = useState<{
+    report: any;
+    extractedTexts: { a: string; m: string };
+  } | null>(null);
+  const [animatedPct, setAnimatedPct] = useState(0);
+  const [strokeOffset, setStrokeOffset] = useState(326.7);
 
-  // Custom File / Note Insertion
-  const [customTitle, setCustomTitle] = useState("");
-  const [customSubject, setCustomSubject] = useState("");
-  const [customContent, setCustomContent] = useState("");
-  const [showCustomForm, setShowCustomForm] = useState(false);
+  const answerInputRef = useRef<HTMLInputElement>(null);
+  const msInputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Drag & Process States
-  const [isDragging, setIsDragging] = useState(false);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [previewModalFile, setPreviewModalFile] = useState<PreviewableFile | null>(null);
+  // Auto-scroll chat messages
+  useEffect(() => {
+    if (msgsContainerRef.current) {
+      msgsContainerRef.current.scrollTop = msgsContainerRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
 
-  // DNS Hub Modal State
-  const [showDnsHubModal, setShowDnsHubModal] = useState(false);
-  const [selectedExamBoard, setSelectedExamBoard] = useState<string>(() => {
-    return localStorage.getItem("ENGEZ_EXAM_BOARD") || "Cambridge IGCSE";
-  });
-  const [strictMarkingMode, setStrictMarkingMode] = useState<boolean>(() => {
-    return localStorage.getItem("ENGEZ_STRICT_MODE") !== "false";
-  });
+  // Animate circular progress ring when gradingResult arrives
+  useEffect(() => {
+    if (!gradingResult) {
+      setAnimatedPct(0);
+      setStrokeOffset(326.7);
+      return;
+    }
+    const qs = (gradingResult.report.questions || []).map((q: any) => {
+      const max = Math.max(0, +q.max_marks || 0);
+      const aw = Math.min(max, Math.max(0, +q.awarded || 0));
+      return { max, aw };
+    });
+    const got = qs.reduce((s: number, q: any) => s + q.aw, 0);
+    const tot = qs.reduce((s: number, q: any) => s + q.max, 0);
+    const pct = tot ? Math.round((got / tot) * 100) : 0;
+    const C = 326.7;
 
-  // =========================================================================
-  // PAPER CORRECTION (HIGH-ACCURACY OCR) MODULE STATES
-  // =========================================================================
-  const [slot1Text, setSlot1Text] = useState("");
-  const [slot1File, setSlot1File] = useState<File | null>(null);
-  const [slot1Progress, setSlot1Progress] = useState<{ percent: number; label: string } | null>(null);
+    let rafId = 0;
+    const t0 = performance.now();
+    requestAnimationFrame(() => {
+      setStrokeOffset(C * (1 - pct / 100));
+      const tick = (t: number) => {
+        const p = Math.min(1, (t - t0) / 1500);
+        setAnimatedPct(Math.round(pct * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) {
+          rafId = requestAnimationFrame(tick);
+        }
+      };
+      rafId = requestAnimationFrame(tick);
+    });
 
-  const [slot2Text, setSlot2Text] = useState("");
-  const [slot2File, setSlot2File] = useState<File | null>(null);
-  const [slot2Progress, setSlot2Progress] = useState<{ percent: number; label: string } | null>(null);
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
 
-  const [slot3Text, setSlot3Text] = useState("");
-  const [slot3File, setSlot3File] = useState<File | null>(null);
-  const [slot3Progress, setSlot3Progress] = useState<{ percent: number; label: string } | null>(null);
+    return () => cancelAnimationFrame(rafId);
+  }, [gradingResult]);
 
-  const [corrSubject, setCorrSubject] = useState("Mathematics (0580 / 4MA1)");
-  const [corrPaperNumber, setCorrPaperNumber] = useState("Paper 2");
-  const [isGradingPaper, setIsGradingPaper] = useState(false);
-  const [gradingError, setGradingError] = useState<string | null>(null);
-  const [correctionReport, setCorrectionReport] = useState<any | null>(null);
-  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-  const [copiedWhatsapp, setCopiedWhatsapp] = useState(false);
+  // Add pictures to Chatbot composer (up to 4)
+  const addPics = async (fileList: FileList | File[]) => {
+    const imageFiles = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+    if (!imageFiles.length) return;
+    const added: string[] = [];
+    for (const f of imageFiles) {
+      if (pics.length + added.length >= 4) break;
+      try {
+        added.push(await shrink(f));
+      } catch {}
+    }
+    if (added.length) {
+      setPics((prev) => [...prev, ...added].slice(0, 4));
+    }
+  };
 
-  // Microphone Speech Recognition Handler with Permission Request
+  // Microphone Speech Recognition with explicit permission request
   const handleToggleMic = async () => {
     if (isListening) {
       if (recognitionRef.current) {
@@ -217,13 +484,13 @@ export default function AiScholarTab({
     }
 
     try {
-      // Request microphone permission explicitly from browser
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop()); // Stop stream after verification
+      stream.getTracks().forEach((track) => track.stop());
 
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        alert("Speech Recognition is not supported by your browser. Please use Chrome, Edge, or Safari.");
+        alert("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
         return;
       }
 
@@ -232,1032 +499,1514 @@ export default function AiScholarTab({
       recognition.interimResults = true;
       recognition.lang = "en-US";
 
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-
+      recognition.onstart = () => setIsListening(true);
       recognition.onresult = (event: any) => {
         let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript;
         }
         if (transcript.trim()) {
-          setInputVal(prev => prev ? `${prev} ${transcript}` : transcript);
+          setChatInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
         }
       };
-
-      recognition.onerror = (event: any) => {
-        console.warn("Speech recognition error:", event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
 
       recognition.start();
       recognitionRef.current = recognition;
-    } catch (err: any) {
-      console.error("Microphone permission denied or error:", err);
-      alert("Microphone permission was denied or unavailable. Please enable microphone access in your browser settings.");
+    } catch {
+      alert("Microphone permission was denied or unavailable. Please allow microphone access in your browser settings.");
     }
   };
 
-  // Helper: Convert PDF file to page images at 2.0x scale for high-accuracy OCR
-  const renderPdfPagesToCanvas = async (file: File, maxPages = 10): Promise<string[]> => {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-      const pdf = await loadingTask.promise;
-      const images: string[] = [];
-      const totalPages = Math.min(pdf.numPages, maxPages);
-
-      for (let i = 1; i <= totalPages; i++) {
-        const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 2.0 });
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        if (!context) continue;
-
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        await page.render({ canvasContext: context, viewport } as any).promise;
-        images.push(canvas.toDataURL("image/png"));
-      }
-      return images;
-    } catch (err) {
-      console.warn("PDF page rendering fallback error:", err);
-      return [];
+  // Start new chat
+  const handleNewChat = () => {
+    genRef.current++;
+    if (isChatBusy && abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setChatHistory([]);
+    setChatInput("");
+    setPics([]);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.focus();
     }
   };
 
-  // Helper: Run Tesseract OCR on images
-  const runOcrOnImages = async (
-    images: string[], 
-    file: File,
-    onProgress: (percent: number, label: string) => void
-  ): Promise<string> => {
-    if (images.length === 0) {
-      // If image conversion wasn't available, read as text
-      try {
-        const text = await file.text();
-        return text;
-      } catch {
-        return `[Document Payload: ${file.name}]`;
-      }
-    }
-
-    let extractedText = "";
-    for (let i = 0; i < images.length; i++) {
-      onProgress(Math.round((i / images.length) * 100), `OCR Page ${i + 1}/${images.length}...`);
-      try {
-        const result = await Tesseract.recognize(images[i], "eng", {
-          logger: m => {
-            if (m.status === "recognizing text") {
-              const p = m.progress || 0;
-              const overall = Math.round(((i + p) / images.length) * 100);
-              onProgress(overall, `Recognizing Page ${i + 1} (${Math.round(p * 100)}%)`);
-            }
-          }
-        });
-        extractedText += `\n--- Page ${i + 1} ---\n` + result.data.text + "\n";
-      } catch (ocrErr) {
-        console.warn(`OCR error on page ${i + 1}:`, ocrErr);
-      }
-    }
-    onProgress(100, "Extraction Complete");
-    return extractedText.trim();
-  };
-
-  // Slot Upload Handler
-  const handleSlotFileUpload = async (
-    file: File, 
-    setFile: (f: File) => void, 
-    setText: (t: string) => void, 
-    setProgress: (p: { percent: number; label: string } | null) => void
-  ) => {
-    setFile(file);
-    setProgress({ percent: 10, label: "Preparing document..." });
-
-    try {
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        setProgress({ percent: 25, label: "Rendering PDF pages..." });
-        const images = await renderPdfPagesToCanvas(file, 8);
-        const text = await runOcrOnImages(images, file, (percent, label) => {
-          setProgress({ percent, label });
-        });
-        setText(text || `[Extracted PDF text for ${file.name}]`);
-      } else if (file.type.startsWith("image/")) {
-        setProgress({ percent: 30, label: "Running OCR on image..." });
-        const reader = new FileReader();
-        reader.onload = async () => {
-          if (typeof reader.result === "string") {
-            const text = await runOcrOnImages([reader.result], file, (percent, label) => {
-              setProgress({ percent, label });
-            });
-            setText(text || `[Extracted image text for ${file.name}]`);
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setProgress({ percent: 50, label: "Reading text file..." });
-        const text = await file.text();
-        setText(text);
-        setProgress({ percent: 100, label: "Text Loaded" });
-      }
-    } catch (err: any) {
-      console.error("Slot upload error:", err);
-      setText(`[File ${file.name} loaded. Ready for evaluation.]`);
-    } finally {
-      setTimeout(() => setProgress(null), 1200);
-    }
-  };
-
-  // Execute Deep 3-Pass Paper Grading
-  const handleCorrectPaper = async () => {
-    if (!slot1Text.trim() && !slot2Text.trim() && !slot3Text.trim()) {
-      alert("Please upload at least one student answer script or mark scheme file, or type/paste the text into the slots.");
+  // Send or stop chat message
+  const handleSendChat = async () => {
+    if (isChatBusy) {
+      abortControllerRef.current?.abort();
       return;
     }
 
-    setIsGradingPaper(true);
-    setGradingError(null);
-    setCorrectionReport(null);
+    const text = chatInput.trim();
+    if (!text && !pics.length) return;
 
-    try {
-      const idToken = await getFirebaseIdToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
-
-      const combinedAnswerText = `--- STUDENT ANSWER SCRIPT (PART 1) ---\n${slot1Text}\n\n--- STUDENT ANSWER SCRIPT (PART 2) ---\n${slot2Text}`.trim();
-      
-      const payload = {
-        subject: corrSubject,
-        examBoard: selectedExamBoard,
-        paperNumber: corrPaperNumber,
-        strictMode: strictMarkingMode,
-        questionPaperText: combinedAnswerText,
-        markSchemeText: slot3Text,
-        paperText: combinedAnswerText,
-        questions: [
-          {
-            questionNumber: "1",
-            promptText: "Evaluated Exam Submission Script",
-            maxMarks: 25,
-            studentAnswer: combinedAnswerText
-          }
-        ]
-      };
-
-      const response = await fetch("/api/scholar/grade", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          messages: [{ role: "user", content: `Please perform a 3-Pass Independent Evaluation on this student submission against the supplied mark scheme:\n\n${combinedAnswerText}\n\nMark Scheme:\n${slot3Text}` }],
-          documentContext: `MARK SCHEME:\n${slot3Text}\n\nSTUDENT SCRIPT:\n${combinedAnswerText}`,
-          fileName: slot1File?.name || "Student Answer Script",
-          subject: corrSubject,
-          examBoard: selectedExamBoard,
-          paperNumber: corrPaperNumber,
-          strictMode: strictMarkingMode
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCorrectionReport(data);
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        setGradingError(errData.error || "Failed to grade paper. Please check connection.");
-      }
-    } catch (err: any) {
-      console.error("Paper correction error:", err);
-      setGradingError(err.message || "Network connection error while communicating with AI Examiner.");
-    } finally {
-      setIsGradingPaper(false);
+    const sentPics = [...pics];
+    setPics([]);
+    setChatInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
     }
-  };
 
-  // Download Official Examiner Annotated PDF
-  const handleDownloadAnnotatedPdf = async () => {
-    if (!correctionReport) return;
-    setIsDownloadingPdf(true);
+    const q = text || "Look at the attached picture and help me with it.";
+    const content = sentPics.length
+      ? [...sentPics.map((image) => ({ image })), { text: q }]
+      : q;
 
-    try {
-      const response = await fetch("/api/scholar/annotate-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: corrSubject,
-          examBoard: selectedExamBoard,
-          paperCode: corrPaperNumber,
-          session: "2026 Official Examination Session",
-          totalAwarded: 18,
-          totalMax: 25,
-          percentage: 72,
-          provisionalGrade: "Grade 8 / Grade A",
-          questions: [
-            { questionNumber: "Q1", awardedMarks: 18, maxMarks: 25, feedback: "Solid method demonstration with minor arithmetic slip." }
-          ]
-        })
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Engez_Examiner_Annotated_${corrSubject.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } else {
-        alert("Could not generate annotated PDF. Please try again.");
-      }
-    } catch (err) {
-      console.error("PDF download error:", err);
-    } finally {
-      setIsDownloadingPdf(false);
-    }
-  };
-
-  // Chat Image & File Compression / Processing
-  const compressImageForChat = (dataUrl: string, maxDimension = 1600, quality = 0.82): Promise<string> => {
-    return new Promise((resolve) => {
-      if (!dataUrl || !dataUrl.startsWith("data:image/")) {
-        resolve(dataUrl);
-        return;
-      }
-      if (dataUrl.length < 250 * 1024) {
-        resolve(dataUrl);
-        return;
-      }
-      const img = new Image();
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-          } else {
-            width = Math.round((width * maxDimension) / height);
-            width = maxDimension;
-          }
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve(dataUrl);
-          return;
-        }
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
-      };
-      img.onerror = () => resolve(dataUrl);
-      img.src = dataUrl;
-    });
-  };
-
-  const addImageFiles = (files: FileList | File[]) => {
-    const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(f => f.type.startsWith("image/"));
-    if (imageFiles.length === 0) return;
-
-    imageFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        if (typeof reader.result === "string") {
-          const optimized = await compressImageForChat(reader.result);
-          setAttachedImages(prev => prev.length < 10 ? [...prev, optimized] : prev);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      addImageFiles(e.target.files);
-    }
-    if (imageInputRef.current) imageInputRef.current.value = "";
-  };
-
-  const activeThread = threads.find(t => t.id === activeThreadId) || threads[0] || {
-    id: "thread-1",
-    title: "Starting Chat Session",
-    selectedPaperId: "none",
-    messages: []
-  };
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    try {
-      const sanitizedThreads = threads.map(t => ({
-        id: t.id,
-        title: t.title,
-        selectedPaperId: t.selectedPaperId,
-        selectedSubject: t.selectedSubject,
-        activeFileId: t.activeFileId,
-        attachedFiles: (t.attachedFiles || []).map(f => ({
-          id: f.id,
-          name: f.name,
-          size: f.size,
-          type: f.type,
-          content: f.content ? f.content.slice(0, 30000) : ""
-        })),
-        messages: (t.messages || []).slice(-40).map(m => ({
-          id: m.id,
-          role: m.role,
-          content: m.content ? m.content.slice(0, 20000) : "",
-          timestamp: m.timestamp,
-          engine: m.engine,
-          provider: m.provider,
-          model: m.model
-        }))
-      }));
-      localStorage.setItem("engez_chat_threads_v3", JSON.stringify(sanitizedThreads));
-    } catch (e) {
-      console.warn("LocalStorage save error:", e);
-    }
-  }, [threads]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("engez_active_thread_id_v3", activeThreadId);
-    } catch {}
-  }, [activeThreadId]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeThread.messages, isAiLoading]);
-
-  const handleAddNewThread = () => {
-    const nextId = "thread-" + Date.now();
-    const newThread: ChatThread = {
-      id: nextId,
-      title: "New Chat",
-      selectedPaperId: "none",
-      selectedSubject: "Auto-Detect",
-      messages: []
-    };
-    setThreads(prev => [newThread, ...prev]);
-    setActiveThreadId(nextId);
-    setMobileView("chat");
-  };
-
-  const handleSend = async (drillText?: string) => {
-    const rawMsgText = drillText || inputVal;
-    const currentFiles = activeThread.attachedFiles || [];
-    if ((!rawMsgText.trim() && attachedImages.length === 0 && currentFiles.length === 0) || isAiLoading) return;
-
-    const messageContent = rawMsgText.trim() || (
-      attachedImages.length > 0
-        ? "Analyze this study image and evaluate it strictly against official IGCSE mark scheme standards."
-        : "Evaluate my answer against official IGCSE mark scheme standards."
-    );
-
-    const userMsg: ChatMessage = {
-      id: "msg-" + Date.now(),
+    const userMsg: ChatItem = {
+      id: "u-" + Date.now(),
       role: "user",
-      content: messageContent,
-      timestamp: new Date(),
-      ...(attachedImages.length > 0 ? { imageUrls: [...attachedImages], imageUrl: attachedImages[0] } : {})
+      content,
+      displayText: text,
+      images: sentPics
+    };
+    const assistantMsgId = "a-" + (Date.now() + 1);
+    const placeholderAiMsg: ChatItem = {
+      id: assistantMsgId,
+      role: "assistant",
+      content: "",
+      isLoading: true
     };
 
-    const updatedMsgs = [...activeThread.messages, userMsg];
+    const currentHistory = [...chatHistory, userMsg];
+    setChatHistory([...currentHistory, placeholderAiMsg]);
 
-    setThreads(prev => prev.map(t => {
-      if (t.id === activeThread.id) {
-        return { 
-          ...t, 
-          messages: updatedMsgs,
-          title: t.title === "New Chat" ? (messageContent.slice(0, 24) + "...") : t.title
-        };
-      }
-      return t;
-    }));
+    const myGen = genRef.current;
+    setIsChatBusy(true);
+    const ctl = new AbortController();
+    abortControllerRef.current = ctl;
 
-    if (!drillText) setInputVal("");
-    setAttachedImages([]);
-    setIsAiLoading(true);
-
+    let acc = "";
     try {
-      const idToken = await getFirebaseIdToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+      const apiMessages = currentHistory
+        .slice(-20)
+        .map((m, i, a) =>
+          Array.isArray(m.content) && i < a.length - 3
+            ? { role: m.role, content: m.content.filter((p: any) => p.text) }
+            : { role: m.role, content: m.content }
+        );
 
-      const response = await fetch("/api/scholar/grade", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          messages: updatedMsgs.slice(-10).map(m => ({ role: m.role, content: m.content })),
-          subject: activeThread.selectedSubject || "Auto-Detect",
-          examBoard: selectedExamBoard,
-          strictMode: strictMarkingMode
-        })
+      acc = await llm({
+        system: CHAT_SYS,
+        cfg: CONFIG.chat,
+        stream: true,
+        signal: ctl.signal,
+        messages: apiMessages,
+        onToken: (t) => {
+          acc = t;
+          if (myGen === genRef.current) {
+            setChatHistory((prev) =>
+              prev.map((item) =>
+                item.id === assistantMsgId ? { ...item, content: acc, isLoading: false } : item
+              )
+            );
+          }
+        }
       });
 
-      let assistantContent = "";
-      let engineName = "gemini-3.8-flash";
-      let modelName = "gemini-3.8-flash";
-      let providerName = "Google Gemini 3.8 Flash";
-
-      if (response.ok) {
-        const rawData = await response.json();
-        assistantContent = rawData.content || "The AI Examiner has evaluated your response.";
-        engineName = rawData.engine || engineName;
-        modelName = rawData.model || modelName;
-        providerName = rawData.provider || providerName;
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        assistantContent = errData.error || "The AI Examiner is ready to help you evaluate your script.";
+      if (myGen === genRef.current) {
+        setChatHistory((prev) =>
+          prev.map((item) =>
+            item.id === assistantMsgId ? { ...item, content: acc, isLoading: false } : item
+          )
+        );
       }
-
-      const assistantMsg: ChatMessage = {
-        id: "ai-" + Date.now(),
-        role: "assistant",
-        content: assistantContent,
-        timestamp: new Date(),
-        engine: engineName,
-        provider: providerName,
-        model: modelName
-      };
-
-      setThreads(prev => prev.map(t => {
-        if (t.id === activeThread.id) {
-          return { ...t, messages: [...updatedMsgs, assistantMsg] };
+    } catch (e: any) {
+      if (e.name === "AbortError") {
+        if (myGen === genRef.current) {
+          setChatHistory((prev) =>
+            prev.map((item) =>
+              item.id === assistantMsgId
+                ? { ...item, content: acc || "Stopped.", isLoading: false }
+                : item
+            )
+          );
         }
-        return t;
-      }));
-    } catch (err: any) {
-      console.error("Chat error:", err);
+      } else {
+        if (myGen === genRef.current) {
+          setChatHistory((prev) =>
+            prev.map((item) =>
+              item.id === assistantMsgId
+                ? { ...item, content: e.message || "Error occurred", isError: true, isLoading: false }
+                : item
+            )
+          );
+        }
+      }
     } finally {
-      setIsAiLoading(false);
+      setIsChatBusy(false);
     }
   };
 
-  const promptSuggestions = [
-    { label: "🏅 Principal Examiner 3-Pass Marking & Output Report", prompt: "Act as an expert Principal Examiner. Run 3-Pass Independent Marking on my submission against official mark schemes." },
-    { label: "✅ Key Points Got Right & ❌ Points Lost Marks On", prompt: "Identify the subject, grade my answer, and explicitly list: 1) Key Points Right, and 2) Key Points Lost." },
-    { label: "🎯 Check answer against IGCSE Mark Scheme", prompt: "Check my answer against the mark scheme: calculate awarded marks and provide a full model answer." },
-    { label: "✨ 100% Model Answer with step-by-step working", prompt: "Provide the 100% full-mark model answer with complete step-by-step working." }
-  ];
+  // Add files to answers or mark scheme zone
+  const handleAddFiles = (zone: "a" | "m", fileList: FileList | File[]) => {
+    const valid = Array.from(fileList).filter(
+      (f) => /pdf|image/.test(f.type) || /\.pdf$/i.test(f.name)
+    );
+    if (!valid.length) return;
+    if (zone === "a") {
+      setAnswerFiles((prev) => [...prev, ...valid]);
+    } else {
+      setMarkSchemeFiles((prev) => [...prev, ...valid]);
+    }
+  };
+
+  const handleRemoveFile = (zone: "a" | "m", index: number) => {
+    if (zone === "a") {
+      setAnswerFiles((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      setMarkSchemeFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const canRunCheck =
+    !isCheckingPaper &&
+    answerFiles.length > 0 &&
+    (markSchemeFiles.length > 0 || msText.trim().length > 0);
+
+  // Execute Paper Correction
+  const handleRunPaperCorrection = async () => {
+    if (!canRunCheck) return;
+    setIsCheckingPaper(true);
+    setPaperError(null);
+    setGradingResult(null);
+
+    try {
+      setProgressInfo({ text: "Checking connections", pct: 2 });
+      const checks: [string, any][] = [
+        ["Page reading", CONFIG.ocr.mode === "vision" && CONFIG.ocr],
+        ["Marking", CONFIG.gradeFallback || CONFIG.grade]
+      ];
+      for (const [name, c] of checks) {
+        if (c) {
+          try {
+            await llm({
+              system: "Reply with OK.",
+              cfg: { ...c, maxTokens: 20 },
+              messages: [{ role: "user", content: "ping" }]
+            });
+          } catch (e: any) {
+            throw new Error(`${name} connection failed. ${e.message}`);
+          }
+        }
+      }
+
+      const jobs: { k: "a" | "m"; p: { img: string; hint: string }; l: string }[] = [];
+      for (const f of answerFiles) {
+        setProgressInfo({ text: "Preparing " + f.name, pct: 3 });
+        const pages = await toPages(f);
+        pages.forEach((p, i) => jobs.push({ k: "a", p, l: `${f.name}, page ${i + 1}` }));
+      }
+      for (const f of markSchemeFiles) {
+        setProgressInfo({ text: "Preparing " + f.name, pct: 4 });
+        const pages = await toPages(f);
+        pages.forEach((p, i) => jobs.push({ k: "m", p, l: `${f.name}, page ${i + 1}` }));
+      }
+
+      let d = 0;
+      const out = await pool(jobs, CONFIG.ocr.mode === "vision" ? 2 : 1, async (j) => {
+        let t: string;
+        try {
+          t = await ocr(j.p, j.l);
+        } catch (e: any) {
+          throw new Error(`Could not read ${j.l}. ${e.message}`);
+        }
+        d++;
+        setProgressInfo({
+          text: `Reading text ${d} of ${jobs.length} pages`,
+          pct: Math.round(5 + (d / Math.max(1, jobs.length)) * 60)
+        });
+        return { k: j.k, t: `[${j.l}]\n${t}` };
+      });
+
+      const T = { a: "", m: msText.trim() };
+      out.forEach((o) => {
+        T[o.k] += (T[o.k] ? "\n\n" : "") + o.t;
+      });
+
+      const ctx = `MARK SCHEME:\n${T.m}\n\nSTUDENT ANSWERS:\n${T.a}`;
+      setProgressInfo({
+        text: "Marking against the mark scheme (can take a minute or two)",
+        pct: 70
+      });
+
+      const draft = parseJsonResult(
+        await gradeLLM({
+          system: GRADE_SYS,
+          json: true,
+          messages: [{ role: "user", content: ctx + "\n\nMark every question now. Return JSON only." }]
+        })
+      );
+
+      setProgressInfo({ text: "Double-checking every mark", pct: 88 });
+      let final = draft;
+      try {
+        final = parseJsonResult(
+          await gradeLLM({
+            system: GRADE_SYS,
+            json: true,
+            messages: [
+              {
+                role: "user",
+                content:
+                  ctx +
+                  "\n\nDRAFT MARKING:\n" +
+                  JSON.stringify(draft) +
+                  "\n\nAudit this draft strictly. For each question re-check the student's answer against every mark scheme point, fix wrong marks, wrong quotes and missing questions, then return the corrected full JSON only."
+              }
+            ]
+          })
+        );
+        if (!Array.isArray(final.questions) || !final.questions.length) final = draft;
+      } catch {
+        final = draft;
+      }
+
+      if (!Array.isArray(final.questions) || !final.questions.length) {
+        throw new Error("No questions could be marked. Check the mark scheme and answer scans.");
+      }
+
+      setProgressInfo({ text: "Done", pct: 100 });
+      setGradingResult({ report: final, extractedTexts: T });
+    } catch (e: any) {
+      console.error(e);
+      setPaperError(e.message || "An error occurred while checking the paper.");
+      setProgressInfo(null);
+    } finally {
+      setIsCheckingPaper(false);
+    }
+  };
+
+  // Compute rendered report metrics if gradingResult is present
+  const renderedMetrics = React.useMemo(() => {
+    if (!gradingResult) return null;
+    const r = gradingResult.report;
+    const qs = (r.questions || []).map((q: any) => {
+      const max = Math.max(0, +q.max_marks || 0);
+      const aw = Math.min(max, Math.max(0, +q.awarded || 0));
+      const st: "ok" | "mid" | "bad" = aw >= max ? "ok" : aw > 0 ? "mid" : "bad";
+      return { ...q, max, aw, st };
+    });
+    const got = qs.reduce((s: number, q: any) => s + q.aw, 0);
+    const tot = qs.reduce((s: number, q: any) => s + q.max, 0);
+    const pct = tot ? Math.round((got / tot) * 100) : 0;
+    const n = (x: number) => +x.toFixed(2);
+    const cls = pct >= 70 ? "ok" : pct >= 45 ? "mid" : "bad";
+    const verdict =
+      pct >= 90
+        ? "Outstanding"
+        : pct >= 75
+        ? "Strong result"
+        : pct >= 60
+        ? "Good effort"
+        : pct >= 40
+        ? "Getting there"
+        : "Needs more work";
+    const cnt = (s: "ok" | "mid" | "bad") => qs.filter((q: any) => q.st === s).length;
+    const wrong = qs.filter((q: any) => (q.mistakes || []).length || q.aw < q.max);
+
+    return { qs, got, tot, pct, n, cls, verdict, cnt, wrong, overall_feedback: r.overall_feedback || "" };
+  }, [gradingResult]);
+
+  // Dynamic theme CSS variables matching Engez Nafsak's Velvet Obsidian & Royal Iris (Dark) and Ivory Calico & Terracotta Bronze (Light)
+  const themeVars = isLight
+    ? ({
+        "--bg": "#FBF9F5",
+        "--card": "#FFFFFF",
+        "--ink": "#1A1614",
+        "--mute": "#82776E",
+        "--line": "#EBE4DC",
+        "--soft": "#F5EFE9",
+        "--acc": "#C25E42",
+        "--acc-hover": "#B25136",
+        "--on-acc": "#FFFFFF",
+        "--ok": "#4D7C5B",
+        "--mid": "#B37D36",
+        "--bad": "#B84747",
+        "--hero-base": "#1A1614"
+      } as React.CSSProperties)
+    : ({
+        "--bg": "#090A10",
+        "--card": "#101322",
+        "--ink": "#F8FAFC",
+        "--mute": "#94A3B8",
+        "--line": "rgba(255, 255, 255, 0.08)",
+        "--soft": "#161A2B",
+        "--acc": "#8B5CF6",
+        "--acc-hover": "#7C3AED",
+        "--on-acc": "#FFFFFF",
+        "--ok": "#10B981",
+        "--mid": "#F59E0B",
+        "--bad": "#F43F5E",
+        "--hero-base": "#101322"
+      } as React.CSSProperties);
 
   return (
-    <div className="space-y-6">
-      
-      {/* MAIN EXAMINER MODULE HEADER & CONTROL BAR */}
-      <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <GraduationCap className="text-indigo-400" size={26} />
-              AI Examiner Module
-            </h1>
-            <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              Dual Engine
-            </span>
+    <section id="ai-examiner" style={themeVars} className="space-y-5 pb-12">
+      <style>{`
+        #ai-examiner {
+          color: var(--ink);
+          background: transparent;
+          line-height: 1.55;
+        }
+        #ai-examiner * {
+          box-sizing: border-box;
+        }
+        #ai-examiner .ex-tabs {
+          display: inline-flex;
+          background: var(--soft);
+          border: 1px solid var(--line);
+          padding: 5px;
+          border-radius: 16px;
+          gap: 4px;
+        }
+        #ai-examiner .ex-tabs button {
+          border: 0;
+          background: none;
+          color: var(--mute);
+          font-weight: 700;
+          font-size: 14px;
+          padding: 10px 24px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        #ai-examiner .ex-tabs button:hover {
+          color: var(--ink);
+        }
+        #ai-examiner .ex-tabs button.on {
+          background: var(--acc);
+          color: var(--on-acc);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+        }
+
+        /* Chat Container */
+        #ai-examiner .ex-chat {
+          display: flex;
+          flex-direction: column;
+          height: min(72vh, 690px);
+          background: var(--card);
+          border: 1px solid var(--line);
+          border-radius: 24px;
+          overflow: hidden;
+          box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.15);
+          transition: outline 0.15s ease;
+        }
+        #ai-examiner .ex-chat.drag {
+          outline: 2px dashed var(--acc);
+          outline-offset: -6px;
+        }
+        #ai-examiner .ex-chead {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 14px 20px;
+          border-bottom: 1px solid var(--line);
+          background: var(--card);
+        }
+        #ai-examiner .ex-chead b {
+          font-size: 15px;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        #ai-examiner .ex-nc {
+          border: 1px solid var(--line);
+          background: var(--soft);
+          color: var(--ink);
+          font-weight: 700;
+          font-size: 13px;
+          padding: 8px 16px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        #ai-examiner .ex-nc:hover {
+          border-color: var(--acc);
+          color: var(--acc);
+        }
+        #ai-examiner .ex-msgs {
+          flex: 1;
+          overflow-y: auto;
+          padding: 24px 22px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        #ai-examiner .ex-empty {
+          margin: auto;
+          text-align: center;
+          color: var(--mute);
+        }
+        #ai-examiner .ex-empty h3 {
+          color: var(--ink);
+          font-size: 20px;
+          font-weight: 800;
+          margin-bottom: 4px;
+        }
+        #ai-examiner .ex-m {
+          max-width: 88%;
+          font-size: 15.5px;
+        }
+        #ai-examiner .ex-m.u {
+          align-self: flex-end;
+          background: var(--acc);
+          color: var(--on-acc);
+          padding: 11px 18px;
+          border-radius: 18px 18px 4px 18px;
+          white-space: pre-wrap;
+          font-weight: 500;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        #ai-examiner .ex-m.u img {
+          display: block;
+          max-width: 220px;
+          max-height: 200px;
+          border-radius: 12px;
+          margin-bottom: 6px;
+        }
+        #ai-examiner .ex-m.a {
+          align-self: flex-start;
+          background: var(--soft);
+          border: 1px solid var(--line);
+          padding: 14px 18px;
+          border-radius: 18px 18px 18px 4px;
+          color: var(--ink);
+        }
+        #ai-examiner .ex-m.a p {
+          margin: 0 0 10px;
+        }
+        #ai-examiner .ex-m.a p:last-child {
+          margin-bottom: 0;
+        }
+        #ai-examiner .ex-m.a ul {
+          margin: 0 0 10px;
+          padding-left: 20px;
+          list-style: disc;
+        }
+        #ai-examiner .ex-m.a ul:last-child {
+          margin-bottom: 0;
+        }
+        #ai-examiner .ex-m.a li {
+          margin: 3px 0;
+        }
+        #ai-examiner .ex-dots {
+          display: inline-flex;
+          gap: 5px;
+          align-items: center;
+          padding: 4px 2px;
+        }
+        #ai-examiner .ex-dots i {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--acc);
+          animation: exBounce 1s infinite;
+        }
+        #ai-examiner .ex-dots i:nth-child(2) {
+          animation-delay: 0.15s;
+        }
+        #ai-examiner .ex-dots i:nth-child(3) {
+          animation-delay: 0.3s;
+        }
+        @keyframes exBounce {
+          50% {
+            opacity: 0.25;
+            transform: translateY(-2px);
+          }
+        }
+        #ai-examiner .ex-pv {
+          display: flex;
+          gap: 10px;
+          padding: 12px 16px 0;
+          flex-wrap: wrap;
+        }
+        #ai-examiner .ex-pv div {
+          position: relative;
+        }
+        #ai-examiner .ex-pv img {
+          width: 64px;
+          height: 64px;
+          object-fit: cover;
+          border-radius: 10px;
+          border: 1px solid var(--line);
+          display: block;
+        }
+        #ai-examiner .ex-pv button {
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 0;
+          background: var(--acc);
+          color: var(--on-acc);
+          font-size: 13px;
+          line-height: 1;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        #ai-examiner .ex-bar {
+          display: flex;
+          gap: 10px;
+          align-items: flex-end;
+          padding: 14px 16px;
+          border-top: 1px solid var(--line);
+          background: var(--card);
+        }
+        #ai-examiner .ex-bar textarea {
+          flex: 1;
+          resize: none;
+          border: 1px solid var(--line);
+          background: var(--soft);
+          color: var(--ink);
+          font-weight: 500;
+          font-size: 15px;
+          padding: 11px 16px;
+          border-radius: 14px;
+          max-height: 140px;
+          transition: border-color 0.15s ease;
+        }
+        #ai-examiner .ex-bar textarea:focus {
+          outline: none;
+          border-color: var(--acc);
+        }
+        #ai-examiner .ex-go,
+        #ai-examiner .ex-att,
+        #ai-examiner .ex-mic {
+          border: 0;
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          font-size: 18px;
+          cursor: pointer;
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s ease;
+        }
+        #ai-examiner .ex-go {
+          background: var(--acc);
+          color: var(--on-acc);
+        }
+        #ai-examiner .ex-go:hover {
+          background: var(--acc-hover);
+        }
+        #ai-examiner .ex-att,
+        #ai-examiner .ex-mic {
+          background: var(--soft);
+          color: var(--mute);
+          border: 1px solid var(--line);
+        }
+        #ai-examiner .ex-att:hover,
+        #ai-examiner .ex-mic:hover {
+          color: var(--ink);
+          border-color: var(--acc);
+        }
+        #ai-examiner .ex-mic.listening {
+          background: var(--bad);
+          color: #fff;
+          border-color: var(--bad);
+          animation: pulse 1.5s infinite;
+        }
+
+        /* Paper Correction Zones */
+        #ai-examiner .ex-zones {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
+        #ai-examiner .ex-drop {
+          background: var(--card);
+          border: 1.5px dashed var(--line);
+          border-radius: 24px;
+          padding: 22px;
+          transition: all 0.15s ease;
+        }
+        #ai-examiner .ex-drop.on,
+        #ai-examiner .ex-drop:hover {
+          border-color: var(--acc);
+          background: var(--soft);
+        }
+        #ai-examiner .ex-drop label {
+          display: block;
+          cursor: pointer;
+          text-align: center;
+          padding: 18px 8px;
+        }
+        #ai-examiner .ex-drop b {
+          display: block;
+          font-size: 16px;
+          font-weight: 800;
+          color: var(--ink);
+          margin-top: 6px;
+        }
+        #ai-examiner .ex-drop small {
+          color: var(--mute);
+          font-size: 13px;
+        }
+        #ai-examiner .ex-fl {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 8px;
+        }
+        #ai-examiner .ex-fc {
+          background: var(--soft);
+          border: 1px solid var(--line);
+          color: var(--ink);
+          border-radius: 10px;
+          padding: 5px 8px 5px 12px;
+          font-size: 12.5px;
+          font-weight: 600;
+          display: inline-flex;
+          gap: 6px;
+          align-items: center;
+          max-width: 100%;
+        }
+        #ai-examiner .ex-fc button {
+          border: 0;
+          background: none;
+          color: var(--mute);
+          cursor: pointer;
+          font-size: 15px;
+          line-height: 1;
+          padding: 2px;
+        }
+        #ai-examiner .ex-fc button:hover {
+          color: var(--bad);
+        }
+        #ai-examiner .ex-drop textarea {
+          width: 100%;
+          margin-top: 10px;
+          border: 1px solid var(--line);
+          background: var(--bg);
+          color: var(--ink);
+          border-radius: 12px;
+          padding: 10px 12px;
+          font-size: 13.5px;
+          resize: vertical;
+          min-height: 64px;
+        }
+        #ai-examiner .ex-run {
+          margin-top: 16px;
+          width: 100%;
+          border: 0;
+          background: var(--acc);
+          color: var(--on-acc);
+          font-weight: 800;
+          font-size: 16px;
+          padding: 16px;
+          border-radius: 16px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.25);
+        }
+        #ai-examiner .ex-run:hover:not(:disabled) {
+          background: var(--acc-hover);
+        }
+        #ai-examiner .ex-run:disabled {
+          opacity: 0.45;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        #ai-examiner .ex-prog {
+          margin-top: 16px;
+        }
+        #ai-examiner .ex-prog .t {
+          height: 7px;
+          background: var(--soft);
+          border-radius: 9px;
+          overflow: hidden;
+          margin-top: 8px;
+        }
+        #ai-examiner .ex-prog .t i {
+          display: block;
+          height: 100%;
+          background: var(--ok);
+          transition: width 0.4s ease;
+        }
+        #ai-examiner .ex-err {
+          margin-top: 14px;
+          padding: 12px 16px;
+          border-radius: 12px;
+          background: rgba(224, 58, 58, 0.12);
+          border: 1px solid rgba(224, 58, 58, 0.25);
+          color: var(--bad);
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        /* Results View */
+        #ai-examiner .ex-hero {
+          --c: var(--ok);
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          gap: 30px;
+          align-items: center;
+          flex-wrap: wrap;
+          padding: 34px;
+          border-radius: 26px;
+          color: #fff;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: radial-gradient(90% 130% at 0% 0%, color-mix(in srgb, var(--c) 42%, #0f1219) 0%, #0f1219 70%);
+          box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.45);
+        }
+        #ai-examiner .ex-hero.mid {
+          --c: var(--mid);
+        }
+        #ai-examiner .ex-hero.bad {
+          --c: var(--bad);
+        }
+        #ai-examiner .ex-ringw {
+          position: relative;
+          width: 170px;
+          height: 170px;
+          flex: none;
+        }
+        #ai-examiner .ex-ring {
+          width: 100%;
+          height: 100%;
+        }
+        #ai-examiner .ex-ring circle {
+          fill: none;
+          stroke-width: 9;
+          stroke-linecap: round;
+        }
+        #ai-examiner .ex-trk {
+          stroke: rgba(255, 255, 255, 0.14);
+        }
+        #ai-examiner .ex-arc {
+          stroke: #fff;
+          filter: drop-shadow(0 0 8px var(--c));
+          transition: stroke-dashoffset 1.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        #ai-examiner .ex-pc {
+          position: absolute;
+          inset: 0;
+          display: grid;
+          place-content: center;
+          text-align: center;
+        }
+        #ai-examiner .ex-pc b {
+          font-size: 42px;
+          font-weight: 800;
+          line-height: 1;
+          color: #fff;
+        }
+        #ai-examiner .ex-pc span {
+          font-size: 13px;
+          opacity: 0.75;
+          color: #fff;
+        }
+        #ai-examiner .ex-hi {
+          flex: 1;
+          min-width: 240px;
+        }
+        #ai-examiner .ex-hi .mk1 {
+          font-size: 15px;
+          opacity: 0.8;
+          color: #fff;
+        }
+        #ai-examiner .ex-hi .big {
+          font-size: 54px;
+          font-weight: 800;
+          line-height: 1.1;
+          letter-spacing: -1px;
+          color: #fff;
+        }
+        #ai-examiner .ex-hi .big small {
+          font-size: 26px;
+          opacity: 0.6;
+          font-weight: 600;
+          color: #fff;
+        }
+        #ai-examiner .ex-hi .vd {
+          display: inline-block;
+          margin: 8px 0 12px;
+          padding: 5px 14px;
+          border-radius: 99px;
+          background: rgba(255, 255, 255, 0.16);
+          font-weight: 700;
+          font-size: 14px;
+          color: #fff;
+        }
+        #ai-examiner .ex-hi p {
+          opacity: 0.9;
+          font-size: 14.5px;
+          max-width: 56ch;
+          color: #fff;
+        }
+        #ai-examiner .ex-st {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-top: 14px;
+        }
+        #ai-examiner .ex-st span {
+          background: rgba(255, 255, 255, 0.12);
+          padding: 5px 12px;
+          border-radius: 99px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #fff;
+        }
+
+        #ai-examiner .ex-sec {
+          margin: 34px 0 14px;
+          font-size: 20px;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: var(--ink);
+        }
+        #ai-examiner .ex-sec em {
+          font-style: normal;
+          font-size: 13px;
+          font-weight: 700;
+          background: var(--soft);
+          border: 1px solid var(--line);
+          color: var(--mute);
+          padding: 2px 10px;
+          border-radius: 99px;
+        }
+        #ai-examiner .ex-mk {
+          background: var(--card);
+          border: 1px solid var(--line);
+          border-left: 5px solid var(--bad);
+          border-radius: 16px;
+          padding: 16px 20px;
+          margin-bottom: 12px;
+        }
+        #ai-examiner .ex-mkh {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        #ai-examiner .ex-mk p {
+          font-size: 14.5px;
+          margin-top: 6px;
+        }
+        #ai-examiner .ex-lb {
+          display: inline-block;
+          font-weight: 700;
+          font-size: 12.5px;
+          color: var(--bad);
+          margin-right: 8px;
+        }
+        #ai-examiner .ex-lb.ok {
+          color: var(--ok);
+        }
+        #ai-examiner .ex-chip {
+          font-weight: 800;
+          font-size: 13px;
+          padding: 3px 11px;
+          border-radius: 99px;
+        }
+        #ai-examiner .ex-chip.ok {
+          background: rgba(21, 160, 90, 0.14);
+          color: var(--ok);
+        }
+        #ai-examiner .ex-chip.mid {
+          background: rgba(217, 138, 6, 0.15);
+          color: var(--mid);
+        }
+        #ai-examiner .ex-chip.bad {
+          background: rgba(224, 58, 58, 0.13);
+          color: var(--bad);
+        }
+        #ai-examiner .ex-good {
+          background: rgba(21, 160, 90, 0.1);
+          color: var(--ok);
+          padding: 16px 20px;
+          border-radius: 16px;
+          font-weight: 600;
+        }
+        #ai-examiner .ex-qc {
+          background: var(--card);
+          border: 1px solid var(--line);
+          border-radius: 18px;
+          margin-bottom: 14px;
+          overflow: hidden;
+        }
+        #ai-examiner .ex-qh {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          padding: 14px 20px;
+          border-bottom: 1px solid var(--line);
+        }
+        #ai-examiner .ex-qn {
+          font-weight: 800;
+        }
+        #ai-examiner .ex-qt {
+          flex: 1;
+          color: var(--mute);
+          font-size: 14px;
+        }
+        #ai-examiner .ex-g3 {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+        }
+        #ai-examiner .ex-g3 > div {
+          padding: 16px 20px;
+          font-size: 14px;
+          border-right: 1px solid var(--line);
+        }
+        #ai-examiner .ex-g3 > div:last-child {
+          border-right: 0;
+          background: rgba(21, 160, 90, 0.06);
+        }
+        #ai-examiner .ex-g3 h4 {
+          font-size: 12.5px;
+          font-weight: 700;
+          color: var(--mute);
+          margin-bottom: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+        }
+        #ai-examiner .ex-g3 p {
+          margin-bottom: 6px;
+        }
+        #ai-examiner .ex-pts {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        #ai-examiner .ex-pts li {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 7px;
+        }
+        #ai-examiner .ex-pts i {
+          font-style: normal;
+          font-weight: 800;
+          flex: none;
+        }
+        #ai-examiner .ex-pts .ok i {
+          color: var(--ok);
+        }
+        #ai-examiner .ex-pts .bad i {
+          color: var(--bad);
+        }
+        #ai-examiner details {
+          margin-top: 24px;
+        }
+        #ai-examiner summary {
+          cursor: pointer;
+          color: var(--mute);
+          font-weight: 600;
+          font-size: 14px;
+        }
+        #ai-examiner pre {
+          white-space: pre-wrap;
+          background: var(--card);
+          border: 1px solid var(--line);
+          color: var(--ink);
+          border-radius: 12px;
+          padding: 14px;
+          font: 12.5px/1.5 ui-monospace, monospace;
+          max-height: 340px;
+          overflow: auto;
+          margin-top: 8px;
+        }
+        @media (max-width: 760px) {
+          #ai-examiner .ex-zones,
+          #ai-examiner .ex-g3 {
+            grid-template-columns: 1fr;
+          }
+          #ai-examiner .ex-g3 > div {
+            border-right: 0;
+            border-bottom: 1px solid var(--line);
+          }
+          #ai-examiner .ex-hero {
+            padding: 24px;
+          }
+        }
+      `}</style>
+
+      {/* Top Header & Navigation Sub-tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+            style={{
+              background: isLight ? "#FFF2ED" : "rgba(139, 92, 246, 0.16)",
+              color: "var(--acc)",
+              border: "1px solid var(--line)"
+            }}
+          >
+            <GraduationCap size={20} />
           </div>
-          <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            Fast AI Chatbot & High-Accuracy OCR Paper Grading calibrated to Cambridge CAIE, Pearson Edexcel & Oxford AQA standards.
-          </p>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">AI Examiner & Tutor</h1>
+            <p className="text-xs" style={{ color: "var(--mute)" }}>
+              Fast AI Chatbot & High-Accuracy OCR Paper Correction
+            </p>
+          </div>
         </div>
 
-        {/* Secured System Engine Badge */}
-        <div className="flex items-center gap-2 bg-slate-800/90 px-3.5 py-2 rounded-xl border border-slate-700 text-xs font-mono text-indigo-300 shrink-0">
-          <Zap size={14} className="text-indigo-400 animate-pulse" />
-          <span>Engez Gemini Academic Engine • Server Secured</span>
+        <div className="ex-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "chat"}
+            className={activeTab === "chat" ? "on" : ""}
+            onClick={() => setActiveTab("chat")}
+          >
+            <Sparkles size={15} />
+            <span>Chatbot</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "paper"}
+            className={activeTab === "paper" ? "on" : ""}
+            onClick={() => setActiveTab("paper")}
+          >
+            <FileText size={15} />
+            <span>Paper Correction</span>
+          </button>
         </div>
       </div>
 
-      {/* DUAL-MODE SUB-TAB NAVIGATION SWITCHER */}
-      <div className={`p-1.5 ${isLight ? "bg-[#F0EEE8] border border-[#E8D7C9]" : "bg-slate-900/90 border border-slate-800"} rounded-2xl flex items-center gap-2`}>
-        <button
-          type="button"
-          onClick={() => setActiveSubTab("chatbot")}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-            activeSubTab === "chatbot"
-              ? isLight ? "bg-[#C96F55] text-white shadow-sm" : "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-              : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <Bot size={16} />
-          <span>Chatbot (Fast)</span>
-        </button>
+      {/* PANEL 1: CHATBOT */}
+      {activeTab === "chat" && (
+        <div id="p-chat">
+          <div
+            className={`ex-chat ${isChatDrag ? "drag" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsChatDrag(true);
+            }}
+            onDragLeave={() => setIsChatDrag(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsChatDrag(false);
+              if (e.dataTransfer.files) addPics(e.dataTransfer.files);
+            }}
+          >
+            <div className="ex-chead">
+              <b>
+                <Sparkles size={16} style={{ color: "var(--acc)" }} />
+                <span>Chatbot</span>
+              </b>
+              <button type="button" className="ex-nc" id="newChat" onClick={handleNewChat}>
+                + New chat
+              </button>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => setActiveSubTab("correction")}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-            activeSubTab === "correction"
-              ? isLight ? "bg-[#C96F55] text-white shadow-sm" : "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-              : isLight ? "text-[#77736B] hover:text-[#1D1D1B]" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <FileCheck2 size={16} />
-          <span>Paper Correction (High-Accuracy OCR)</span>
-        </button>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* SUB-TAB 1: FAST AI CHATBOT VIEW                                            */}
-      {/* ========================================================================= */}
-      {activeSubTab === "chatbot" && (
-        <div className="space-y-4">
-          
-          {/* Mobile View Switcher */}
-          <div className={`flex lg:hidden items-center gap-1.5 p-1 ${
-            isLight ? "bg-[#F0EEE8] border border-[#E8D7C9]" : "bg-black/40 border border-white/10"
-          } rounded-xl w-full`}>
-            <button
-              type="button"
-              onClick={() => setMobileView("chat")}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-bold ${
-                mobileView === "chat" ? (isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white") : "text-slate-400"
-              }`}
-            >
-              Chat
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileView("history")}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-mono font-bold ${
-                mobileView === "history" ? (isLight ? "bg-[#C96F55] text-white" : "bg-indigo-600 text-white") : "text-slate-400"
-              }`}
-            >
-              History ({threads.length})
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch min-h-[560px] h-[calc(100dvh-280px)] lg:h-[800px]">
-            
-            {/* Sidebar: History */}
-            <div className={`${mobileView === "history" ? "flex" : "hidden"} ${
-              isSidebarOpen ? "lg:flex lg:col-span-3" : "lg:hidden"
-            } ${
-              isLight ? "bg-white border border-[#E8D7C9]" : "bg-[#0E1322]/80 border border-white/10 text-white"
-            } rounded-2xl p-4 flex-col h-full overflow-hidden`}>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-700/50 mb-3">
-                <span className="text-xs font-bold font-mono uppercase flex items-center gap-1.5">
-                  <History size={13} /> Chat History
-                </span>
-                <button
-                  type="button"
-                  onClick={handleAddNewThread}
-                  className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-mono font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <Plus size={12} /> New
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
-                {threads.map((t) => {
-                  const isActive = t.id === activeThread.id;
-                  return (
-                    <div
-                      key={t.id}
-                      onClick={() => {
-                        setActiveThreadId(t.id);
-                        setMobileView("chat");
-                      }}
-                      className={`w-full py-2 px-3 rounded-xl border text-xs font-mono cursor-pointer flex items-center justify-between transition ${
-                        isActive
-                          ? isLight ? "bg-[#FFF1EC] border-[#E8D7C9] text-[#1D1D1B] font-bold" : "bg-[#1E253A] border-indigo-500/50 text-white font-bold"
-                          : isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-white/5 border-white/5 text-slate-400"
-                      }`}
-                    >
-                      <span className="truncate flex-1 pr-2">💬 {t.title}</span>
-                      {threads.length > 1 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setThreads(prev => prev.filter(item => item.id !== t.id));
-                          }}
-                          className="text-slate-500 hover:text-rose-400 p-0.5 cursor-pointer"
-                        >
-                          <Trash2 size={11} />
-                        </button>
+            <div id="msgs" className="ex-msgs" ref={msgsContainerRef}>
+              {chatHistory.length === 0 ? (
+                <div className="ex-empty" id="emp">
+                  <h3>Ask anything</h3>
+                  <p>Questions, explanations, revision help. You can attach a picture too.</p>
+                </div>
+              ) : (
+                chatHistory.map((m) =>
+                  m.role === "user" ? (
+                    <div key={m.id} className="ex-m u">
+                      {(m.images || []).map((imgBase64, i) => (
+                        <img key={i} src={`data:image/jpeg;base64,${imgBase64}`} alt="" />
+                      ))}
+                      {m.displayText}
+                    </div>
+                  ) : (
+                    <div key={m.id} className="ex-m a">
+                      {m.isLoading ? (
+                        <span className="ex-dots">
+                          <i></i>
+                          <i></i>
+                          <i></i>
+                        </span>
+                      ) : m.isError ? (
+                        <p style={{ color: "var(--bad)" }}>{m.content}</p>
+                      ) : (
+                        <div dangerouslySetInnerHTML={{ __html: fmt(m.content) }} />
                       )}
                     </div>
-                  );
-                })}
-              </div>
+                  )
+                )
+              )}
             </div>
 
-            {/* Main Chat Stream */}
-            <div className={`${mobileView === "chat" ? "flex" : "hidden lg:flex"} ${
-              isSidebarOpen ? "lg:col-span-9" : "lg:col-span-12"
-            } ${
-              isLight ? "bg-white border border-[#E8D7C9]" : "bg-[#0E1322]/80 border border-white/10 text-white"
-            } rounded-2xl p-4 sm:p-5 flex flex-col h-full overflow-hidden`}>
-              
-              {/* Timeline */}
-              <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-0 select-text">
-                {activeThread.messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
-                      <Sparkles size={24} />
+            {pics.length > 0 && (
+              <div className="ex-pv" id="pv">
+                {pics.map((p, i) => (
+                  <div key={i}>
+                    <img src={`data:image/jpeg;base64,${p}`} alt="Attached picture" />
+                    <button
+                      type="button"
+                      aria-label="Remove picture"
+                      onClick={() => setPics((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="ex-bar">
+              <button
+                type="button"
+                className="ex-att"
+                id="att"
+                aria-label="Attach a picture"
+                title="Attach a picture"
+                onClick={() => picInputRef.current?.click()}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                  <circle cx="9" cy="9" r="1.6" />
+                  <path d="m21 15-5-5L5 21" />
+                </svg>
+              </button>
+              <input
+                ref={picInputRef}
+                type="file"
+                id="pic"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={(e) => {
+                  if (e.target.files) addPics(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleToggleMic}
+                className={`ex-mic ${isListening ? "listening" : ""}`}
+                title={isListening ? "Stop listening" : "Voice input (allow microphone)"}
+                aria-label="Voice input"
+              >
+                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+              <textarea
+                id="inp"
+                ref={textareaRef}
+                rows={1}
+                value={chatInput}
+                onPaste={(e) => {
+                  const fs = Array.from<File>(e.clipboardData.files).filter((f: File) =>
+                    f.type.startsWith("image/")
+                  );
+                  if (fs.length) {
+                    e.preventDefault();
+                    addPics(fs);
+                  }
+                }}
+                onChange={(e) => {
+                  setChatInput(e.target.value);
+                  e.target.style.height = "auto";
+                  e.target.style.height = Math.min(e.target.scrollHeight, 140) + "px";
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendChat();
+                  }
+                }}
+                placeholder={isListening ? "Listening... Speak now..." : "Type your message"}
+              />
+              <button
+                type="button"
+                className="ex-go"
+                id="send"
+                aria-label={isChatBusy ? "Stop" : "Send"}
+                onClick={handleSendChat}
+              >
+                {isChatBusy ? "■" : "➤"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PANEL 2: PAPER CORRECTION */}
+      {activeTab === "paper" && (
+        <div id="p-paper">
+          <div className="ex-zones">
+            {/* Drop Zone A: Your answers */}
+            <div
+              className={`ex-drop ${dragZone === "a" ? "on" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragZone("a");
+              }}
+              onDragLeave={() => setDragZone(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragZone(null);
+                if (e.dataTransfer.files) handleAddFiles("a", e.dataTransfer.files);
+              }}
+            >
+              <label onClick={() => answerInputRef.current?.click()}>
+                <Upload size={22} className="mx-auto" style={{ color: "var(--acc)" }} />
+                <b>Your answers</b>
+                <small>PDF or photos. Drop or click</small>
+              </label>
+              <input
+                ref={answerInputRef}
+                type="file"
+                hidden
+                multiple
+                accept=".pdf,image/*"
+                onChange={(e) => {
+                  if (e.target.files) handleAddFiles("a", e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              {answerFiles.length > 0 && (
+                <div className="ex-fl">
+                  {answerFiles.map((f, i) => (
+                    <span key={`${f.name}-${i}`} className="ex-fc">
+                      <span className="truncate max-w-[200px]">{f.name}</span>
+                      <button
+                        type="button"
+                        aria-label="Remove"
+                        onClick={() => handleRemoveFile("a", i)}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Drop Zone M: Mark scheme */}
+            <div
+              className={`ex-drop ${dragZone === "m" ? "on" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragZone("m");
+              }}
+              onDragLeave={() => setDragZone(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragZone(null);
+                if (e.dataTransfer.files) handleAddFiles("m", e.dataTransfer.files);
+              }}
+            >
+              <label onClick={() => msInputRef.current?.click()}>
+                <Upload size={22} className="mx-auto" style={{ color: "var(--acc)" }} />
+                <b>Mark scheme</b>
+                <small>PDF or photos. Drop or click</small>
+              </label>
+              <input
+                ref={msInputRef}
+                type="file"
+                hidden
+                multiple
+                accept=".pdf,image/*"
+                onChange={(e) => {
+                  if (e.target.files) handleAddFiles("m", e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              {markSchemeFiles.length > 0 && (
+                <div className="ex-fl">
+                  {markSchemeFiles.map((f, i) => (
+                    <span key={`${f.name}-${i}`} className="ex-fc">
+                      <span className="truncate max-w-[200px]">{f.name}</span>
+                      <button
+                        type="button"
+                        aria-label="Remove"
+                        onClick={() => handleRemoveFile("m", i)}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <textarea
+                id="msText"
+                value={msText}
+                onChange={(e) => setMsText(e.target.value)}
+                placeholder="Or paste the mark scheme text here"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="ex-run"
+            id="run"
+            disabled={!canRunCheck}
+            onClick={handleRunPaperCorrection}
+          >
+            {isCheckingPaper ? "Checking paper..." : "Check paper"}
+          </button>
+
+          {progressInfo && (
+            <div className="ex-prog" id="prog">
+              <span id="pt" style={{ color: "var(--mute)", fontSize: "13.5px", fontWeight: 600 }}>
+                {progressInfo.text}
+              </span>
+              <div className="t">
+                <i id="pb" style={{ width: `${progressInfo.pct}%` }} />
+              </div>
+            </div>
+          )}
+
+          {paperError && (
+            <div className="ex-err" id="err">
+              {paperError}
+            </div>
+          )}
+
+          {/* Results Section */}
+          {renderedMetrics && gradingResult && (
+            <div id="res" ref={resultsRef} className="mt-7">
+              <div
+                className={`ex-hero ${
+                  renderedMetrics.cls === "mid" ? "mid" : renderedMetrics.cls === "bad" ? "bad" : ""
+                }`}
+              >
+                <div className="ex-ringw">
+                  <svg className="ex-ring" viewBox="0 0 120 120">
+                    <circle className="ex-trk" cx="60" cy="60" r="52" />
+                    <circle
+                      className="ex-arc"
+                      id="arc"
+                      cx="60"
+                      cy="60"
+                      r="52"
+                      strokeDasharray={326.7}
+                      strokeDashoffset={strokeOffset}
+                      transform="rotate(-90 60 60)"
+                    />
+                  </svg>
+                  <div className="ex-pc">
+                    <b id="pnum">{animatedPct}</b>
+                    <span>percent</span>
+                  </div>
+                </div>
+
+                <div className="ex-hi">
+                  <div className="mk1">Your mark</div>
+                  <div className="big">
+                    {renderedMetrics.n(renderedMetrics.got)}
+                    <small> / {renderedMetrics.n(renderedMetrics.tot)}</small>
+                  </div>
+                  <div className="vd">{renderedMetrics.verdict}</div>
+                  <p>{clean(renderedMetrics.overall_feedback).replace(/\*+/g, "").trim()}</p>
+                  <div className="ex-st">
+                    <span>{renderedMetrics.cnt("ok")} full marks</span>
+                    <span>{renderedMetrics.cnt("mid")} partial</span>
+                    <span>{renderedMetrics.cnt("bad")} no marks</span>
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="ex-sec">
+                Mistakes made <em>{renderedMetrics.wrong.length}</em>
+              </h3>
+
+              {renderedMetrics.wrong.length > 0 ? (
+                renderedMetrics.wrong.map((q: any, idx: number) => (
+                  <div key={`wrong-${q.id}-${idx}`} className="ex-mk">
+                    <div className="ex-mkh">
+                      <b>Question {clean(q.id).replace(/\*+/g, "").trim()}</b>
+                      <span className="ex-chip bad">
+                        −{renderedMetrics.n(q.max - q.aw)} mark{q.max - q.aw === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    {(q.mistakes || []).length > 0 ? (
+                      (q.mistakes || []).map((m: any, mIdx: number) => (
+                        <React.Fragment key={mIdx}>
+                          <p>
+                            <span className="ex-lb">What went wrong</span>
+                            {clean(m.issue).replace(/\*+/g, "").trim()}
+                          </p>
+                          <p>
+                            <span className="ex-lb ok">How to fix it</span>
+                            {clean(m.fix).replace(/\*+/g, "").trim()}
+                          </p>
+                        </React.Fragment>
+                      ))
+                    ) : (
+                      <p style={{ color: "var(--mute)" }}>Marks were lost against the mark scheme.</p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="ex-good">No mistakes found. Every mark was earned.</div>
+              )}
+
+              <h3 className="ex-sec">Right answers vs mark scheme</h3>
+
+              {renderedMetrics.qs.map((q: any, idx: number) => (
+                <div key={`q-${q.id}-${idx}`} className="ex-qc">
+                  <div className="ex-qh">
+                    <span className="ex-qn">Q{clean(q.id).replace(/\*+/g, "").trim()}</span>
+                    <span className="ex-qt">{clean(q.question || "").replace(/\*+/g, "").trim()}</span>
+                    <span className={`ex-chip ${q.st}`}>
+                      {renderedMetrics.n(q.aw)} / {renderedMetrics.n(q.max)}
+                    </span>
+                  </div>
+                  <div className="ex-g3">
+                    <div>
+                      <h4>Your answer</h4>
+                      {q.student_answer ? (
+                        <div dangerouslySetInnerHTML={{ __html: fmt(q.student_answer) }} />
+                      ) : (
+                        <p style={{ color: "var(--mute)" }}>No answer found</p>
+                      )}
                     </div>
                     <div>
-                      <h3 className={`text-sm font-bold ${isLight ? "text-[#1D1D1B]" : "text-white"}`}>Fast Academic Q&A & Marking</h3>
-                      <p className={`text-xs ${isLight ? "text-[#77736B]" : "text-slate-400"} mt-1 max-w-sm`}>
-                        Ask questions, click the microphone for voice input, or attach exam photos.
-                      </p>
+                      <h4>Mark scheme points</h4>
+                      <ul className="ex-pts">
+                        {(q.points || []).map((p: any, pIdx: number) => (
+                          <li key={pIdx} className={p.earned ? "ok" : "bad"}>
+                            <i>{p.earned ? "✓" : "✗"}</i>
+                            <span>{clean(p.text).replace(/\*+/g, "").trim()}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-
-                    <div className="w-full max-w-md space-y-2 text-left pt-2">
-                      {promptSuggestions.map((sug, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => handleSend(sug.prompt)}
-                          className={`w-full p-2.5 rounded-xl border text-xs text-left transition cursor-pointer ${
-                            isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B] hover:bg-[#FFF1EC]" : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
-                          }`}
-                        >
-                          {sug.label}
-                        </button>
-                      ))}
+                    <div>
+                      <h4>Correct answer</h4>
+                      <div dangerouslySetInnerHTML={{ __html: fmt(q.correct_answer) }} />
                     </div>
                   </div>
-                ) : (
-                  activeThread.messages.map((msg) => {
-                    const isAi = msg.role === "assistant";
-                    return (
-                      <div key={msg.id} className={`flex gap-3 max-w-[92%] ${isAi ? "mr-auto w-full" : "ml-auto"}`}>
-                        {isAi && (
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                            isLight ? "bg-[#FFF1EC] text-[#C96F55]" : "bg-[#1B233D] text-indigo-400"
-                          }`}>
-                            <Bot size={14} />
-                          </div>
-                        )}
-                        <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                          isAi 
-                            ? isLight ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B] w-full" : "bg-[#111626] border border-white/10 text-slate-100 w-full"
-                            : isLight ? "bg-[#FFF1EC] border border-[#E8D7C9] text-[#1D1D1B]" : "bg-indigo-600 text-white"
-                        }`}>
-                          {isAi ? (
-                            <FormattedScholarResponse content={msg.content} />
-                          ) : (
-                            <p className="whitespace-pre-line">{msg.content}</p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-
-                {isAiLoading && (
-                  <div className="flex gap-3 items-center text-xs font-mono text-indigo-400 animate-pulse">
-                    <Bot size={16} /> Fast AI thinking...
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Composer Control Bar */}
-              <div className="pt-3 flex gap-2 items-center shrink-0 border-t border-slate-700/40">
-                {/* Voice Mic Button with Permission Flow */}
-                <button
-                  type="button"
-                  onClick={handleToggleMic}
-                  className={`p-3 rounded-2xl border transition flex flex-col items-center justify-center shrink-0 w-12 h-12 cursor-pointer ${
-                    isListening
-                      ? "bg-rose-600 text-white border-rose-500 animate-pulse"
-                      : isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-[#12192B] border-white/10 text-slate-300"
-                  }`}
-                  title={isListening ? "Listening... Click to stop" : "Click to speak (requests mic permission)"}
-                >
-                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => imageInputRef.current?.click()}
-                  className={`p-3 ${
-                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#77736B]" : "bg-[#12192B] border-white/10 text-slate-300"
-                  } rounded-2xl border transition flex flex-col items-center justify-center shrink-0 w-12 h-12 cursor-pointer`}
-                  title="Attach images"
-                >
-                  <ImageIcon size={18} />
-                </button>
-                <input
-                  type="file"
-                  ref={imageInputRef}
-                  onChange={handleImageSelect}
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                />
-
-                <textarea
-                  value={inputVal}
-                  onChange={(e) => setInputVal(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder={isListening ? "Listening... Speak your question now..." : "Ask AI Tutor, click mic to speak, or paste question..."}
-                  className={`flex-1 px-4 py-2.5 ${
-                    isLight 
-                      ? "bg-[#FAF8F5] border border-[#E8D7C9] text-[#1D1D1B]" 
-                      : "bg-[#12192B] border border-white/10 text-white"
-                  } rounded-2xl text-xs resize-none h-12 focus:outline-none`}
-                  disabled={isAiLoading}
-                  rows={1}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => handleSend()}
-                  disabled={isAiLoading || (!inputVal.trim() && attachedImages.length === 0)}
-                  className={`w-12 h-12 shrink-0 rounded-2xl ${
-                    isLight ? "bg-[#C96F55]" : "bg-indigo-600 hover:bg-indigo-500"
-                  } text-white flex items-center justify-center transition cursor-pointer disabled:opacity-50`}
-                >
-                  <Send size={16} />
-                </button>
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SUB-TAB 2: PAPER CORRECTION (HIGH-ACCURACY OCR) MODULE VIEW                */}
-      {/* ========================================================================= */}
-      {activeSubTab === "correction" && (
-        <div className="space-y-6">
-          
-          {/* Target Metadata Bar */}
-          <div className={`p-4 rounded-2xl ${isLight ? "bg-white border border-[#E8D7C9]" : "bg-slate-900 border border-slate-800"} flex flex-wrap items-center justify-between gap-4`}>
-            <div className="flex flex-wrap items-center gap-3">
-              <div>
-                <label className="text-[10px] font-mono uppercase font-bold text-slate-400 block">Subject / Syllabus</label>
-                <select
-                  value={corrSubject}
-                  onChange={(e) => setCorrSubject(e.target.value)}
-                  className={`mt-1 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold cursor-pointer ${
-                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-slate-800 border-slate-700 text-white"
-                  }`}
-                >
-                  {IGCSE_SUBJECT_OPTIONS.map((sub) => (
-                    <option key={sub.id} value={sub.id}>{sub.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-mono uppercase font-bold text-slate-400 block">Paper Component</label>
-                <select
-                  value={corrPaperNumber}
-                  onChange={(e) => setCorrPaperNumber(e.target.value)}
-                  className={`mt-1 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold cursor-pointer ${
-                    isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-slate-800 border-slate-700 text-white"
-                  }`}
-                >
-                  <option value="Paper 1 (MCQ)">Paper 1 (Multiple Choice)</option>
-                  <option value="Paper 2 (Core / Structured)">Paper 2 (Core Structured)</option>
-                  <option value="Paper 4 (Extended Structured)">Paper 4 (Extended Structured)</option>
-                  <option value="Paper 6 (Alternative to Practical)">Paper 6 (Alternative to Practical)</option>
-                </select>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleCorrectPaper}
-              disabled={isGradingPaper}
-              className={`px-5 py-2.5 rounded-xl text-xs font-mono font-bold text-white transition flex items-center gap-2 cursor-pointer shadow-lg ${
-                isLight ? "bg-[#C96F55] hover:bg-[#B85F48]" : "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30"
-              } disabled:opacity-50`}
-            >
-              {isGradingPaper ? (
-                <>
-                  <RefreshCw size={14} className="animate-spin" />
-                  <span>3-Pass Independent Marking Active...</span>
-                </>
-              ) : (
-                <>
-                  <Zap size={14} />
-                  <span>Grade / Correct Paper (3-Pass)</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* 3 OCR MULTI-FILE UPLOAD SLOTS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-            {/* Slot 1 */}
-            <div className={`p-4 rounded-2xl border ${isLight ? "bg-white border-[#E8D7C9]" : "bg-slate-900 border-slate-800"} flex flex-col space-y-3`}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold uppercase text-indigo-400 flex items-center gap-1.5">
-                  <FileText size={14} /> 1. Student Answer (Part 1)
-                </span>
-                {slot1File && <span className="text-[10px] text-emerald-400 font-mono">Loaded</span>}
-              </div>
-
-              <div className="relative border-2 border-dashed border-slate-700 rounded-xl p-4 text-center hover:border-indigo-500 transition cursor-pointer">
-                <input
-                  type="file"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      handleSlotFileUpload(e.target.files[0], setSlot1File, setSlot1Text, setSlot1Progress);
-                    }
-                  }}
-                  accept=".pdf,image/*,.txt"
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-                <FileUp size={20} className="mx-auto text-slate-400 mb-1" />
-                <p className="text-xs font-mono text-slate-300">{slot1File ? slot1File.name : "Upload Student Script 1 (PDF/Photo)"}</p>
-              </div>
-
-              {slot1Progress && (
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                    <span>{slot1Progress.label}</span>
-                    <span>{slot1Progress.percent}%</span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-indigo-500 h-full transition-all duration-200" style={{ width: `${slot1Progress.percent}%` }} />
-                  </div>
                 </div>
-              )}
+              ))}
 
-              <textarea
-                value={slot1Text}
-                onChange={(e) => setSlot1Text(e.target.value)}
-                placeholder="Extracted OCR text will appear here. You can also paste handwritten transcription manually..."
-                className={`w-full flex-1 min-h-[140px] p-2.5 rounded-xl border text-xs font-mono resize-none focus:outline-none ${
-                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-slate-950 border-slate-800 text-slate-200"
-                }`}
-              />
-            </div>
-
-            {/* Slot 2 */}
-            <div className={`p-4 rounded-2xl border ${isLight ? "bg-white border-[#E8D7C9]" : "bg-slate-900 border-slate-800"} flex flex-col space-y-3`}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold uppercase text-indigo-400 flex items-center gap-1.5">
-                  <FileText size={14} /> 2. Student Answer (Part 2)
-                </span>
-                {slot2File && <span className="text-[10px] text-emerald-400 font-mono">Loaded</span>}
-              </div>
-
-              <div className="relative border-2 border-dashed border-slate-700 rounded-xl p-4 text-center hover:border-indigo-500 transition cursor-pointer">
-                <input
-                  type="file"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      handleSlotFileUpload(e.target.files[0], setSlot2File, setSlot2Text, setSlot2Progress);
-                    }
-                  }}
-                  accept=".pdf,image/*,.txt"
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-                <FileUp size={20} className="mx-auto text-slate-400 mb-1" />
-                <p className="text-xs font-mono text-slate-300">{slot2File ? slot2File.name : "Upload Student Script 2 (Optional)"}</p>
-              </div>
-
-              {slot2Progress && (
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                    <span>{slot2Progress.label}</span>
-                    <span>{slot2Progress.percent}%</span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-indigo-500 h-full transition-all duration-200" style={{ width: `${slot2Progress.percent}%` }} />
-                  </div>
-                </div>
-              )}
-
-              <textarea
-                value={slot2Text}
-                onChange={(e) => setSlot2Text(e.target.value)}
-                placeholder="Extracted OCR text for Part 2 will appear here..."
-                className={`w-full flex-1 min-h-[140px] p-2.5 rounded-xl border text-xs font-mono resize-none focus:outline-none ${
-                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-slate-950 border-slate-800 text-slate-200"
-                }`}
-              />
-            </div>
-
-            {/* Slot 3 */}
-            <div className={`p-4 rounded-2xl border ${isLight ? "bg-white border-[#E8D7C9]" : "bg-slate-900 border-slate-800"} flex flex-col space-y-3`}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold uppercase text-amber-400 flex items-center gap-1.5">
-                  <FileSpreadsheet size={14} /> 3. Official Mark Scheme / QP
-                </span>
-                {slot3File && <span className="text-[10px] text-emerald-400 font-mono">Loaded</span>}
-              </div>
-
-              <div className="relative border-2 border-dashed border-slate-700 rounded-xl p-4 text-center hover:border-amber-500 transition cursor-pointer">
-                <input
-                  type="file"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      handleSlotFileUpload(e.target.files[0], setSlot3File, setSlot3Text, setSlot3Progress);
-                    }
-                  }}
-                  accept=".pdf,image/*,.txt"
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-                <FileUp size={20} className="mx-auto text-amber-400 mb-1" />
-                <p className="text-xs font-mono text-slate-300">{slot3File ? slot3File.name : "Upload Official Mark Scheme (PDF/Text)"}</p>
-              </div>
-
-              {slot3Progress && (
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-mono text-slate-400">
-                    <span>{slot3Progress.label}</span>
-                    <span>{slot3Progress.percent}%</span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-amber-500 h-full transition-all duration-200" style={{ width: `${slot3Progress.percent}%` }} />
-                  </div>
-                </div>
-              )}
-
-              <textarea
-                value={slot3Text}
-                onChange={(e) => setSlot3Text(e.target.value)}
-                placeholder="Mark Scheme criteria will appear here..."
-                className={`w-full flex-1 min-h-[140px] p-2.5 rounded-xl border text-xs font-mono resize-none focus:outline-none ${
-                  isLight ? "bg-[#FAF8F5] border-[#E8D7C9] text-[#1D1D1B]" : "bg-slate-950 border-slate-800 text-slate-200"
-                }`}
-              />
-            </div>
-
-          </div>
-
-          {/* GRADED EXAMINER REPORT OUTPUT */}
-          {gradingError && (
-            <div className="p-4 bg-rose-950/40 border border-rose-500/50 rounded-2xl text-rose-300 text-xs font-mono flex items-center gap-2">
-              <AlertCircle size={16} />
-              <span>{gradingError}</span>
+              <details>
+                <summary>Extracted text (check the OCR)</summary>
+                <pre>{gradingResult.extractedTexts.a}</pre>
+              </details>
             </div>
           )}
-
-          {correctionReport && (
-            <div className={`p-6 rounded-2xl border ${isLight ? "bg-white border-[#E8D7C9]" : "bg-slate-900 border-slate-800"} space-y-6 animate-in fade-in duration-300`}>
-              
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-700/50">
-                <div>
-                  <span className="text-[10px] font-mono uppercase font-bold text-indigo-400 tracking-wider block">
-                    3-Pass Moderated Examiner Report
-                  </span>
-                  <h2 className="text-xl font-extrabold text-white font-mono mt-0.5">
-                    Official Evaluation Results
-                  </h2>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleDownloadAnnotatedPdf}
-                  disabled={isDownloadingPdf}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
-                >
-                  <Download size={14} />
-                  <span>{isDownloadingPdf ? "Generating PDF..." : "Download Annotated PDF"}</span>
-                </button>
-              </div>
-
-              {/* Formatted Examiner Feedback Content */}
-              <div className={`p-5 rounded-2xl ${isLight ? "bg-[#FAF8F5]" : "bg-slate-950"} border border-slate-800 space-y-4`}>
-                <FormattedScholarResponse content={correctionReport.content || JSON.stringify(correctionReport, null, 2)} />
-              </div>
-
-            </div>
-          )}
-
         </div>
       )}
-
-      {/* File Preview Modal */}
-      <FilePreviewModal
-        file={previewModalFile}
-        isOpen={Boolean(previewModalFile)}
-        onClose={() => setPreviewModalFile(null)}
-        isLight={isLight}
-      />
-
-      {/* Custom Domain & DNS Modal */}
-      <DomainDnsModal
-        isOpen={showDnsHubModal}
-        onClose={() => setShowDnsHubModal(false)}
-        themeMode={isLight ? "light" : "dark"}
-      />
-
-    </div>
+    </section>
   );
 }
