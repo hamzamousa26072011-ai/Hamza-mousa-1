@@ -8,7 +8,6 @@ coverage/
 *.ps
 .env*
 !.env.example
-public/assets/aistudio/*.mp4
-public/assets/aistudio/*.zip
-public/assets/aistudio/ai-examiner*
-public/assets/aistudio/gemini-code*
+.aistudio/
+public/assets/aistudio/
+

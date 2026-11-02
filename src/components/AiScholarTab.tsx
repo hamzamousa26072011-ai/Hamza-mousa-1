@@ -1,21 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Mic, MicOff, Sparkles, GraduationCap, Upload, FileText } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import Tesseract from "tesseract.js";
 import { PastPaper } from "../types";
+import { loadPdfJs } from "../utils/pdfRenderer";
 
-// Configure PDF.js worker CDN
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+// Configure PDF.js worker using the exact bundled worker asset matching pdfjs-dist
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-/* ================= CONFIG: Server-Side Gemini Models ================= */
+/* ================= CONFIG: Server-Side AI Tutor & Examiner Models ================= */
 const CONFIG = {
-  chat: { model: "gemini-3.8-flash", maxTokens: 8192, extra: { reasoning_effort: "low" } }, // fast chatbot replies
-  grade: { model: "gemini-3.1-pro-preview", maxTokens: 32000, extra: { reasoning_effort: "high" } }, // marking (most accurate)
-  gradeFallback: { model: "gemini-3.8-flash", maxTokens: 32000, extra: { reasoning_effort: "high" } }, // used automatically if the line above fails
-  ocr: { mode: "vision", model: "gemini-3.8-flash", maxTokens: 8192, extra: { reasoning_effort: "low" } } // reads handwriting from scans
+  chat: { model: "gpt-4o-mini", maxTokens: 4096 }, // fast chatbot replies
+  grade: { model: "gpt-4o", maxTokens: 16000 }, // marking (most accurate)
+  gradeFallback: { model: "gpt-4o-mini", maxTokens: 16000 }, // used automatically if the line above fails
+  ocr: { mode: "vision", model: "gpt-4o-mini", maxTokens: 4096 } // reads handwriting from scans
 };
-/* ===================================================================== */
+/* ================================================================================== */
 
 /* ---------- text cleaning: removes $ signs, LaTeX and markdown symbols ---------- */
 const sup: Record<string, string> = { "2": "²", "3": "³" };
@@ -257,7 +258,14 @@ const shrink = async (f: File): Promise<string> => {
 
 async function toPages(f: File): Promise<{ img: string; hint: string }[]> {
   if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) {
-    const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+    const rawBuffer = await f.arrayBuffer();
+    let pdf: any;
+    try {
+      pdf = await pdfjsLib.getDocument({ data: new Uint8Array(rawBuffer.slice(0)) }).promise;
+    } catch {
+      const cdnPdfJs = await loadPdfJs();
+      pdf = await cdnPdfJs.getDocument({ data: new Uint8Array(rawBuffer.slice(0)) }).promise;
+    }
     const out: { img: string; hint: string }[] = [];
     for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
       const pg = await pdf.getPage(i);
@@ -292,28 +300,35 @@ async function toPages(f: File): Promise<{ img: string; hint: string }[]> {
 let tesseractWorker: any = null;
 async function ocr(p: { img: string; hint: string }, label: string): Promise<string> {
   if (CONFIG.ocr.mode === "vision") {
-    return llm({
-      system: OCR_SYS,
-      cfg: CONFIG.ocr,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { image: p.img },
-            {
-              text:
-                `Transcribe this page (${label}).` +
-                (p.hint.length > 30
-                  ? `\nOptional reference, the embedded text layer (may be incomplete or out of order):\n${p.hint.slice(
-                      0,
-                      6000
-                    )}`
-                  : "")
-            }
-          ]
-        }
-      ]
-    });
+    try {
+      const resText = await llm({
+        system: OCR_SYS,
+        cfg: CONFIG.ocr,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { image: p.img },
+              {
+                text:
+                  `Transcribe this page (${label}).` +
+                  (p.hint.length > 30
+                    ? `\nOptional reference, the embedded text layer (may be incomplete or out of order):\n${p.hint.slice(
+                        0,
+                        6000
+                      )}`
+                    : "")
+              }
+            ]
+          }
+        ]
+      });
+      if (resText && !resText.includes("__USE_LOCAL_OCR__") && resText.trim().length > 0) {
+        return resText;
+      }
+    } catch {
+      // Fall through to embedded text layer or local Tesseract OCR
+    }
   }
   if (p.hint.length > 30) return p.hint;
   tesseractWorker = tesseractWorker || (await Tesseract.createWorker("eng"));
