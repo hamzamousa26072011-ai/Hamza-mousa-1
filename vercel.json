@@ -30,6 +30,14 @@
       "destination": "https://engez-nafsak.firebaseapp.com/__/auth/$1"
     },
     {
+      "source": "/api/examiner/llm",
+      "destination": "/api/examiner/llm"
+    },
+    {
+      "source": "/api/examiner/(.*)",
+      "destination": "/api/examiner/llm"
+    },
+    {
       "source": "/api/scholar/grade",
       "destination": "/api/scholar/grade"
     },

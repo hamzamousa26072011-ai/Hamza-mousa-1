@@ -35,13 +35,15 @@ export const loadPdfJs = (): Promise<any> => {
     }
 
     const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js";
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
     script.async = true;
     script.crossOrigin = "anonymous";
     script.onload = () => {
       const pdfjs = window.pdfjsLib;
       if (pdfjs) {
-        pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+        try {
+          pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        } catch {}
         resolve(pdfjs);
       } else {
         reject(new Error("PDF.js library loaded but pdfjsLib object is undefined."));
